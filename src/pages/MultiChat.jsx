@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { InvokeChatWithHistory, getKnowledge, saveKnowledge, parseAndExtractMemory } from '@/api/claude';
+import { scrubPII, scrubMessagesForStorage, scrubForStorage } from '@/lib/SecurityModule';
 import { Send, Trash2, Copy, Check, Brain, X, Zap, Plus, Briefcase, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -14,7 +15,7 @@ const CHANNELS = [
     flag: '🇪🇺',
     subtitle: 'European Exchange · MiCA Regulated',
     type: 'CHAT',
-    systemContext: `ACTIVE PLATFORM: BYBIT EU — confirmed. Do not ask to confirm the platform.\n\nYou're the agent's real-time partner on Bybit EU live chat. They're mid-conversation — fast, accurate, ready-to-send.\n\nIf they paste a customer message, give a reply they can send immediately. If they ask a policy question, answer directly.\n\nBYBIT EU — ALWAYS APPLY:\n- Never mix EU and Global rules. EU operates under a separate regulatory framework (MiCA).\n- Travel Rule: "This check is related to an EU transfer requirement. In some cases, Bybit EU must verify sender and recipient information before a crypto transfer can be completed." Direct user to complete requested info in the official flow.\n- SEPA/Fiat: clarify exact flow first (SEPA deposit/withdrawal or bank card). Fiat cannot be manually activated from livechat.\n- Bybit Card issues: narrow to application / declined payment / wallet setup / limits / delivery. Never ask for full card details.\n- EU complaints: direct to EU webform. "For Bybit EU, the correct next step is the support and complaint webform."\n- EU campaign questions: never assume Global promos apply. Check EU page: https://announcements.bybit.global/en/ and https://www.bybit.eu/en-EU/promo/campaign/Card-New-Signup\n- Escalation triggers: Bybit Pay stuck, KYC/EDD pending beyond expected time, Travel Rule still pending after info submitted, card/SEPA issue after standard checks, user requests formal complaint.\n\nCHAT STARTERS TO USE:\n- Card: "I can help with your Bybit EU Card issue. Is this about the application, a declined payment, wallet setup, limits, or delivery?"\n- SEPA: "I can help check this fiat transaction. Was this a SEPA deposit, a SEPA withdrawal, or a bank card payment?"\n- EU product availability: "Bybit EU and Bybit Global do not always offer the same products. Let's confirm which platform and which feature you're trying to access."\n- Complaints: "If this needs formal review, the correct next step is the Bybit EU support and complaint webform."`,
+    systemContext: `ACTIVE PLATFORM: BYBIT EU — confirmed. Do not ask to confirm the platform.\n\nCHANNEL AWARENESS: The customer is ALREADY in a live chat session with the agent RIGHT NOW. NEVER suggest the customer "contact support via Live Chat", "reach out to our support team", "submit a ticket", or "contact us" — the agent IS the support team and the customer is already being helped in real-time. If escalation is needed, tell the agent what to do internally (submit a case, escalate to P2), not tell the customer to contact support. The only exception is directing to the EU complaint webform when a formal complaint is requested.\n\nYou're the agent's real-time partner on Bybit EU live chat. They're mid-conversation — fast, accurate, ready-to-send.\n\nIf they paste a customer message, give a reply they can send immediately. If they ask a policy question, answer directly.\n\nBYBIT EU — ALWAYS APPLY:\n- Never mix EU and Global rules. EU operates under a separate regulatory framework (MiCA).\n- Travel Rule: "This check is related to an EU transfer requirement. In some cases, Bybit EU must verify sender and recipient information before a crypto transfer can be completed." Direct user to complete requested info in the official flow.\n- SEPA/Fiat: clarify exact flow first (SEPA deposit/withdrawal or bank card). Fiat cannot be manually activated from livechat.\n- Bybit Card issues: narrow to application / declined payment / wallet setup / limits / delivery. Never ask for full card details.\n- EU complaints: direct to EU webform. "For Bybit EU, the correct next step is the support and complaint webform."\n- EU campaign questions: never assume Global promos apply. Check EU page: https://announcements.bybit.global/en/ and https://www.bybit.eu/en-EU/promo/campaign/Card-New-Signup\n- Escalation triggers: Bybit Pay stuck, KYC/EDD pending beyond expected time, Travel Rule still pending after info submitted, card/SEPA issue after standard checks, user requests formal complaint.\n\nCHAT STARTERS TO USE:\n- Card: "I can help with your Bybit EU Card issue. Is this about the application, a declined payment, wallet setup, limits, or delivery?"\n- SEPA: "I can help check this fiat transaction. Was this a SEPA deposit, a SEPA withdrawal, or a bank card payment?"\n- EU product availability: "Bybit EU and Bybit Global do not always offer the same products. Let's confirm which platform and which feature you're trying to access."\n- Complaints: "If this needs formal review, the correct next step is the Bybit EU support and complaint webform."`,
   },
   {
     id: 'bybit-eu',
@@ -23,7 +24,7 @@ const CHANNELS = [
     flag: '🇪🇺',
     subtitle: 'European Exchange · MiCA Regulated',
     type: 'EMAIL',
-    systemContext: `ACTIVE PLATFORM: BYBIT EU — confirmed. Do not ask to confirm the platform.\n\nYou are helping a Bybit EU support agent write professional email responses. Bybit EU operates under a separate EU regulatory framework (MiCA). Compliance tone is non-negotiable here.\n\nBYBIT EU — KEY RULES:\n- Do NOT assume any Global product or feature is available on EU. If unsure, say so.\n- Bybit EU has formal complaint and escalation paths — direct users to the EU webform, not Global help center.\n- GDPR applies — no unnecessary personal data in templates.\n- Travel Rule: some crypto transfers require sender/recipient verification. Explain it as a regulatory requirement, not an optional check. Wording: "This is related to an EU transfer requirement. In some cases, Bybit EU must verify sender and recipient information before a crypto transfer can be completed."\n- SEPA/Fiat: confirm exact flow (SEPA deposit, SEPA withdrawal, or bank card payment) before giving guidance. Fiat availability depends on region and KYC status — livechat cannot manually activate fiat services.\n- Bybit EU Card: confirm whether issue is application, decline, wallet setup (Apple/Google Pay), limits, or delivery. Physical card requires virtual card first. Never ask for full card details.\n- EU complaints: "For Bybit EU, the correct next step is the support and complaint webform. Please include your UID, contactable email, relevant transaction/order IDs, and supporting evidence."\n- Campaigns: use EU announcement pages only. Never assume a Global promo applies to EU.\n\nEMAIL STRUCTURE: Answer → Educate → Link → Next step. Concise, professional, empathetic. No waffle.`,
+    systemContext: `ACTIVE PLATFORM: BYBIT EU — confirmed. Do not ask to confirm the platform.\n\nCHANNEL AWARENESS: The agent is handling this customer via EMAIL support. Do NOT suggest the customer "email support", "contact us", or "reach out to our team" — this IS the support email response. Describe the next step directly (e.g., "reply with your TxID" not "contact our support team"). If internal escalation is needed, tell the agent what to do (submit a case, escalate to P2), not the customer.\n\nYou are helping a Bybit EU support agent write professional email responses. Bybit EU operates under a separate EU regulatory framework (MiCA). Compliance tone is non-negotiable here.\n\nBYBIT EU — KEY RULES:\n- Do NOT assume any Global product or feature is available on EU. If unsure, say so.\n- Bybit EU has formal complaint and escalation paths — direct users to the EU webform, not Global help center.\n- GDPR applies — no unnecessary personal data in templates.\n- Travel Rule: some crypto transfers require sender/recipient verification. Explain it as a regulatory requirement, not an optional check. Wording: "This is related to an EU transfer requirement. In some cases, Bybit EU must verify sender and recipient information before a crypto transfer can be completed."\n- SEPA/Fiat: confirm exact flow (SEPA deposit, SEPA withdrawal, or bank card payment) before giving guidance. Fiat availability depends on region and KYC status — livechat cannot manually activate fiat services.\n- Bybit EU Card: confirm whether issue is application, decline, wallet setup (Apple/Google Pay), limits, or delivery. Physical card requires virtual card first. Never ask for full card details.\n- EU complaints: "For Bybit EU, the correct next step is the support and complaint webform. Please include your UID, contactable email, relevant transaction/order IDs, and supporting evidence."\n- Campaigns: use EU announcement pages only. Never assume a Global promo applies to EU.\n\nEMAIL STRUCTURE: Answer → Educate → Link → Next step. Concise, professional, empathetic. No waffle.`,
   },
   {
     id: 'global-live-chat',
@@ -32,7 +33,7 @@ const CHANNELS = [
     flag: '🌍',
     subtitle: 'Global Exchange · 180+ Countries',
     type: 'CHAT',
-    systemContext: `ACTIVE PLATFORM: BYBIT GLOBAL — confirmed. Do not ask to confirm the platform.\n\nYou're the agent's real-time partner on Bybit Global live chat. They need fast answers and ready-to-send replies.\n\nIf they paste a customer message, give a reply they can send immediately — professional, clear, empathetic. If they ask a question, answer it directly. No fluff. Speed matters here — they're mid-shift.`,
+    systemContext: `ACTIVE PLATFORM: BYBIT GLOBAL — confirmed. Do not ask to confirm the platform.\n\nCHANNEL AWARENESS: The customer is ALREADY in a live chat session with the agent RIGHT NOW. NEVER suggest the customer "contact support via Live Chat", "reach out to our support team", "submit a ticket", or "contact us" — the agent IS the support team and the customer is already being helped in real-time. If escalation is needed, tell the agent what to do internally (submit a case, escalate to P2), not tell the customer to contact support.\n\nYou're the agent's real-time partner on Bybit Global live chat. They need fast answers and ready-to-send replies.\n\nIf they paste a customer message, give a reply they can send immediately — professional, clear, empathetic. If they ask a question, answer it directly. No fluff. Speed matters here — they're mid-shift.`,
   },
   {
     id: 'bybit-global',
@@ -41,7 +42,7 @@ const CHANNELS = [
     flag: '🌍',
     subtitle: 'Global Exchange · 180+ Countries',
     type: 'EMAIL',
-    systemContext: `ACTIVE PLATFORM: BYBIT GLOBAL — confirmed. Do not ask to confirm the platform.\n\nYou are helping a Bybit Global support agent write emails to customers across 180+ countries.\n\nDraft clear, professional, empathetic responses. Get to the point. Address the issue, give the resolution or next steps, close with warmth. Avoid jargon. Keep in mind customers may not speak English as a first language — simple, clear language wins every time.`,
+    systemContext: `ACTIVE PLATFORM: BYBIT GLOBAL — confirmed. Do not ask to confirm the platform.\n\nCHANNEL AWARENESS: The agent is handling this customer via EMAIL support. Do NOT suggest the customer "email support", "contact us", or "reach out to our team" — this IS the support email response. Describe the next step directly (e.g., "reply with your TxID" not "contact our support team"). If internal escalation is needed, tell the agent what to do (submit a case, escalate to P2), not the customer.\n\nYou are helping a Bybit Global support agent write emails to customers across 180+ countries.\n\nDraft clear, professional, empathetic responses. Get to the point. Address the issue, give the resolution or next steps, close with warmth. Avoid jargon. Keep in mind customers may not speak English as a first language — simple, clear language wins every time.`,
   },
   {
     id: 'personal',
@@ -118,7 +119,7 @@ export default function MultiChat() {
           closeSaving: false,
         }));
       }
-    } catch {}
+    } catch { /* corrupted localStorage — start fresh */ }
     return [newTab()];
   });
 
@@ -128,7 +129,8 @@ export default function MultiChat() {
     const configs = tabs.map(({ messages, input, loading, copied, savingMem, memTitle, memSaved, autoSaved, showContext, closingCase, closeSummary, closeSaving, ...rest }) => rest);
     localStorage.setItem('multitab_tabs', JSON.stringify({ configs }));
     tabs.forEach(t => {
-      localStorage.setItem(`multitab_msgs_${t.id}`, JSON.stringify(t.messages));
+      // STORAGE SHIELD: scrub ALL messages before persisting
+      localStorage.setItem(`multitab_msgs_${t.id}`, JSON.stringify(scrubMessagesForStorage(t.messages)));
     });
   }, [tabs]);
 
@@ -209,7 +211,8 @@ export default function MultiChat() {
       }
     }
 
-    const userMsg = { role: 'user', content: text, ts: Date.now() };
+    // GDPR: store ONLY scrubbed text in state — raw is destroyed here
+    const userMsg = { role: 'user', content: scrubPII(text), ts: Date.now() };
     const newMessages = [...tab.messages, userMsg];
     updateTab(tabId, { messages: newMessages, input: '', loading: true });
 
@@ -218,8 +221,8 @@ export default function MultiChat() {
     if (caseType || issue || notes) {
       systemPrompt += `\n\n--- CURRENT CASE CONTEXT ---`;
       if (caseType) systemPrompt += `\nCase type: ${caseType}`;
-      if (issue) systemPrompt += `\nCustomer issue: ${issue}`;
-      if (notes) systemPrompt += `\nAdditional notes: ${notes}`;
+      if (issue) systemPrompt += `\nCustomer issue: ${scrubPII(issue)}`;
+      if (notes) systemPrompt += `\nAdditional notes: ${scrubPII(notes)}`;
       systemPrompt += `\n---\nUse this context to give targeted, relevant responses from the start. Do not repeat this back unless asked.`;
     }
 
@@ -267,7 +270,7 @@ export default function MultiChat() {
       const today = new Date().toLocaleDateString('en-GB');
       const title = `Case: ${label} — ${today}`;
       const existing = getKnowledge();
-      saveKnowledge([...existing, { id: Date.now(), title, content: summary, active: true }]);
+      saveKnowledge([...existing, { id: Date.now(), title, content: scrubForStorage(summary), active: true }]);
     }
     updateTab(tabId, {
       messages: [],

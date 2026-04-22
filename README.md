@@ -1,8 +1,7 @@
-# Base44 App
+# ACE — Agent Cockpit Engine
 
-
-This app was created automatically by Base44.
-It's a Vite+React app that communicates with the Base44 API.
+Viktor's AI support co-pilot for Bybit EU/Global operations.
+Runs fully local — all data stays on your machine.
 
 ## Running the app
 
@@ -16,5 +15,3 @@ npm run dev
 ```bash
 npm run build
 ```
-
-For more information and support, please contact Base44 support at app@base44.com.

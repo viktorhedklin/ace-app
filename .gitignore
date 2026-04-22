@@ -28,3 +28,4 @@ dist-ssr
 
 # Claude Code local settings (permissions, IDE config — not for repo)
 .claude/settings.local.json
+.vercel

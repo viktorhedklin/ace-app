@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { scrubPII } from '@/lib/SecurityModule';
 import { Copy, Check } from 'lucide-react';
 
 const DISPUTE_TYPES = [
@@ -171,8 +172,8 @@ export default function P2PDispute() {
               </span>
             )}
           </p>
-          {handoff.uid && <p className="text-xs text-slate-400">UID: <span className="text-slate-200 font-mono">{handoff.uid}</span></p>}
-          {handoff.orderId && <p className="text-xs text-slate-400">Order ID: <span className="text-slate-200 font-mono">{handoff.orderId}</span></p>}
+          {handoff.uid && <p className="text-xs text-slate-400">UID: <span className="text-slate-200 font-mono">{scrubPII(handoff.uid)}</span></p>}
+          {handoff.orderId && <p className="text-xs text-slate-400">Order ID: <span className="text-slate-200 font-mono">{scrubPII(handoff.orderId)}</span></p>}
           {handoff.issue && <p className="text-xs text-slate-500 mt-0.5">{handoff.issue}</p>}
         </div>
       )}

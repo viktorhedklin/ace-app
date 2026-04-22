@@ -1,6 +1,10 @@
-import { useState } from 'react';
-import { getApiKey, setApiKey, clearApiKey } from '@/api/claude';
-import { Check, Eye, EyeOff, Trash2, AlertTriangle } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { getApiKey, setApiKey, clearApiKey, getCostMode, setCostMode } from '@/api/claude';
+import { getSerpApiKey, setSerpApiKey, clearSerpApiKey } from '@/api/search';
+import { getOpenAIKey, setOpenAIKey, clearOpenAIKey } from '@/api/openai';
+import { Check, Eye, EyeOff, Trash2, AlertTriangle, ShieldCheck, FolderOpen, Loader2, Globe, Zap, Scale, Leaf } from 'lucide-react';
+import KnowledgeManager from '@/components/KnowledgeManager';
+import { getAllCases } from '@/lib/caseMemory';
 
 function Section({ title, children }) {
   return (
@@ -13,12 +17,259 @@ function Section({ title, children }) {
   );
 }
 
+// ── Auto-Vault — encrypted local snapshots ──────────────────────────────────
+
+const VAULT_INTERVAL = 15 * 60 * 1000; // 15 minutes
+
+async function deriveVaultKey() {
+  const hash = import.meta.env.VITE_APP_HASH || '';
+  // Use Terminal Gate hash as key material; fall back to a static salt if no gate
+  const material = hash.length === 64 ? hash : 'ace-vault-default-key-2026';
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(material), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt: enc.encode('ace-vault-salt'), iterations: 100000, hash: 'SHA-256' },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt'],
+  );
+}
+
+async function encryptData(data) {
+  const key = await deriveVaultKey();
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const enc = new TextEncoder();
+  const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(data));
+  // Combine IV + ciphertext into a single buffer
+  const combined = new Uint8Array(iv.length + encrypted.byteLength);
+  combined.set(iv, 0);
+  combined.set(new Uint8Array(encrypted), iv.length);
+  return combined;
+}
+
+async function collectSnapshot() {
+  // Gather all localStorage data (except API key)
+  const store = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k === 'claude_api_key' || k === 'openai_api_key') continue; // never vault secrets
+    store[k] = localStorage.getItem(k);
+  }
+  // Gather IndexedDB cases
+  let cases = [];
+  try { cases = await getAllCases(); } catch { /* non-critical */ }
+  return JSON.stringify({ ts: new Date().toISOString(), localStorage: store, indexedDB: { cases } });
+}
+
+function AutoVault() {
+  const [dirHandle, setDirHandle] = useState(null);
+  const [lastSave, setLastSave] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const intervalRef = useRef(null);
+
+  const isSupported = typeof window.showDirectoryPicker === 'function';
+
+  const saveSnapshot = useCallback(async (handle) => {
+    if (!handle || saving) return;
+    setSaving(true);
+    setError('');
+    try {
+      const raw = await collectSnapshot();
+      const encrypted = await encryptData(raw);
+      const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      const fileName = `ace-vault-${ts}.vault`;
+      const fileHandle = await handle.getFileHandle(fileName, { create: true });
+      const writable = await fileHandle.createWritable();
+      await writable.write(encrypted);
+      await writable.close();
+      setLastSave(new Date());
+    } catch (err) {
+      setError(err.message || 'Save failed');
+    } finally {
+      setSaving(false);
+    }
+  }, [saving]);
+
+  const enableVault = useCallback(async () => {
+    try {
+      const handle = await window.showDirectoryPicker({ mode: 'readwrite' });
+      setDirHandle(handle);
+      setError('');
+      // Immediate first save
+      await saveSnapshot(handle);
+    } catch (err) {
+      if (err.name !== 'AbortError') setError(err.message || 'Permission denied');
+    }
+  }, [saveSnapshot]);
+
+  // Auto-save interval
+  useEffect(() => {
+    if (!dirHandle) return;
+    intervalRef.current = setInterval(() => saveSnapshot(dirHandle), VAULT_INTERVAL);
+    return () => clearInterval(intervalRef.current);
+  }, [dirHandle, saveSnapshot]);
+
+  function disableVault() {
+    clearInterval(intervalRef.current);
+    setDirHandle(null);
+    setLastSave(null);
+  }
+
+  return (
+    <Section title="🔐 Auto-Vault">
+      <div className="space-y-3">
+        <p className="text-xs text-slate-500">
+          Automatically saves an AES-256 encrypted session snapshot to a local folder every 15 minutes.
+          No cloud. Data never leaves your machine.
+        </p>
+
+        {!isSupported ? (
+          <p className="text-xs text-yellow-400/80 bg-yellow-400/5 border border-yellow-400/20 rounded-lg px-3 py-2">
+            File System Access API not supported in this browser. Use Chrome or Edge.
+          </p>
+        ) : dirHandle ? (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2">
+              <ShieldCheck size={14} className="text-emerald-400 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-emerald-400 font-medium">Auto-Vault active</p>
+                <p className="text-[10px] text-slate-500">
+                  {saving ? 'Saving...' : lastSave ? `Last saved: ${lastSave.toLocaleTimeString()}` : 'Waiting for first save...'}
+                </p>
+              </div>
+              <button
+                onClick={() => saveSnapshot(dirHandle)}
+                disabled={saving}
+                className="text-xs text-slate-500 hover:text-slate-300 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                {saving ? <Loader2 size={12} className="animate-spin" /> : 'Save now'}
+              </button>
+            </div>
+            <button
+              onClick={disableVault}
+              className="text-xs text-slate-600 hover:text-red-400 transition-colors cursor-pointer"
+            >
+              Disable Auto-Vault
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={enableVault}
+            className="flex items-center gap-2 text-xs bg-slate-800 hover:bg-yellow-400/15 border border-slate-700 hover:border-yellow-400/30 text-slate-300 hover:text-yellow-400 px-4 py-2.5 rounded-lg transition-colors duration-150 cursor-pointer"
+          >
+            <FolderOpen size={14} />
+            Select vault folder
+          </button>
+        )}
+
+        {error && <p className="text-xs text-red-400">{error}</p>}
+
+        <p className="text-[10px] text-slate-700">
+          Encrypted with AES-256-GCM. Key derived from Terminal Gate hash via PBKDF2 (100k iterations).
+        </p>
+      </div>
+    </Section>
+  );
+}
+
+const COST_MODES = [
+  {
+    key: 'performance',
+    label: 'Performance',
+    icon: Zap,
+    desc: 'Opus everywhere — best quality, highest cost',
+    color: 'text-orange-400',
+    bg: 'bg-orange-400/10 border-orange-400/30',
+  },
+  {
+    key: 'balanced',
+    label: 'Balanced',
+    icon: Scale,
+    desc: 'Opus for chat, Sonnet for tools + routing',
+    color: 'text-yellow-400',
+    bg: 'bg-yellow-400/10 border-yellow-400/30',
+  },
+  {
+    key: 'economy',
+    label: 'Economy',
+    icon: Leaf,
+    desc: 'Sonnet everywhere — lowest cost',
+    color: 'text-emerald-400',
+    bg: 'bg-emerald-400/10 border-emerald-400/30',
+  },
+];
+
+function CostModeSection() {
+  const [mode, setMode] = useState(getCostMode);
+
+  function pick(key) {
+    setCostMode(key);
+    setMode(key);
+  }
+
+  return (
+    <Section title="💰 Cost Mode">
+      <div className="space-y-3">
+        <p className="text-xs text-slate-500">
+          Controls which Claude model each feature uses. Prompt caching is always on — repeated system prompts cost 90% less automatically.
+        </p>
+        <div className="space-y-2">
+          {COST_MODES.map(m => {
+            const Icon = m.icon;
+            const active = mode === m.key;
+            return (
+              <button
+                key={m.key}
+                onClick={() => pick(m.key)}
+                aria-label={`Select ${m.label} cost mode`}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all duration-150 cursor-pointer ${
+                  active ? m.bg : 'bg-slate-800 border-slate-700 hover:border-slate-600'
+                }`}
+              >
+                <Icon size={16} className={active ? m.color : 'text-slate-500'} />
+                <div className="flex-1">
+                  <p className={`text-sm font-medium ${active ? m.color : 'text-slate-200'}`}>{m.label}</p>
+                  <p className="text-xs text-slate-500">{m.desc}</p>
+                </div>
+                {active && (
+                  <div className="w-5 h-5 rounded-full bg-yellow-400 flex items-center justify-center shrink-0">
+                    <Check size={10} className="text-slate-900" />
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-[10px] text-slate-700">
+          Balanced saves ~60-70% vs Performance with minimal quality difference on utility tools.
+        </p>
+      </div>
+    </Section>
+  );
+}
+
 export default function Settings() {
   const [apiKey, setApiKeyState] = useState(getApiKey);
   const [newKey, setNewKey] = useState('');
   const [showKey, setShowKey] = useState(false);
   const [saved, setSaved] = useState(false);
   const [keyError, setKeyError] = useState('');
+
+  // SerpAPI
+  const [serpKey, setSerpKeyState] = useState(getSerpApiKey);
+  const [newSerpKey, setNewSerpKey] = useState('');
+  const [showSerpKey, setShowSerpKey] = useState(false);
+  const [serpSaved, setSerpSaved] = useState(false);
+  const [serpError, setSerpError] = useState('');
+
+  // OpenAI
+  const [oaiKey, setOaiKeyState] = useState(getOpenAIKey);
+  const [newOaiKey, setNewOaiKey] = useState('');
+  const [showOaiKey, setShowOaiKey] = useState(false);
+  const [oaiSaved, setOaiSaved] = useState(false);
+  const [oaiError, setOaiError] = useState('');
 
   function saveKey() {
     const trimmed = newKey.trim();
@@ -36,6 +287,40 @@ export default function Settings() {
     clearApiKey();
     setApiKeyState('');
     window.location.reload();
+  }
+
+  function saveSerpKey() {
+    const trimmed = newSerpKey.trim();
+    if (!trimmed) { setSerpError('Enter a SerpAPI key'); return; }
+    setSerpApiKey(trimmed);
+    setSerpKeyState(trimmed);
+    setNewSerpKey('');
+    setSerpSaved(true);
+    setSerpError('');
+    setTimeout(() => setSerpSaved(false), 2000);
+  }
+
+  function removeSerpKey() {
+    if (!confirm('Remove SerpAPI key? Campaign web search will stop working.')) return;
+    clearSerpApiKey();
+    setSerpKeyState('');
+  }
+
+  function saveOaiKey() {
+    const trimmed = newOaiKey.trim();
+    if (!trimmed.startsWith('sk-')) { setOaiError('OpenAI keys start with sk-'); return; }
+    setOpenAIKey(trimmed);
+    setOaiKeyState(trimmed);
+    setNewOaiKey('');
+    setOaiSaved(true);
+    setOaiError('');
+    setTimeout(() => setOaiSaved(false), 2000);
+  }
+
+  function removeOaiKey() {
+    if (!confirm('Remove OpenAI key? GPT models will be unavailable.')) return;
+    clearOpenAIKey();
+    setOaiKeyState('');
   }
 
   function clearData(key, label) {
@@ -57,7 +342,7 @@ export default function Settings() {
   const DATA_STORES = [
     { key: null, label: 'Shift Tracker logs', desc: 'Daily case counts, CSAT scores, points', keys: Object.keys(localStorage).filter(k => k.startsWith('shift_')) },
     { key: 'closed_cases', label: 'Closed Cases', desc: 'All logged case records' },
-    { key: 'ace_knowledge', label: 'Knowledge Base', desc: 'All knowledge entries' },
+    // Knowledge Base managed by KnowledgeManager component above
     { key: 'custom_campaigns', label: 'Campaign notes', desc: 'Custom campaign entries' },
     { key: 'custom_templates', label: 'Custom Templates', desc: 'User-added response templates' },
     { key: 'pinned_templates', label: 'Pinned Templates', desc: 'Template pin preferences' },
@@ -119,6 +404,108 @@ export default function Settings() {
         </div>
       </Section>
 
+      {/* SerpAPI Key */}
+      <Section title="🌐 SerpAPI Key (Web Search)">
+        <div className="space-y-4">
+          <p className="text-xs text-slate-500">Powers live web search in Campaign lookup and other tools. Get a key at serpapi.com.</p>
+          <div className="flex items-center justify-between bg-slate-800 rounded-lg px-4 py-3">
+            <div>
+              <p className="text-xs text-slate-500 mb-0.5">Current key</p>
+              <p className="text-sm font-mono text-slate-300">{serpKey ? (showSerpKey ? serpKey : `...${serpKey.slice(-6)}`) : 'Not set'}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              {serpKey && (
+                <>
+                  <button onClick={() => setShowSerpKey(!showSerpKey)} className="text-slate-500 hover:text-slate-300 transition-colors cursor-pointer" aria-label={showSerpKey ? 'Hide SerpAPI key' : 'Show SerpAPI key'}>
+                    {showSerpKey ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                  <button onClick={removeSerpKey} className="text-slate-500 hover:text-red-400 transition-colors cursor-pointer" aria-label="Remove SerpAPI key">
+                    <Trash2 size={15} />
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+          <div>
+            <label htmlFor="serp-key-input" className="text-xs text-slate-500 mb-1.5 block">{serpKey ? 'Replace key' : 'Add key'}</label>
+            <div className="flex gap-2">
+              <input
+                id="serp-key-input"
+                type="password"
+                value={newSerpKey}
+                onChange={e => { setNewSerpKey(e.target.value); setSerpError(''); }}
+                onKeyDown={e => e.key === 'Enter' && saveSerpKey()}
+                placeholder="Paste SerpAPI key..."
+                className="flex-1 bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none font-mono"
+              />
+              <button
+                onClick={saveSerpKey}
+                disabled={!newSerpKey.trim()}
+                className="bg-yellow-400 disabled:bg-slate-700 disabled:text-slate-500 text-slate-900 font-medium text-sm px-4 rounded-lg hover:bg-yellow-300 transition-colors flex items-center gap-1 cursor-pointer"
+                aria-label="Save SerpAPI key"
+              >
+                {serpSaved ? <><Check size={13} /> Saved</> : 'Save'}
+              </button>
+            </div>
+            {serpError && <p className="text-xs text-red-400 mt-1">{serpError}</p>}
+          </div>
+        </div>
+      </Section>
+
+      {/* OpenAI API Key */}
+      <Section title="🟢 OpenAI API Key">
+        <div className="space-y-4">
+          <p className="text-xs text-slate-500">Enables GPT-5.4, GPT-5.4 Mini and GPT-4.1 as model options. Switch provider in Models & Usage page.</p>
+          <div className="flex items-center justify-between bg-slate-800 rounded-lg px-4 py-3">
+            <div>
+              <p className="text-xs text-slate-500 mb-0.5">Current key</p>
+              <p className="text-sm font-mono text-slate-300">{oaiKey ? (showOaiKey ? oaiKey : `sk-...${oaiKey.slice(-6)}`) : 'Not set'}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              {oaiKey && (
+                <>
+                  <button onClick={() => setShowOaiKey(!showOaiKey)} className="text-slate-500 hover:text-slate-300 transition-colors cursor-pointer" aria-label={showOaiKey ? 'Hide OpenAI key' : 'Show OpenAI key'}>
+                    {showOaiKey ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                  <button onClick={removeOaiKey} className="text-slate-500 hover:text-red-400 transition-colors cursor-pointer" aria-label="Remove OpenAI key">
+                    <Trash2 size={15} />
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+          <div>
+            <label htmlFor="oai-key-input" className="text-xs text-slate-500 mb-1.5 block">{oaiKey ? 'Replace key' : 'Add key'}</label>
+            <div className="flex gap-2">
+              <input
+                id="oai-key-input"
+                type="password"
+                value={newOaiKey}
+                onChange={e => { setNewOaiKey(e.target.value); setOaiError(''); }}
+                onKeyDown={e => e.key === 'Enter' && saveOaiKey()}
+                placeholder="sk-..."
+                className="flex-1 bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none font-mono"
+              />
+              <button
+                onClick={saveOaiKey}
+                disabled={!newOaiKey.trim()}
+                className="bg-yellow-400 disabled:bg-slate-700 disabled:text-slate-500 text-slate-900 font-medium text-sm px-4 rounded-lg hover:bg-yellow-300 transition-colors flex items-center gap-1 cursor-pointer"
+                aria-label="Save OpenAI key"
+              >
+                {oaiSaved ? <><Check size={13} /> Saved</> : 'Save'}
+              </button>
+            </div>
+            {oaiError && <p className="text-xs text-red-400 mt-1">{oaiError}</p>}
+          </div>
+        </div>
+      </Section>
+
+      {/* Cost Mode */}
+      <CostModeSection />
+
+      {/* Knowledge Base Manager */}
+      <KnowledgeManager />
+
       {/* Data management */}
       <Section title="🗄️ Data Management">
         <div className="space-y-3">
@@ -166,6 +553,9 @@ export default function Settings() {
         </div>
       </Section>
 
+      {/* Auto-Vault */}
+      <AutoVault />
+
       {/* Danger zone */}
       <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-5 space-y-3">
         <div className="flex items-center gap-2">
@@ -184,7 +574,7 @@ export default function Settings() {
       {/* App info */}
       <div className="text-center space-y-1 pt-2">
         <p className="text-xs text-slate-700">ACE Super Agent v1.0</p>
-        <p className="text-xs text-slate-700">Running locally · Powered by Claude (claude-opus-4-6)</p>
+        <p className="text-xs text-slate-700">Running locally · Powered by Claude (Sonnet 4.6 / Opus 4.6)</p>
       </div>
     </div>
   );

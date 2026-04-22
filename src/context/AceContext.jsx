@@ -1,33 +1,20 @@
-import { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { BYBIT_KB } from '@/data/bybitKB';
+import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
+import { BYBIT_KB, parseErrorCodes } from '@/data/bybitKB';
+import { scrubPII } from '@/lib/SecurityModule';
+import { toast } from '@/components/ui/use-toast';
+import { syncKnowledgeFromRemote, getKBSyncUrl } from '@/api/claude';  // kept for optional manual sync
+
+// Re-export from SecurityModule — single source of truth for all PII scrubbing.
+// Every file that imports scrubPII from AceContext gets the SecurityModule version.
+export { scrubPII } from '@/lib/SecurityModule';
 
 const AceContext = createContext(null);
-
-// ─── Privacy Shield — PII Scrubber ───────────────────────────────────────────
-// Runs 100% client-side. Called before any text is sent to the LLM.
-// Preserves message meaning; replaces only identifiable personal data.
-
-export function scrubPII(text) {
-  if (!text) return text;
-  return text
-    // Emails — RFC-ish, covers subdomain and plus-addressing
-    .replace(/[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}/gi, '[EMAIL]')
-    // Names preceded by common CRM labels
-    .replace(
-      /(?:(?:full[-_\s]?)?name|customer|client|from|to|sender|recipient)\s*[:\s]+([A-Z][a-z][\w'-]*(?:\s+[A-Z][a-z][\w'-]*)+)/g,
-      (m, name) => m.replace(name, '[NAME]')
-    )
-    // Phone numbers: 10-15 digits, optional +/spaces/dashes/dots/parens
-    .replace(/(?<!\d)(\+?[\d][\d\s().\\-]{8,14}[\d])(?!\d)/g, '[PHONE]')
-    // UID-style digit blocks — 8-12 digits not embedded in a longer hex string
-    .replace(/(?<![a-fA-F0-9])(\b\d{8,12}\b)(?![a-fA-F0-9])/g, '[USER_ID]');
-}
 
 // ─── Raw text parser ──────────────────────────────────────────────────────────
 // Standalone mandate: parse what the agent pastes — no API, no loading states.
 
 function parseRawContext(text) {
-  if (!text?.trim()) return { uid: '', orderId: '', issue: '', platform: '', coin: '', txHash: '', errorCode: '', rawText: text || '' };
+  if (!text?.trim()) return { uid: '', orderId: '', issue: '', platform: '', coin: '', txHash: '', errorCode: '' };
 
   // UID: 6-12 digit number, often preceded by "UID", "User ID", "Account"
   const uidMatch =
@@ -66,7 +53,6 @@ function parseRawContext(text) {
     coin,
     txHash: txHashMatch?.[1] || '',
     errorCode: errorCodeMatch?.[1]?.trim() || '',
-    rawText: text,
   };
 }
 
@@ -86,6 +72,18 @@ export function recordCaseEvent({ vipLevel = 0, channel = '' } = {}) {
   } catch { /* non-critical */ }
 }
 
+// ─── Secure Snippets — local-only snippet storage ────────────────────────────
+const SNIPPETS_KEY = 'ace_snippets';
+
+function loadSnippets() {
+  try { return JSON.parse(localStorage.getItem(SNIPPETS_KEY) || '[]'); }
+  catch { return []; }
+}
+
+function persistSnippets(snippets) {
+  localStorage.setItem(SNIPPETS_KEY, JSON.stringify(snippets));
+}
+
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function AceProvider({ children }) {
@@ -95,10 +93,38 @@ export function AceProvider({ children }) {
   });
 
   const [parsedData, setParsedData] = useState({
-    uid: '', orderId: '', issue: '', platform: '', coin: '', txHash: '', errorCode: '', rawText: '',
+    uid: '', orderId: '', issue: '', platform: '', coin: '', txHash: '', errorCode: '',
   });
 
   const [nbaActions, setNbaActions] = useState([]);
+
+  // Ghost Mode — suppresses all VIP visual flair (animations, gold accents)
+  const [ghostMode, setGhostMode] = useState(false);
+
+  // Nebula Heartbeat — triggered by Friction Detector on sentiment drop
+  const [nebulaHeartbeat, setNebulaHeartbeat] = useState(0); // increment to trigger
+
+  // ── Secure Snippets ──────────────────────────────────────────────────────────
+  const [snippets, setSnippetsRaw] = useState(loadSnippets);
+  const [snippetSearchOpen, setSnippetSearchOpen] = useState(false);
+
+  const addSnippet = useCallback((title, content) => {
+    const next = [...snippets, { id: Date.now() + Math.random(), title, content, createdAt: Date.now() }];
+    setSnippetsRaw(next);
+    persistSnippets(next);
+  }, [snippets]);
+
+  const removeSnippet = useCallback((id) => {
+    const next = snippets.filter(s => s.id !== id);
+    setSnippetsRaw(next);
+    persistSnippets(next);
+  }, [snippets]);
+
+  const updateSnippet = useCallback((id, title, content) => {
+    const next = snippets.map(s => s.id === id ? { ...s, title, content } : s);
+    setSnippetsRaw(next);
+    persistSnippets(next);
+  }, [snippets]);
 
   // Magic Paste signal — fires when Bybit-relevant data is pasted anywhere in the app
   const [pasteSignal, setPasteSignal] = useState(null);
@@ -115,9 +141,22 @@ export function AceProvider({ children }) {
     return parsed;
   }
 
+  // ── Hotkey: ⌘+S Snippet Search (⌘+H Ghost Mode is in Layout.jsx) ────────────
+  useEffect(() => {
+    function handleKey(e) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        setSnippetSearchOpen(o => !o);
+      }
+    }
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, []);
+
   // ── Magic Paste global listener ──────────────────────────────────────────────
   // Intercepts all paste events app-wide. Doesn't prevent default — just piggybacks.
   // If Bybit signals are detected, updates parsedData and fires pasteSignal.
+  // If error codes are detected, fires Tactical Suggestion toasts with SOP.
   useEffect(() => {
     function handlePaste(e) {
       const text = e.clipboardData?.getData('text') || '';
@@ -127,9 +166,42 @@ export function AceProvider({ children }) {
         setParsedData(parsed);
         setPasteSignal({ parsed, ts: Date.now() });
       }
+
+      // ── Tactical Auto-Parser: detect Bybit error codes in pasted text ──
+      const errorHits = parseErrorCodes(text);
+      if (errorHits.length > 0) {
+        // Show one toast per detected error code (max 3 to avoid spam)
+        errorHits.slice(0, 3).forEach((hit, idx) => {
+          setTimeout(() => {
+            const severityColor = hit.severity === 'critical' ? 'destructive' : 'default';
+            const severityTag = hit.severity === 'critical' ? 'CRITICAL'
+              : hit.severity === 'high' ? 'HIGH' : hit.severity === 'medium' ? 'MED' : 'LOW';
+            toast({
+              title: `Tactical: ${hit.code} [${severityTag}]`,
+              description: `${hit.label} — ${hit.agentAction.slice(0, 120)}${hit.agentAction.length > 120 ? '...' : ''}`,
+              variant: severityColor,
+              duration: 8000,
+            });
+          }, idx * 400); // stagger toasts so they don't stack instantly
+        });
+      }
     }
     document.addEventListener('paste', handlePaste);
     return () => document.removeEventListener('paste', handlePaste);
+  }, []);
+
+  // ── Startup cleanup — purge dead Base44 sync URLs ──────────────────────────
+  const cleanupRan = useRef(false);
+  useEffect(() => {
+    if (cleanupRan.current) return;
+    cleanupRan.current = true;
+    // Kill any Base44 remnants — Base44 was permanently excluded in Phase 1
+    const url = getKBSyncUrl();
+    if (url && /base44|b44\./i.test(url)) {
+      localStorage.removeItem('ace_kb_sync_url');
+    }
+    // Also clean up any leftover GitHub token from previous version
+    localStorage.removeItem('ace_gh_token');
   }, []);
 
   const searchKB = useCallback((query) => {
@@ -170,6 +242,16 @@ export function AceProvider({ children }) {
       kb: BYBIT_KB,
       pasteSignal,
       clearPasteSignal: () => setPasteSignal(null),
+      ghostMode,
+      setGhostMode,
+      nebulaHeartbeat,
+      triggerHeartbeat: () => setNebulaHeartbeat(n => n + 1),
+      snippets,
+      addSnippet,
+      removeSnippet,
+      updateSnippet,
+      snippetSearchOpen,
+      setSnippetSearchOpen,
     }}>
       {children}
     </AceContext.Provider>

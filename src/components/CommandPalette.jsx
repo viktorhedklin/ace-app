@@ -5,6 +5,7 @@ import { motion, LayoutGroup, AnimatePresence } from 'framer-motion';
 import { BYBIT_KB, DOMAINS, DOMAIN_COLORS } from '@/data/bybitKB';
 import { cn } from '@/lib/utils';
 import { getMacros } from '@/lib/macros';
+import { useAce } from '@/context/AceContext';
 
 // Heavy spring — "particle assembly" snap-in feel
 const ASSEMBLE_SPRING = { type: 'spring', stiffness: 500, damping: 22, mass: 0.7 };
@@ -62,11 +63,13 @@ const KB_ITEMS = BYBIT_KB.map(article => ({
 
 export default function CommandPalette({ open, onClose }) {
   const [search, setSearch] = useState('');
+  const [copiedSnippet, setCopiedSnippet] = useState(null);
   const navigate = useNavigate();
+  const { snippets, parsedData } = useAce();
 
   // Reset search when opened
   useEffect(() => {
-    if (open) setSearch('');
+    if (open) { setSearch(''); setCopiedSnippet(null); }
   }, [open]);
 
   // Close on Escape
@@ -79,9 +82,19 @@ export default function CommandPalette({ open, onClose }) {
   }, [open, onClose]);
 
   function handleSelect(item) {
+    if (item.isSnippet) {
+      // Personalize: replace [USER_ID] with active UID
+      let content = item.content || '';
+      if (parsedData?.uid) {
+        content = content.replace(/\[USER_ID\]/g, parsedData.uid);
+      }
+      navigator.clipboard.writeText(content);
+      setCopiedSnippet(item.id);
+      setTimeout(() => { setCopiedSnippet(null); onClose(); }, 800);
+      return;
+    }
     onClose();
     if (item.isKB && item.url) {
-      // KB articles: navigate to knowledge base
       navigate('/knowledge');
     } else {
       navigate(item.path);
@@ -220,6 +233,38 @@ export default function CommandPalette({ open, onClose }) {
                 </Command.Group>
               );
             })()}
+
+            {/* Snippets — type "/" to focus, auto-personalizes [USER_ID] */}
+            {snippets.length > 0 && (
+              <Command.Group heading="Snippets (type /)"
+                className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-slate-600 [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider"
+              >
+                {snippets.map(s => (
+                  <Command.Item
+                    key={`snippet-${s.id}`}
+                    value={`/ snippet ${s.title} ${s.content?.slice(0, 60) || ''}`}
+                    onSelect={() => handleSelect({ isSnippet: true, id: s.id, content: s.content })}
+                    className={cn(
+                      'flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors duration-100',
+                      'text-slate-400 hover:text-slate-100',
+                      'aria-selected:bg-yellow-400/10 aria-selected:text-yellow-400',
+                      'data-[selected=true]:bg-yellow-400/10 data-[selected=true]:text-yellow-400'
+                    )}
+                  >
+                    <span className="text-base w-5 text-center shrink-0">
+                      {copiedSnippet === s.id ? '✓' : '📋'}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm leading-snug truncate">{s.title}</p>
+                      <p className="text-xs text-slate-600 truncate">{s.content?.slice(0, 80)}</p>
+                    </div>
+                    {copiedSnippet === s.id && (
+                      <span className="text-xs text-green-400 font-medium shrink-0">Copied!</span>
+                    )}
+                  </Command.Item>
+                ))}
+              </Command.Group>
+            )}
           </Command.List>
           </motion.div>
           </LayoutGroup>
@@ -229,9 +274,10 @@ export default function CommandPalette({ open, onClose }) {
             <p className="text-xs text-slate-700">
               <kbd className="bg-slate-800 px-1 py-0.5 rounded border border-slate-700 text-slate-600">↑↓</kbd> navigate &nbsp;
               <kbd className="bg-slate-800 px-1 py-0.5 rounded border border-slate-700 text-slate-600">↵</kbd> open &nbsp;
+              <kbd className="bg-slate-800 px-1 py-0.5 rounded border border-slate-700 text-slate-600">/</kbd> snippets &nbsp;
               <kbd className="bg-slate-800 px-1 py-0.5 rounded border border-slate-700 text-slate-600">Alt+1–9</kbd> macros
             </p>
-            <p className="text-xs text-slate-700">{NAV_ITEMS.length + KB_ITEMS.length} items</p>
+            <p className="text-xs text-slate-700">{NAV_ITEMS.length + KB_ITEMS.length + snippets.length} items</p>
           </div>
         </Command>
       </motion.div>

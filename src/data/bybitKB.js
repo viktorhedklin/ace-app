@@ -1,5 +1,7 @@
-// Bybit Official Knowledge Base — 15 critical live-chat articles
+// Bybit Official Knowledge Base — 47 live-chat articles
+// 15 core (both platforms) + 17 Global-specific + 15 EU-specific
 // Sourced from bybit.com/en/help-center and bybit.eu/en-EU/help-center
+// Last updated: 2026-04-09 — includes Feb 2025 hack, Supreme VIP, EURC, TradeGPT, Copy Trading Classic
 
 export const BYBIT_KB = [
   // ── KYC / Identity ─────────────────────────────────────────────────────────
@@ -457,6 +459,776 @@ export const BYBIT_KB = [
       'Collect evidence before doing anything else',
     ],
   },
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // PHASE 4 — DATA HARVEST: 15 Global + 15 EU articles
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  // ── Global: P2P ────────────────────────────────────────────────────────────────
+  {
+    id: 'p2p-payment-methods-global',
+    domain: 'P2P',
+    domainColor: 'orange',
+    title: 'P2P Payment Methods — Global',
+    subtitle: 'Supported fiat methods, limits, and release rules per region',
+    url: 'https://www.bybit.com/en/help-center/article/P2P-Payment-Methods',
+    lastUpdated: '2026-03-15',
+    platform: 'global',
+    escalatePath: 'Submit Case if payment method rejected despite meeting requirements',
+    keyPoints: [
+      'Supported payment methods vary by region and currency (bank transfer, Wise, Revolut, mobile wallets)',
+      'Sellers set accepted payment methods per ad — buyers must use one listed',
+      'Only payments from accounts matching KYC name accepted — third-party payments auto-rejected',
+      'Minimum/maximum order amounts set by the advertiser, not Bybit',
+      'Payment window: typically 15 min for buyer to complete — configurable by seller',
+      'Crypto held in escrow until seller confirms payment — never release before verifying in bank',
+    ],
+    agentTips: [
+      'If buyer claims they paid but seller sees nothing — check if payment method matches the ad listing',
+      'Third-party payments (friend/family sending on behalf) are NOT accepted — common dispute cause',
+    ],
+  },
+  {
+    id: 'p2p-merchant-global',
+    domain: 'P2P',
+    domainColor: 'orange',
+    title: 'P2P Merchant Application — Global',
+    subtitle: 'How to become a verified P2P merchant, requirements, and restrictions',
+    url: 'https://www.bybit.com/en/help-center/article/P2P-Merchant-Application',
+    lastUpdated: '2026-02-20',
+    platform: 'global',
+    escalatePath: 'Submit Case for merchant application issues after 7+ business days',
+    keyPoints: [
+      'Requirements: Advanced KYC completed, minimum 30-day account age, ≥50 completed P2P orders',
+      'Deposit requirement: USDT bond (amount varies by region) held during merchant status',
+      'Merchants get: verified badge, higher ad visibility, custom payment terms',
+      'Merchant removal: 3+ upheld disputes or compliance violation → automatic demotion',
+      'Application review: 3-7 business days standard processing',
+    ],
+    agentTips: [
+      'Cannot expedite merchant applications from livechat',
+      'If merchant demoted, they must wait 30 days before reapplying',
+    ],
+  },
+  {
+    id: 'p2p-order-timeout-global',
+    domain: 'P2P',
+    domainColor: 'orange',
+    title: 'P2P Order Timeout & Auto-Cancel Rules — Global',
+    subtitle: 'What happens when a P2P order times out and how to recover',
+    url: 'https://www.bybit.com/en/help-center/article/P2P-Order-Timeout',
+    lastUpdated: '2026-03-10',
+    platform: 'global',
+    escalatePath: 'Appeal immediately if payment was sent before auto-cancel',
+    keyPoints: [
+      'Buyer has 15 min (default) to mark payment as completed — timer set by seller',
+      'If timer expires without marking "Paid": order auto-cancels, crypto returned to seller',
+      'If buyer paid before timeout but did not click "Paid": submit appeal IMMEDIATELY',
+      'Seller has 2h to confirm receipt and release crypto after buyer marks "Paid"',
+      'If seller does not release within 2h: buyer can submit appeal for auto-release review',
+      '3+ auto-cancelled orders in 24h: temporary P2P restriction (1-24h cooldown)',
+    ],
+    agentTips: [
+      'If buyer paid but order cancelled — time-critical: submit appeal within the order page immediately',
+      'Auto-cancel does NOT mean funds are lost if payment was actually sent — appeal recovers',
+    ],
+  },
+
+  // ── Global: KYC ────────────────────────────────────────────────────────────────
+  {
+    id: 'kyc-corporate-global',
+    domain: 'KYC',
+    domainColor: 'blue',
+    title: 'Corporate / Institutional KYC — Global',
+    subtitle: 'Business account verification requirements and SLA',
+    url: 'https://www.bybit.com/en/help-center/article/Corporate-KYC-Verification',
+    lastUpdated: '2026-03-01',
+    platform: 'global',
+    escalatePath: 'Institutional KYC team handles all corporate verifications — submit Case',
+    keyPoints: [
+      'Corporate accounts require: certificate of incorporation, articles of association, UBO declaration',
+      'All UBOs (Ultimate Beneficial Owners) with ≥25% ownership must complete individual KYC',
+      'Corporate KYC review: 5-10 business days standard, 15+ for complex structures',
+      'Authorized signatories must be listed and verified separately',
+      'Higher withdrawal limits than individual accounts once approved',
+      'Sub-accounts can be created under a corporate master account',
+    ],
+    agentTips: [
+      'Never advise on corporate structures — direct to institutional support team',
+      'Corporate KYC cannot be processed via livechat — always submit Case',
+    ],
+  },
+  {
+    id: 'kyc-address-proof-global',
+    domain: 'KYC',
+    domainColor: 'blue',
+    title: 'Proof of Address (POA) Requirements — Global',
+    subtitle: 'Accepted documents, validity period, and common rejection reasons',
+    url: 'https://www.bybit.com/en/help-center/article/Proof-of-Address-Requirements',
+    lastUpdated: '2026-02-15',
+    platform: 'global',
+    escalatePath: 'Submit Case if POA repeatedly rejected with no clear reason in CS:GO',
+    keyPoints: [
+      'Accepted POA documents: utility bill, bank statement, government-issued letter, tax document',
+      'Document must be dated within last 3 months — older documents rejected',
+      'Name and address on POA must match KYC registered name and declared address',
+      'Digital/electronic statements accepted if they show institution letterhead + date',
+      'Screenshots of online banking are NOT accepted — must be official PDF or scan',
+      'PO Box addresses may not be accepted in certain jurisdictions',
+    ],
+    agentTips: [
+      'Most POA rejections are because the document is >3 months old — check date first',
+      'Bank statements work best — most users have access to recent ones',
+    ],
+  },
+
+  // ── Global: Crypto/Withdrawal ──────────────────────────────────────────────────
+  {
+    id: 'withdrawal-limits-global',
+    domain: 'Crypto',
+    domainColor: 'yellow',
+    title: 'Withdrawal Limits by KYC & VIP Tier — Global',
+    subtitle: 'Full limit matrix: No-KYC → Standard → Advanced → Pro × VIP 0-5',
+    url: 'https://www.bybit.com/en/help-center/article/Withdrawal-Limits',
+    lastUpdated: '2026-04-01',
+    platform: 'global',
+    escalatePath: 'Submit Case if verified limit not reflected in account',
+    keyPoints: [
+      'No Verification: ≤20K USDT/day, ≤100K USDT/month — crypto withdrawal only',
+      'Standard KYC: ≤1M USDT/day (Non-VIP), up to 3M USDT/day (VIP 3)',
+      'Advanced KYC: ≤2M USDT/day (Non-VIP), up to 8M USDT/day (VIP 4)',
+      'Pro KYC: ≤8M USDT/day (Non-VIP), up to 40M USDT/day (VIP 5)',
+      'Fiat withdrawal requires at minimum Standard KYC — no fiat without verification',
+      'VIP tier limits stack with KYC level — both must be met',
+      '24h withdrawal restriction after: security change, new device, API key modification',
+    ],
+    agentTips: [
+      'Always check BOTH KYC level and VIP tier — the lower of the two applies',
+      'For VIP 4-5 requesting higher limits: direct to VIP account manager',
+    ],
+  },
+  {
+    id: 'withdrawal-whitelist-global',
+    domain: 'Crypto',
+    domainColor: 'yellow',
+    title: 'Withdrawal Address Whitelist — Global',
+    subtitle: 'How to set up and manage trusted withdrawal addresses',
+    url: 'https://www.bybit.com/en/help-center/article/Withdrawal-Address-Whitelist',
+    lastUpdated: '2026-01-30',
+    platform: 'global',
+    escalatePath: 'None — fully self-service feature',
+    keyPoints: [
+      'Whitelist = only pre-approved addresses can receive withdrawals',
+      'Enable: Assets → Withdraw → Address Management → Turn on Whitelist',
+      'Adding new address to whitelist requires 2FA confirmation',
+      'New whitelist address: 24h restriction before first withdrawal to that address',
+      'Disabling whitelist also triggers 24h withdrawal hold for security',
+      'Recommended for ALL users — especially API traders to prevent unauthorized withdrawals',
+    ],
+    agentTips: [
+      'If customer withdrew to wrong address — whitelist would have prevented this. Recommend enabling it.',
+      'The 24h hold on new addresses is a security feature, not a bug — set expectations',
+    ],
+  },
+  {
+    id: 'deposit-networks-global',
+    domain: 'Crypto',
+    domainColor: 'yellow',
+    title: 'Supported Deposit Networks & Minimum Amounts — Global',
+    subtitle: 'Network selection, confirmations required, and minimum deposit thresholds',
+    url: 'https://www.bybit.com/en/help-center/article/Supported-Deposit-Networks',
+    lastUpdated: '2026-03-20',
+    platform: 'global',
+    escalatePath: 'Submit Case with TX hash for deposits on unsupported networks',
+    keyPoints: [
+      'ALWAYS verify the correct network before depositing — wrong network may result in permanent loss',
+      'ERC-20 (Ethereum): ~12 confirmations, higher gas fees, most widely supported',
+      'TRC-20 (Tron): ~20 confirmations, low fees, popular for USDT',
+      'BEP-20 (BSC): ~15 confirmations, low fees, BNB Chain',
+      'Arbitrum/Optimism/Base: L2 networks with lower fees — check if Bybit supports the specific L2',
+      'Deposits below minimum threshold are NOT credited and CANNOT be recovered',
+      'Internal transfer (Bybit-to-Bybit): instant, zero fees, no blockchain confirmation needed',
+    ],
+    agentTips: [
+      'If deposit not arrived: confirm network matches deposit page selection FIRST',
+      'Internal transfers between Bybit accounts are instant — suggest this for Bybit-to-Bybit',
+    ],
+  },
+
+  // ── Global: Account ────────────────────────────────────────────────────────────
+  {
+    id: 'account-deletion-global',
+    domain: 'Account',
+    domainColor: 'purple',
+    title: 'Account Deletion Request — Global',
+    subtitle: 'Permanent deletion process, cooling-off period, and data retention',
+    url: 'https://www.bybit.com/en/help-center/article/Account-Deletion',
+    lastUpdated: '2026-02-10',
+    platform: 'global',
+    escalatePath: 'Submit Case — account deletion is irreversible and requires manual processing',
+    keyPoints: [
+      'Account deletion is PERMANENT — cannot be undone after processing',
+      'Requirements: zero balance across ALL accounts (Spot, Derivatives, Funding, Earn)',
+      'All open orders and positions must be closed before deletion',
+      'No pending P2P orders, active disputes, or ongoing compliance reviews',
+      'Cooling-off period: 7 days after request before final deletion',
+      'Post-deletion data retention: Bybit retains records for regulatory compliance (varies by jurisdiction)',
+      'KYC documents destroyed after regulatory retention period expires',
+    ],
+    agentTips: [
+      'Confirm user TRULY wants deletion — many confused with deactivation. Deactivation is reversible, deletion is not.',
+      'Check for hidden balances in Earn products, Launchpool, or locked staking',
+    ],
+  },
+  {
+    id: 'api-key-management-global',
+    domain: 'Account',
+    domainColor: 'purple',
+    title: 'API Key Management & Security — Global',
+    subtitle: 'Creating, restricting, and revoking API keys safely',
+    url: 'https://www.bybit.com/en/help-center/article/API-Key-Management',
+    lastUpdated: '2026-03-25',
+    platform: 'global',
+    escalatePath: 'P1 Security Team if unauthorized API activity detected',
+    keyPoints: [
+      'Create: Account → API Management → Create New Key → set permissions + IP whitelist',
+      'Always restrict API keys by IP address — unrestricted keys are a security risk',
+      'Permission types: Read Only, Trade, Withdraw (withdraw requires separate approval)',
+      'API key with Withdraw permission: requires 2FA + email confirmation to create',
+      'If compromised: DELETE ALL KEYS immediately → check for unauthorized trades/withdrawals',
+      'Rate limits: 120 requests/min (trade), 10 requests/sec (order), varies by endpoint',
+      'Sub-account API keys are isolated from main account',
+    ],
+    agentTips: [
+      'If customer suspects API compromise: IMMEDIATE action → delete all keys, check trade history, change password',
+      'Recommend IP whitelist as mandatory, not optional',
+    ],
+  },
+  {
+    id: 'sub-account-global',
+    domain: 'Account',
+    domainColor: 'purple',
+    title: 'Sub-Account Management — Global',
+    subtitle: 'Create, fund, and manage sub-accounts under a master account',
+    url: 'https://www.bybit.com/en/help-center/article/Sub-Account-Management',
+    lastUpdated: '2026-02-28',
+    platform: 'global',
+    escalatePath: 'Submit Case for sub-account restrictions or permission issues',
+    keyPoints: [
+      'Sub-accounts share master account KYC — no separate verification needed',
+      'Create: Account → Sub-Account → Create Sub-Account (up to 20 for Standard, 50+ for VIP)',
+      'Each sub-account has independent trading, but withdrawal goes through master only',
+      'Internal transfer between master and sub-accounts: instant, zero fee',
+      'Sub-account API keys isolated — compromise of one does not affect others',
+      'Master account can restrict sub-account permissions (trade types, products)',
+    ],
+    agentTips: [
+      'Sub-accounts cannot withdraw directly — all withdrawals route through master account',
+      'For institutional clients: sub-accounts are the recommended structure for portfolio segregation',
+    ],
+  },
+
+  // ── Global: Trading ────────────────────────────────────────────────────────────
+  {
+    id: 'trading-fees-global',
+    domain: 'Account',
+    domainColor: 'purple',
+    title: 'Trading Fee Structure & VIP Tiers — Global',
+    subtitle: 'Spot/derivatives fees, VIP 0-5 + Supreme VIP maker/taker rates, and fee discounts',
+    url: 'https://www.bybit.com/en/help-center/article/Trading-Fee-Structure',
+    lastUpdated: '2026-04-09',
+    platform: 'global',
+    escalatePath: 'VIP Manager for fee negotiation (VIP 3+)',
+    keyPoints: [
+      'Spot: Maker 0.10% / Taker 0.10% (VIP 0) → Maker 0.04% / Taker 0.05% (VIP 5) → Maker 0.03% / Taker 0.045% (Supreme VIP)',
+      'Perpetual: Maker 0.02% / Taker 0.055% (VIP 0) → Maker 0.01% / Taker 0.032% (VIP 5) → Maker 0.00% / Taker 0.03% (Supreme VIP)',
+      'NEW: Supreme VIP tier — above VIP 5, lowest fees, 0% maker on perpetuals',
+      'VIP tier based on 30-day trailing volume OR asset balance — whichever qualifies for the higher tier',
+      'VIP levels refresh daily at 7:00 AM UTC — subaccounts inherit main account fee structure',
+      'Funding fees: charged/received every 8h on perpetual positions — not a Bybit fee, market-driven',
+      'Withdrawal fees: network-dependent, not VIP-dependent — shown at withdrawal time',
+    ],
+    agentTips: [
+      'Customers asking "why was I charged?" for perpetuals: likely funding fee — check position history',
+      'VIP tier updates daily at 7:00 AM UTC (not midnight) — volume from today counts toward tomorrow\'s tier',
+      'Supreme VIP is invitation-based — cannot self-qualify through volume alone',
+    ],
+  },
+  {
+    id: 'uta-global',
+    domain: 'Account',
+    domainColor: 'purple',
+    title: 'Unified Trading Account (UTA) FAQ — Global',
+    subtitle: 'What UTA is, how to upgrade, and cross-margin benefits',
+    url: 'https://www.bybit.com/en/help-center/article/UTA-FAQ',
+    lastUpdated: '2026-03-18',
+    platform: 'global',
+    escalatePath: 'Submit Case if UTA upgrade fails or margin calculation appears incorrect',
+    keyPoints: [
+      'UTA combines Spot, Derivatives, and Options into one account with shared margin',
+      'Cross-collateral: unrealised profits from one position can margin another',
+      'Upgrade: one-click from Account → Unified Trading Account (irreversible)',
+      'UTA upgrade requires: no open orders or positions in Standard account',
+      'Supported collateral: USDT, USDC, BTC, ETH + select assets at haircut rates',
+      'Portfolio Margin mode: advanced risk model for VIP/Pro traders — lower margin requirements',
+    ],
+    agentTips: [
+      'UTA upgrade is IRREVERSIBLE — confirm user understands before proceeding',
+      'If customer confused about margin: check if they recently upgraded to UTA — cross-margin changes calculations',
+    ],
+  },
+  {
+    id: 'copy-trading-global',
+    domain: 'Account',
+    domainColor: 'purple',
+    title: 'Copy Trading Classic FAQ — Global',
+    subtitle: 'Following master traders, profit sharing, ranks, and risk controls (2026)',
+    url: 'https://www.bybit.com/en/help-center/article/FAQ-Copy-Trading',
+    lastUpdated: '2026-04-09',
+    platform: 'global',
+    escalatePath: 'Submit Case for profit-sharing disputes or master trader complaints',
+    keyPoints: [
+      'Now called "Copy Trading Classic" — USDT Perpetual only, Spot not included',
+      'Requires Individual KYC Lv.1 or Business KYC — only USDT supported',
+      'Max following: 10 master traders simultaneously per follower',
+      'Two copy modes: Smart Copy (master manages risk ratio) and Advanced Copy (fixed margin per trade)',
+      'Master Trader ranks: Cadet (1K USDT/trade), Bronze (2K), Silver (10K), Gold (custom)',
+      'Max cumulative order value per trading pair: 300,000 USDT',
+      'Risk controls: PCSL (Per-Copy Stop Loss), Trailing Stop for followers',
+      'Bonuses and coupons CANNOT be used in Copy Trading Classic',
+      'Trading fees and funding fees match standard Derivatives platform rates (VIP-tiered)',
+    ],
+    agentTips: [
+      'Losses from copy trading are the follower\'s responsibility — Bybit does not compensate',
+      'If follower asks why position was closed: check if master closed it, or if follower\'s PCSL/stop-loss triggered',
+      'Spot copy trading is NOT available — only USDT Perpetual',
+    ],
+  },
+
+  // ── Global: Security & Platform ─────────────────────────────────────────────
+  {
+    id: 'feb-2025-hack-incident',
+    domain: 'Account',
+    domainColor: 'purple',
+    title: 'February 2025 Security Incident — $1.5B ETH Hack',
+    subtitle: 'Lazarus Group cold wallet breach, Bybit response, fund recovery, and customer impact',
+    url: 'https://www.bybit.com/en/help-center/article/Security-Incident-Feb-2025',
+    lastUpdated: '2026-04-09',
+    platform: 'both',
+    escalatePath: 'P1 Security Team for any customer reporting hack-related fund issues',
+    keyPoints: [
+      'On Feb 21, 2025, North Korea\'s Lazarus Group stole ~$1.5B in ETH from Bybit\'s cold wallet',
+      'Largest cryptocurrency heist in history — FBI confirmed North Korea responsible (IC3 PSA Feb 26, 2025)',
+      'CEO Ben Zhou confirmed ALL customer losses would be covered — bridge loans secured',
+      'Customer funds were NOT at risk — withdrawals continued normally, 1:1 backing maintained',
+      'As of April 2025: ~72% of stolen funds still traceable, ~28% went dark/untraceable',
+      'Bybit launched bounty program for stolen fund recovery — community-assisted tracking',
+      'Post-incident: Bybit significantly upgraded cold wallet infrastructure and multi-sig procedures',
+      'No customer accounts were compromised — attack targeted Bybit\'s own ETH cold wallet signing process',
+    ],
+    agentTips: [
+      'If customer asks "is Bybit safe?": funds are fully backed 1:1, cold wallet infrastructure was upgraded post-incident',
+      'Do NOT speculate on recovery progress — direct to official announcements only',
+      'If customer claims fund loss related to the hack: escalate to P1 Security Team immediately',
+      'This was an infrastructure-level attack, NOT a user-account breach — no customer credentials were compromised',
+    ],
+  },
+  {
+    id: 'tradegpt-global',
+    domain: 'Account',
+    domainColor: 'purple',
+    title: 'TradeGPT — AI Trading Assistant',
+    subtitle: 'AI-powered market analysis, strategy suggestions, and real-time data tool',
+    url: 'https://www.bybit.com/en/help-center/article/Introduction-to-Bybit-TradeGPT',
+    lastUpdated: '2026-04-09',
+    platform: 'global',
+    escalatePath: 'Submit Case for TradeGPT access issues',
+    keyPoints: [
+      'TradeGPT is Bybit\'s AI-powered trading assistant — provides real-time market analysis and strategy insights',
+      'Available directly within the Bybit platform — no separate subscription needed',
+      'Features: market analysis, strategy suggestions, additional trading insights, data-driven recommendations',
+      'AI-generated suggestions are informational only — NOT financial advice, NOT guaranteed',
+      'Users are fully responsible for their own trading decisions regardless of TradeGPT output',
+    ],
+    agentTips: [
+      'If customer complains about a loss from following TradeGPT: it is explicitly NOT financial advice — user bears full responsibility',
+      'TradeGPT is a tool, not a guaranteed signal service — set expectations clearly',
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // EU-SPECIFIC ARTICLES (15)
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  // ── EU: Fiat & SEPA ────────────────────────────────────────────────────────────
+  {
+    id: 'eu-sepa-guide',
+    domain: 'Fiat',
+    domainColor: 'green',
+    title: 'EU SEPA Deposit & Withdrawal Guide',
+    subtitle: 'SEPA Instant vs Standard, limits, name matching, and processing times',
+    url: 'https://www.bybit.eu/en-EU/help-center/article/SEPA-Guide',
+    lastUpdated: '2026-04-01',
+    platform: 'eu',
+    escalatePath: 'Submit Case if SEPA transfer not credited after 5 business days',
+    keyPoints: [
+      'SEPA Instant: credited within minutes (supported banks only), max €100K per transfer',
+      'SEPA Standard: 1-3 business days processing',
+      'Name on bank account MUST exactly match KYC name — even minor differences reject',
+      'Joint accounts: may fail name verification — use personal account',
+      'SEPA deposits are EUR only — other currencies require conversion at sender bank',
+      'Withdrawal: minimum €10, processed within 1-2 business days',
+      'IBAN must be from an EEA/EU bank — non-EEA IBANs rejected',
+    ],
+    agentTips: [
+      'First check: does the bank name match the KYC name? This is the #1 rejection cause for EU SEPA',
+      'SEPA Instant availability depends on the user\'s bank — not all banks support it',
+    ],
+  },
+  {
+    id: 'eu-card-guide',
+    domain: 'Fiat',
+    domainColor: 'green',
+    title: 'EU Bybit Card — MiCA Compliant',
+    subtitle: 'Card activation, spending limits, MCC restrictions, and compliance',
+    url: 'https://www.bybit.eu/en-EU/help-center/article/Bybit-Card-EU',
+    lastUpdated: '2026-03-28',
+    platform: 'eu',
+    escalatePath: 'P2 Card Team for frozen cards; Submit Case for billing disputes',
+    keyPoints: [
+      'Available to EU users with completed Standard KYC — ships to registered address',
+      'Spending source: Funding Account EUR balance — must top up before use',
+      'Daily limit: €10,000 spend, €5,000 ATM withdrawal',
+      'MCC restrictions: gambling, adult content, money orders — transactions auto-declined',
+      'Contactless: enabled by default, max €50 per tap (EU PSD2 regulation)',
+      'PIN: set during activation — can be changed in app',
+      'Card freeze: can self-freeze in app for security — unfreeze requires 2FA',
+    ],
+    agentTips: [
+      'EU card follows PSD2 regulations — contactless limits and strong authentication are legal requirements, not Bybit restrictions',
+      'If declined at POS: check funding balance first, then MCC category',
+    ],
+  },
+  {
+    id: 'eu-fiat-deposit-methods',
+    domain: 'Fiat',
+    domainColor: 'green',
+    title: 'EU Fiat Deposit Methods & Limits',
+    subtitle: 'All EU deposit options: SEPA, card, third-party, and their restrictions',
+    url: 'https://www.bybit.eu/en-EU/help-center/article/EU-Fiat-Deposit-Methods',
+    lastUpdated: '2026-03-25',
+    platform: 'eu',
+    escalatePath: 'Submit Case for failed deposits after 48h with bank confirmation',
+    keyPoints: [
+      'SEPA bank transfer: no deposit fee, 1-3 business days (instant for supported banks)',
+      'Visa/Mastercard: instant, 1.5-2.5% fee, max €20K/transaction',
+      'Third-party providers (Banxa, Mercuryo): separate terms and fees — Bybit cannot intervene',
+      'All deposit methods require completed Standard KYC minimum',
+      'EUR is the primary fiat currency for Bybit EU — other currencies converted by bank',
+      'Fiat deposits credited to Funding Account, not Spot — user must transfer internally',
+    ],
+    agentTips: [
+      'Third-party provider issues (Banxa, Mercuryo): direct user to the provider\'s support — Bybit has no visibility into their processing',
+      'If deposit missing: confirm it went to Funding Account, not Spot — many users check the wrong account',
+    ],
+  },
+
+  // ── EU: Withdrawal & Limits ────────────────────────────────────────────────────
+  {
+    id: 'eu-withdrawal-limits',
+    domain: 'Crypto',
+    domainColor: 'yellow',
+    title: 'EU Withdrawal Limits & Restrictions',
+    subtitle: 'MiCA-aligned limits, Travel Rule thresholds, and compliance holds',
+    url: 'https://www.bybit.eu/en-EU/help-center/article/EU-Withdrawal-Limits',
+    lastUpdated: '2026-04-01',
+    platform: 'eu',
+    escalatePath: 'Submit Case if withdrawal blocked with no CS:GO risk flag',
+    keyPoints: [
+      'Standard KYC: ≤€500K/day crypto withdrawal',
+      'Advanced KYC: ≤€2M USDC/day crypto withdrawal (USDC is primary EU stablecoin post-MiCA)',
+      'Travel Rule: transfers >€1,000 require beneficiary information (name, address)',
+      'First-time withdrawal to new address: additional verification step may trigger',
+      'EUR withdrawal (fiat): via SEPA only, minimum €10, max €100K/day',
+      'Withdrawal to non-EEA addresses: may trigger additional compliance screening',
+    ],
+    agentTips: [
+      'EU limits are USDC-denominated post-MiCA — not USDT. Confirm which stablecoin user is withdrawing.',
+      'Travel Rule applies to ALL crypto transfers >€1,000 — this is EU law, not a Bybit policy',
+    ],
+  },
+  {
+    id: 'eu-travel-rule',
+    domain: 'Crypto',
+    domainColor: 'yellow',
+    title: 'EU Travel Rule (TFR) Compliance',
+    subtitle: 'When beneficiary info is required and how to complete the form',
+    url: 'https://www.bybit.eu/en-EU/help-center/article/EU-Travel-Rule',
+    lastUpdated: '2026-04-01',
+    platform: 'eu',
+    escalatePath: 'None — user must complete Travel Rule form to proceed with transfer',
+    keyPoints: [
+      'EU Transfer of Funds Regulation (TFR): applies to all crypto transfers >€1,000',
+      'Required info: beneficiary full name, beneficiary account/wallet address',
+      'For transfers to another exchange: beneficiary exchange name + account identifier',
+      'For transfers to self-hosted wallet: user must declare ownership',
+      'Transfers without complete beneficiary info: held or rejected by compliance',
+      'Travel Rule verification may add 5-30 min processing time',
+      'Regulation effective 30 Dec 2024 across all EU/EEA member states',
+    ],
+    agentTips: [
+      'This is a legal requirement under EU TFR — cannot be waived or bypassed',
+      'If customer asks "why do I need to provide this info?" — explain it is EU regulation, same as bank wire transfers',
+    ],
+  },
+
+  // ── EU: Account & Compliance ───────────────────────────────────────────────────
+  {
+    id: 'eu-account-restrictions',
+    domain: 'Account',
+    domainColor: 'purple',
+    title: 'EU Account Restrictions & Compliance',
+    subtitle: 'Why EU accounts get restricted and how to resolve',
+    url: 'https://www.bybit.eu/en-EU/help-center/article/EU-Account-Restrictions',
+    lastUpdated: '2026-03-20',
+    platform: 'eu',
+    escalatePath: 'P2 Risk Team — EU account restrictions always escalate',
+    keyPoints: [
+      'Common restriction triggers: failed KYC, EDD pending, Travel Rule non-compliance, sanctions screening',
+      'Restricted account: trading disabled, withdrawal limited to verified fiat bank account only',
+      'Resolution: complete pending verification steps shown in account notification',
+      'EU accounts subject to stricter AML/CFT checks than Global under MiCA',
+      'Nationality restrictions: residents of sanctioned countries cannot hold EU accounts',
+      'Account migration from Global to EU: may trigger re-verification',
+    ],
+    agentTips: [
+      'Do NOT reveal the specific restriction reason — use neutral language: "Your account requires additional verification"',
+      'EU restrictions are often compliance-driven and cannot be expedited',
+    ],
+  },
+  {
+    id: 'eu-complaint-procedure',
+    domain: 'Account',
+    domainColor: 'purple',
+    title: 'EU Formal Complaint Procedure',
+    subtitle: 'How EU customers file formal complaints and regulatory escalation paths',
+    url: 'https://www.bybit.eu/en-EU/help-center/article/EU-Complaint-Procedure',
+    lastUpdated: '2026-03-15',
+    platform: 'eu',
+    escalatePath: 'Formal complaint webform → Compliance Team handles within 15 business days',
+    keyPoints: [
+      'EU customers have the right to file a formal complaint under MiCA Article 71',
+      'Complaint form: bybit.eu/complaint — must include account details and full description',
+      'Response SLA: acknowledgement within 2 business days, resolution within 15 business days',
+      'If unsatisfied with resolution: user can escalate to national competent authority (NCA)',
+      'Relevant NCAs: BaFin (Germany), AMF (France), AFM (Netherlands), CySEC (Cyprus), etc.',
+      'Complaints are tracked and reported to regulators quarterly — taken seriously internally',
+    ],
+    agentTips: [
+      'If customer says "I want to file a complaint": do NOT try to resolve in chat — direct to formal complaint form',
+      'The 15 business day SLA is a regulatory requirement — set this expectation clearly',
+    ],
+  },
+  {
+    id: 'eu-data-privacy',
+    domain: 'Account',
+    domainColor: 'purple',
+    title: 'EU Data Privacy & GDPR Rights',
+    subtitle: 'Data subject access requests, right to erasure, and processing details',
+    url: 'https://www.bybit.eu/en-EU/help-center/article/EU-Data-Privacy',
+    lastUpdated: '2026-02-28',
+    platform: 'eu',
+    escalatePath: 'Data Protection Officer (DPO): privacy@bybit.eu — formal GDPR requests only',
+    keyPoints: [
+      'EU users have GDPR rights: access, rectification, erasure, portability, restriction of processing',
+      'Data Subject Access Request (DSAR): email privacy@bybit.eu with verified account details',
+      'Response SLA: 30 calendar days (extendable by 60 days for complex requests)',
+      'Right to erasure: limited by regulatory retention requirements (AML records kept 5-7 years)',
+      'Data processed: KYC documents, transaction history, device/IP logs, communication records',
+      'Data transfers outside EU: governed by Standard Contractual Clauses (SCCs)',
+    ],
+    agentTips: [
+      'GDPR requests MUST go through the DPO email — agents cannot process data deletion or export in livechat',
+      'Right to erasure does not override AML/CFT retention requirements — be transparent about this',
+    ],
+  },
+
+  // ── EU: Products & Restrictions ────────────────────────────────────────────────
+  {
+    id: 'eu-product-restrictions',
+    domain: 'Account',
+    domainColor: 'purple',
+    title: 'EU Product Restrictions (MiCA)',
+    subtitle: 'Which products are available and restricted for EU users under MiCA',
+    url: 'https://www.bybit.eu/en-EU/help-center/article/EU-Product-Restrictions',
+    lastUpdated: '2026-04-01',
+    platform: 'eu',
+    escalatePath: 'None — regulatory restrictions cannot be appealed',
+    keyPoints: [
+      'Spot trading: available for all MiCA-compliant listed tokens',
+      'Perpetual contracts / Derivatives: RESTRICTED for EU retail users under MiCA',
+      'Options trading: RESTRICTED for EU retail users',
+      'Copy Trading: RESTRICTED for EU retail users (derivatives-based)',
+      'Earn products: available for approved tokens only (no algorithmic stablecoin products)',
+      'P2P trading: available with Travel Rule compliance for transactions >€1,000',
+      'Launchpad/Launchpool: availability varies per token — some excluded for EU',
+      'NFT marketplace: available with regulatory disclosures',
+    ],
+    agentTips: [
+      'If customer asks "why can\'t I trade perpetuals?" — EU regulatory restriction under MiCA, not a Bybit decision',
+      'Professional EU traders may have access to additional products — check account classification',
+    ],
+  },
+  {
+    id: 'eu-stablecoin-policy',
+    domain: 'Fiat',
+    domainColor: 'green',
+    title: 'EU Stablecoin Policy (MiCA) — USDC, EURC, USDT',
+    subtitle: 'USDT restrictions, USDC + EURC as EU stablecoins, Earn campaigns, and transition rules',
+    url: 'https://www.bybit.eu/en-EU/help-center/article/EU-Stablecoin-Policy',
+    lastUpdated: '2026-04-09',
+    platform: 'eu',
+    escalatePath: 'None — regulatory policy, cannot be modified',
+    keyPoints: [
+      'MiCA requires stablecoins to have EU-licensed issuer — USDC and EURC (both Circle) are compliant',
+      'EURC (Euro Coin): NEW — Circle\'s EUR-pegged stablecoin, fully MiCA-compliant, available on Bybit EU since Feb 2026',
+      'USDT (Tether): restricted for EU users — cannot purchase via fiat, limited trading pairs',
+      'Existing USDT holdings: users can hold and withdraw, but new purchases restricted',
+      'USDC + EURC are the primary stablecoins for EU Bybit — all fiat on/off ramps use these',
+      'EU Earn campaigns: up to 20% APR on fixed-term USDC and EURC products (launched Feb 2026)',
+      'EUR-denominated trading pairs available for major assets',
+      'Stablecoin swap: USDT→USDC conversion available at market rate',
+      'Transition period: existing USDT positions grandfathered until compliance deadline',
+    ],
+    agentTips: [
+      'If customer asks about USDT: it is not banned, but new purchases via fiat are restricted for EU users',
+      'Recommend USDC or EURC for all EU operations — both fully MiCA-compliant',
+      'EURC is EUR-denominated — no FX conversion needed for EU users. Highlight this benefit.',
+    ],
+  },
+
+  // ── EU: P2P ────────────────────────────────────────────────────────────────────
+  {
+    id: 'eu-p2p-rules',
+    domain: 'P2P',
+    domainColor: 'orange',
+    title: 'EU P2P Service Rules & Travel Rule',
+    subtitle: 'P2P availability in EU, Travel Rule application, and dispute handling',
+    url: 'https://www.bybit.eu/en-EU/help-center/article/EU-P2P-Rules',
+    lastUpdated: '2026-03-30',
+    platform: 'eu',
+    escalatePath: 'P2P Dispute Team for EU disputes; formal complaint via bybit.eu/complaint',
+    keyPoints: [
+      'P2P trading available for EU users with completed Standard KYC',
+      'Travel Rule applies to P2P transactions >€1,000: both parties must provide identification',
+      'Payment methods: SEPA transfer, EU bank transfer — payment apps may vary by country',
+      'Disputes: same global process applies, but EU users have additional complaint rights under MiCA',
+      'EUR is the primary currency for EU P2P — non-EUR pairs limited',
+      'EU P2P merchants subject to enhanced monitoring under MiCA AML requirements',
+    ],
+    agentTips: [
+      'Travel Rule for P2P is the same as for withdrawals — €1,000 threshold for beneficiary info',
+      'EU customers unsatisfied with P2P dispute resolution can file formal MiCA complaint',
+    ],
+  },
+
+  // ── EU: EDD & Compliance ───────────────────────────────────────────────────────
+  {
+    id: 'eu-edd-process',
+    domain: 'KYC',
+    domainColor: 'blue',
+    title: 'EU Enhanced Due Diligence (EDD) Process',
+    subtitle: 'EU-specific EDD triggers, required documents, and timelines',
+    url: 'https://www.bybit.eu/en-EU/help-center/article/EU-EDD-Process',
+    lastUpdated: '2026-03-25',
+    platform: 'eu',
+    escalatePath: 'None from livechat — EDD portal + Support Hub only. Compliance team reviews.',
+    keyPoints: [
+      'EU EDD triggers: high-risk jurisdiction connection, large transaction pattern, PEP screening match',
+      'Required: Proof of Funds (POF) + Proof of Wealth (POW) via Support Hub',
+      'POF examples: bank statements (3 months), employment contracts, tax returns',
+      'POW examples: property deeds, investment portfolio, inheritance documentation',
+      'Processing: 5-15 business days — compliance team, not CS, handles review',
+      'During EDD: account may be partially restricted (trading OK, withdrawals limited)',
+      'EU EDD is stricter than Global — MiCA mandates enhanced monitoring for flagged accounts',
+    ],
+    agentTips: [
+      'Support Hub is the ONLY channel for EU EDD document submission — not email, not livechat',
+      'Do not speculate on EDD trigger reason — neutral language only',
+    ],
+  },
+  {
+    id: 'eu-account-transfer',
+    domain: 'Account',
+    domainColor: 'purple',
+    title: 'EU Account Transfer & Migration',
+    subtitle: 'Migrating from Bybit Global to Bybit EU — what changes and how',
+    url: 'https://www.bybit.eu/en-EU/help-center/article/EU-Account-Migration',
+    lastUpdated: '2026-03-10',
+    platform: 'eu',
+    escalatePath: 'Submit Case for migration errors or stuck transitions',
+    keyPoints: [
+      'EEA residents required to migrate to Bybit EU entity — regulatory requirement',
+      'Migration process: prompted at login for eligible users → follow guided flow',
+      'KYC must be re-verified under EU entity — previous Global KYC may not carry over',
+      'Product availability changes: derivatives/options restricted for retail EU users post-migration',
+      'Open positions on restricted products: must be closed before or during migration window',
+      'Migration is one-way: once on EU entity, cannot revert to Global',
+      'Trading history and account age preserved after migration',
+    ],
+    agentTips: [
+      'If customer lost access to derivatives: check if they were migrated to EU entity — this is the most common cause',
+      'Migration is mandatory for EEA residents — it is not optional',
+    ],
+  },
+  {
+    id: 'eu-mica-disclosure',
+    domain: 'Account',
+    domainColor: 'purple',
+    title: 'EU MiCA Regulatory Disclosures',
+    subtitle: 'Bybit EU licensing, regulatory status, and customer protections',
+    url: 'https://www.bybit.eu/en-EU/help-center/article/MiCA-Disclosures',
+    lastUpdated: '2026-04-01',
+    platform: 'eu',
+    escalatePath: 'Compliance/Legal team for regulatory inquiries beyond standard FAQ',
+    keyPoints: [
+      'Bybit EU operates under MiCA (Markets in Crypto-Assets Regulation) framework',
+      'Licensed as a Crypto-Asset Service Provider (CASP) in the EU',
+      'Customer funds: segregated from company assets — held in qualified custodian accounts',
+      'Insurance: no EU deposit guarantee scheme for crypto — clearly disclose to customers',
+      'Complaints: customers can escalate to national competent authority if unsatisfied',
+      'Transparency: white paper requirements for listed tokens, risk disclosures mandatory',
+      'MiCA compliance effective from 30 December 2024 for all EU operations',
+    ],
+    agentTips: [
+      'If customer asks "are my funds safe?": explain segregated custody, but be transparent that crypto is not covered by deposit guarantee schemes',
+      'Regulatory questions beyond FAQ scope: direct to Bybit EU legal disclosures page',
+    ],
+  },
+  {
+    id: 'eu-trading-restrictions',
+    domain: 'Account',
+    domainColor: 'purple',
+    title: 'EU Derivatives & Leverage Restrictions',
+    subtitle: 'Why EU retail users cannot access derivatives and professional classification',
+    url: 'https://www.bybit.eu/en-EU/help-center/article/EU-Derivatives-Restrictions',
+    lastUpdated: '2026-03-30',
+    platform: 'eu',
+    escalatePath: 'Professional classification request via Support Hub only',
+    keyPoints: [
+      'EU retail users: NO access to perpetual contracts, futures, or options under MiCA',
+      'Professional classification: allows derivative access — requires proof of experience + portfolio',
+      'Professional criteria: ≥€500K portfolio, financial sector experience, ≥10 large trades/quarter',
+      'Application: via Support Hub → Professional Trader Classification form',
+      'Processing: 5-10 business days, compliance team review',
+      'Warning: professional traders lose some MiCA consumer protections (e.g., complaint rights)',
+      'Classification is reversible: can request reclassification back to retail',
+    ],
+    agentTips: [
+      'Do NOT promise professional classification — it requires meeting ALL criteria',
+      'If customer just wants leverage: EU regulation prohibits it for retail — no workaround',
+    ],
+  },
 ];
 
 // Escalation decision table — for the escalation matrix in the KB
@@ -478,6 +1250,7 @@ export const ESCALATION_TABLE = [
   { situation: 'EU KYC Force Advance/CRA', selfService: true, agentAction: 'CS:GO shows "Force update > Advance CRA" — apply ET [EU] 7003d. Direct to Support Hub.' },
   { situation: 'EU KYC DUPLICATE reject', selfService: 'partial', agentAction: 'Ask if user recognises popup email. If yes → check login. If no → P2 escalation.' },
   { situation: 'Fiat transaction error (name mismatch)', selfService: true, agentAction: 'Confirm name on bank matches KYC name — most common cause' },
+  { situation: 'Feb 2025 hack inquiry', selfService: false, agentAction: 'Reassure funds fully backed 1:1. No user accounts compromised. Cold wallet upgraded. Direct to official announcements only.' },
 ];
 
 // Domain metadata for filtering UI
@@ -496,3 +1269,303 @@ export const DOMAIN_COLORS = {
   green:  { bg: 'bg-green-500/10',  text: 'text-green-400',  border: 'border-green-500/20' },
   orange: { bg: 'bg-orange-500/10', text: 'text-orange-400', border: 'border-orange-500/20' },
 };
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// BYBIT ERROR CODE MAP — used by NBA engine to parse raw error logs.
+// Format: code → { label, domain, severity, agentAction, escalatePath }
+// severity: 'low' | 'medium' | 'high' | 'critical'
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export const BYBIT_ERROR_CODES = {
+  // ── KYC / Identity ──────────────────────────────────────────────────────────
+  'E01': {
+    label: 'Account Matters — Email/Phone/GA Change',
+    domain: 'Account',
+    severity: 'high',
+    agentAction: 'Follow E01 SOP: verify Full Name (KYC doc) + Date of Birth. If GA reset → confirm via registered email. Never bypass identity check.',
+    escalatePath: 'P2 escalation via Macro Pool 1 > Pool 2 if identity cannot be verified in chat',
+  },
+  'KYC_REJECT': {
+    label: 'KYC Verification Rejected',
+    domain: 'KYC',
+    severity: 'medium',
+    agentAction: 'Check CS:GO decision comments for exact reason. Apply QT EU-kyc04 (reject-retry) or ET 7000#a (reject-final). Share reason, not internal label.',
+    escalatePath: 'Submit Case if customer disputes final rejection — compliance team only',
+  },
+  'KYC_FORGERY': {
+    label: 'KYC Forgery Detection',
+    domain: 'KYC',
+    severity: 'critical',
+    agentAction: 'Document inconsistency detected. Apply QT EU-kyc03. Ask customer to reverify with authentic documents. Do NOT speculate on what triggered forgery flag.',
+    escalatePath: 'Do not escalate — compliance auto-reviews. Customer resubmits or gets final reject.',
+  },
+  'KYC_PENDING': {
+    label: 'KYC Under Review (Extended)',
+    domain: 'KYC',
+    severity: 'low',
+    agentAction: 'Normal processing: 1-3 business days. If >5 days, check CS:GO Risk Order tab for blockers.',
+    escalatePath: 'P2 escalation only if >5 business days and no CS:GO update',
+  },
+  'RESTRICTED_COUNTRY': {
+    label: 'Service Unavailable — Restricted Nationality/Country',
+    domain: 'KYC',
+    severity: 'high',
+    agentAction: 'Nationality takes priority over residence. Apply ET [EU] 7001. Cannot be overridden. No workaround.',
+    escalatePath: 'None — compliance decision is final',
+  },
+
+  // ── Deposits / Withdrawals ──────────────────────────────────────────────────
+  'DEPOSIT_NOT_ARRIVED': {
+    label: 'Crypto Deposit Not Credited',
+    domain: 'Crypto',
+    severity: 'medium',
+    agentAction: 'Confirm: correct network, correct address, above minimum. Check chain explorer for TX confirmations. If confirmed on-chain but not credited after 30+ confirmations → submit case.',
+    escalatePath: 'Submit Case with TX hash + screenshot if deposit confirmed on-chain but missing >2h',
+  },
+  'WRONG_NETWORK': {
+    label: 'Deposit Sent to Wrong Network',
+    domain: 'Crypto',
+    severity: 'high',
+    agentAction: 'Check if Bybit supports the chain the deposit was sent on. If supported → may auto-credit after review. If unsupported → recovery not guaranteed. Collect TX hash.',
+    escalatePath: 'Submit Case immediately — Finance team handles cross-chain recovery',
+  },
+  'WITHDRAWAL_BLOCKED': {
+    label: 'Withdrawal Blocked / Flagged by Risk',
+    domain: 'Crypto',
+    severity: 'high',
+    agentAction: 'Check CS:GO for risk flag reason. Common causes: new address, large amount, unusual pattern. Do NOT reveal risk logic. Reassure customer funds are safe.',
+    escalatePath: 'P2 Risk Team if blocked >24h with no CS:GO update',
+  },
+  'WITHDRAWAL_PENDING': {
+    label: 'Withdrawal Stuck in Processing',
+    domain: 'Crypto',
+    severity: 'medium',
+    agentAction: 'Normal: up to 30 min. Check blockchain for TX broadcast. If no TX after 1h → risk review may be in progress.',
+    escalatePath: 'Submit Case if stuck >2h with no on-chain TX',
+  },
+
+  // ── SEPA / Fiat ─────────────────────────────────────────────────────────────
+  'SEPA_DELAY': {
+    label: 'SEPA Transfer Delayed',
+    domain: 'Fiat',
+    severity: 'medium',
+    agentAction: 'SEPA: 1-3 business days standard. Check if name on bank account matches KYC name (most common cause of delay). Verify IBAN format.',
+    escalatePath: 'Submit Case if >5 business days and bank confirms sent',
+  },
+  'SEPA_REJECTED': {
+    label: 'SEPA Transfer Rejected',
+    domain: 'Fiat',
+    severity: 'high',
+    agentAction: 'Check rejection reason in CS:GO. Common: name mismatch, unsupported bank, sanctioned jurisdiction. Funds return to sender bank within 3-5 days.',
+    escalatePath: 'Submit Case if funds not returned after 7 business days',
+  },
+  'FIAT_NAME_MISMATCH': {
+    label: 'Fiat Deposit/Withdrawal Name Mismatch',
+    domain: 'Fiat',
+    severity: 'medium',
+    agentAction: 'Bank account holder name MUST match KYC registered name. Joint accounts may fail. Advise customer to use personal account matching KYC.',
+    escalatePath: 'None — customer must correct on their end',
+  },
+
+  // ── Card ────────────────────────────────────────────────────────────────────
+  'CARD_DECLINED': {
+    label: 'Bybit Card Transaction Declined',
+    domain: 'Fiat',
+    severity: 'medium',
+    agentAction: 'Check: sufficient balance in funding account, daily limit not hit, MCC not blocked (gambling/adult/money orders). Card must be activated + PIN set.',
+    escalatePath: 'Submit Case if declined with sufficient funds and no MCC block',
+  },
+  'CARD_FROZEN': {
+    label: 'Bybit Card Frozen / Suspended',
+    domain: 'Fiat',
+    severity: 'high',
+    agentAction: 'Usually risk-triggered. Customer cannot self-unfreeze. Collect UID + recent TX details. Do NOT reveal freeze reason.',
+    escalatePath: 'P2 Card Team — always escalate frozen cards',
+  },
+
+  // ── P2P ─────────────────────────────────────────────────────────────────────
+  'P2P_DISPUTE': {
+    label: 'P2P Order Disputed / Appeal Filed',
+    domain: 'P2P',
+    severity: 'high',
+    agentAction: 'Check appeal status in CS:GO. Collect: order ID, payment proof, chat screenshots. Do NOT mediate — P2P team handles disputes.',
+    escalatePath: 'P2P Dispute Team handles all appeals — agent submits evidence via CS:GO',
+  },
+  'P2P_FROZEN_ORDER': {
+    label: 'P2P Order Frozen',
+    domain: 'P2P',
+    severity: 'critical',
+    agentAction: 'Frozen = risk review or counterparty dispute. Collect order ID. Reassure funds are in escrow. Do NOT advise releasing payment.',
+    escalatePath: 'P2 P2P Risk Team — frozen orders always escalate',
+  },
+  'P2P_AD_RESTRICTED': {
+    label: 'P2P Ad Restricted After Risk Review',
+    domain: 'P2P',
+    severity: 'medium',
+    agentAction: 'Advertiser privileges suspended by risk team. Cannot be restored from livechat. Customer must submit appeal via webform.',
+    escalatePath: 'Webform only — no livechat override',
+  },
+
+  // ── Account / Security ──────────────────────────────────────────────────────
+  'ACCOUNT_RESTRICTED': {
+    label: 'Account Restricted / Frozen by Risk',
+    domain: 'Account',
+    severity: 'critical',
+    agentAction: 'Do NOT reveal restriction reason. Confirm account status in CS:GO. Collect UID. Standard line: "Your account is under review for security purposes."',
+    escalatePath: 'P2 Risk Team — all account restrictions escalate. Never promise timeline.',
+  },
+  'TWO_FA_LOST': {
+    label: '2FA Lost — All Methods',
+    domain: 'Account',
+    severity: 'high',
+    agentAction: 'Customer must submit Case with identity verification. Cannot be bypassed in livechat. If only GA lost (email still works) → self-service GA reset.',
+    escalatePath: 'Submit Case — identity team handles full 2FA loss',
+  },
+  'SUSPICIOUS_LOGIN': {
+    label: 'Suspicious Login / Possible Account Compromise',
+    domain: 'Account',
+    severity: 'critical',
+    agentAction: 'Immediate: advise customer to change password + reset 2FA. Check recent login IPs in CS:GO. If unauthorized access confirmed → offer account ban + escalate.',
+    escalatePath: 'P1 Security Team if unauthorized access confirmed',
+  },
+  'API_KEY_COMPROMISE': {
+    label: 'API Key Suspected Compromised',
+    domain: 'Account',
+    severity: 'critical',
+    agentAction: 'Advise IMMEDIATE deletion of all API keys. Check for unauthorized trades/withdrawals. If funds moved → treat as hack case.',
+    escalatePath: 'P1 Security Team + Hack Case SOP if funds moved',
+  },
+  'FEB_2025_HACK': {
+    label: 'Feb 2025 Hack Inquiry — $1.5B ETH Cold Wallet Breach',
+    domain: 'Account',
+    severity: 'critical',
+    agentAction: 'Reassure: ALL customer funds fully backed 1:1. No user accounts compromised — this was an infrastructure attack on Bybit cold wallet by Lazarus Group. Cold wallet security upgraded post-incident.',
+    escalatePath: 'P1 Security Team if customer claims personal fund loss related to incident',
+  },
+
+  // ── Trading ─────────────────────────────────────────────────────────────────
+  'LIQUIDATION': {
+    label: 'Position Liquidated',
+    domain: 'Account',
+    severity: 'medium',
+    agentAction: 'Explain: margin fell below maintenance margin. Show liquidation price from order history. Bybit cannot reverse liquidations. Direct to risk management articles.',
+    escalatePath: 'None — liquidations are final and automated',
+  },
+  'ORDER_FAILED': {
+    label: 'Order Placement Failed',
+    domain: 'Account',
+    severity: 'low',
+    agentAction: 'Common causes: insufficient margin, price deviation too high, position limit reached, contract delisted. Check error message details.',
+    escalatePath: 'Submit Case only if persistent with sufficient balance',
+  },
+  'EDD_TRIGGERED': {
+    label: 'Enhanced Due Diligence Review Triggered',
+    domain: 'KYC',
+    severity: 'high',
+    agentAction: 'EDD is regulatory requirement. Customer must complete via EDD portal. Cannot be expedited or bypassed. Estimated 5-15 business days.',
+    escalatePath: 'None from livechat — EDD portal only. Compliance team reviews.',
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// REGIONAL POLICIES — MiCA (EU), VAR (Dubai), CMA (Global)
+// Used by DEEP_INSTRUCTION to enforce regional policy checks.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export const REGIONAL_POLICIES = {
+  EU: {
+    framework: 'MiCA (Markets in Crypto-Assets Regulation)',
+    authority: 'ESMA + National Competent Authorities (BaFin, AMF, AFM, CySEC, etc.)',
+    effectiveDate: '2024-12-30',
+    keyRules: [
+      'Derivatives/futures/options: RESTRICTED for retail users — professional classification required',
+      'Stablecoins: USDT restricted (no EU-licensed issuer) — USDC + EURC (both Circle) are compliant',
+      'Travel Rule (TFR): beneficiary info required for all crypto transfers >€1,000',
+      'Formal complaint right: response within 15 business days (MiCA Art. 71)',
+      'EDD: stricter than Global — MiCA mandates enhanced monitoring for flagged accounts',
+      'SEPA only: EUR fiat via SEPA — non-EEA IBANs rejected',
+      'Data privacy: full GDPR rights — DSAR via privacy@bybit.eu',
+      'Card: PSD2 contactless limit €50/tap, strong customer authentication required',
+      'P2P: Travel Rule applies at €1,000 threshold',
+      'KYC: ONE person = ONE verified EU account — cannot transfer or reset',
+    ],
+    agentGuidance: 'Always check EU-specific rules before responding. EU customers have stronger regulatory protections. Never promise outcomes that conflict with MiCA requirements.',
+  },
+  DUBAI: {
+    framework: 'VARA (Virtual Assets Regulatory Authority)',
+    authority: 'VARA — Dubai, UAE',
+    effectiveDate: '2023-02-07',
+    keyRules: [
+      'Licensed under VARA as Virtual Asset Service Provider (VASP)',
+      'Fiat: AED on/off ramp available — local bank transfer supported',
+      'KYC: Emirates ID or passport required — UAE-specific document acceptance',
+      'Derivatives: available for qualified investors (different threshold than EU)',
+      'Travel Rule: FATF-aligned — applies to transfers above AED 3,675 (~$1,000)',
+      'Stablecoins: no USDT restriction (unlike EU)',
+      'P2P: available with AED payment methods',
+      'Marketing: VARA mandates specific risk disclosures in all communications',
+      'Complaints: VARA consumer protection framework — escalation to VARA possible',
+    ],
+    agentGuidance: 'Dubai users have VARA-specific protections. AED fiat rails are available. Derivatives access differs from EU — check user classification.',
+  },
+  HK: {
+    framework: 'SFC Licensing Regime (Securities and Futures Commission)',
+    authority: 'SFC — Hong Kong SAR',
+    effectiveDate: '2023-06-01',
+    keyRules: [
+      'Platform must hold SFC VATP (Virtual Asset Trading Platform) license',
+      'Retail access: limited to "large-cap" virtual assets approved by SFC',
+      'Professional investors: broader asset access with signed risk acknowledgement',
+      'KYC: HKID required — stricter identity verification than Global',
+      'Derivatives: NOT available for retail users — SFC restriction',
+      'Stablecoins: regulatory framework under development — USDT/USDC both available currently',
+      'Fiat: HKD via FPS (Faster Payment System) and local bank transfer',
+      'Travel Rule: applies per FATF guidance — same threshold principles as EU/Dubai',
+      'Custody: client assets must be held by licensed custodian — segregation required',
+      'Complaints: SFC consumer hotline available for licensed platform issues',
+    ],
+    agentGuidance: 'HK users are under SFC regime. Retail access is limited to approved tokens. Check if user is classified as professional before advising on product availability.',
+  },
+  GLOBAL: {
+    framework: 'Bybit Global — Multi-jurisdictional',
+    authority: 'Varies by user jurisdiction — no single regulator',
+    effectiveDate: 'N/A',
+    keyRules: [
+      'Full product suite available: Spot, Derivatives, Options, P2P, Earn, Copy Trading Classic, TradeGPT',
+      'Withdrawal limits based on KYC level + VIP tier (VIP 0-5 + Supreme VIP)',
+      'No stablecoin restrictions — USDT and USDC both fully supported',
+      'Country restrictions: service not available in US, UK (derivatives), and sanctioned jurisdictions',
+      'Travel Rule: applied on a per-jurisdiction basis where required by local law',
+      'KYC: Standard → Advanced → Pro — progressive limit unlocks',
+      'Derivatives: leverage up to 100x for perpetuals (varies by pair)',
+      'P2P: widest fiat coverage — 100+ payment methods globally',
+      'Post Feb-2025 hack: upgraded cold wallet multi-sig infrastructure, bounty program for fund recovery',
+      '2026 vision: "New Financial Platform" — expanding into banking, custody, and TradFi products',
+    ],
+    agentGuidance: 'Global users have the widest product access. Check their specific country for any restrictions. When in doubt about jurisdiction, ask the user.',
+  },
+};
+
+// Quick lookup by error code string — normalizes input (trims, uppercases)
+export function lookupErrorCode(code) {
+  if (!code) return null;
+  const normalized = code.trim().toUpperCase().replace(/[^A-Z0-9_]/g, '_');
+  return BYBIT_ERROR_CODES[normalized] || null;
+}
+
+// Parse error codes from raw text — returns array of matched { code, ...entry }
+export function parseErrorCodes(text) {
+  if (!text) return [];
+  const results = [];
+  const seen = new Set();
+  for (const code of Object.keys(BYBIT_ERROR_CODES)) {
+    // Match the code as a standalone token in the text (case-insensitive)
+    const escaped = code.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const rx = new RegExp(`\\b${escaped}\\b`, 'gi');
+    if (rx.test(text) && !seen.has(code)) {
+      seen.add(code);
+      results.push({ code, ...BYBIT_ERROR_CODES[code] });
+    }
+  }
+  return results;
+}

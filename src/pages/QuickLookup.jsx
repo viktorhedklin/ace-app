@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { InvokeLLM } from '@/api/integrations';
+import { scrubPII } from '@/lib/SecurityModule';
 import { BYBIT_KB, DOMAINS, DOMAIN_COLORS } from '@/data/bybitKB';
 import { Search, Loader2, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -121,8 +122,9 @@ export default function QuickLookup() {
     setResult('');
     try {
       const res = await InvokeLLM({
-        prompt: `A Bybit live chat agent needs help with: "${text}". Provide a concise SOP/policy card covering: 1) What this is, 2) Step-by-step action, 3) Key policies/limits to know, 4) What to tell the customer. Format clearly with headers.`,
+        prompt: `A Bybit live chat agent needs help with: "${scrubPII(text)}". Provide a concise SOP/policy card covering: 1) What this is, 2) Step-by-step action, 3) Key policies/limits to know, 4) What to tell the customer. Format clearly with headers.`,
         system_prompt: 'You are a Bybit expert with full knowledge of all SOPs, policies, and customer service procedures. Provide accurate, actionable guidance for support agents.',
+        useKB: true,
       });
       setResult(res);
     } catch {

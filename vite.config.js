@@ -28,17 +28,50 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         runtimeCaching: [
           {
-            // Cache the Bybit KB data module for 100% offline access
             urlPattern: ({ url }) => url.pathname.includes('bybitKB'),
             handler: 'CacheFirst',
             options: { cacheName: 'ace-kb-v1', expiration: { maxEntries: 20, maxAgeSeconds: 30 * 24 * 60 * 60 } },
+          },
+          {
+            urlPattern: /^https:\/\/api\.anthropic\.com\//,
+            handler: 'NetworkOnly',
+          },
+          {
+            urlPattern: ({ request }) => request.destination === 'document',
+            handler: 'NetworkFirst',
+            options: { cacheName: 'ace-pages', expiration: { maxEntries: 10, maxAgeSeconds: 7 * 24 * 60 * 60 } },
           },
         ],
       },
     }),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-motion': ['framer-motion'],
+          'vendor-radix': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-slot',
+            '@radix-ui/react-tooltip',
+          ],
+          'vendor-icons': ['lucide-react'],
+        },
+      },
+    },
+  },
   server: {
-    allowedHosts: true
+    port: 5173,
+    strictPort: true,
+    allowedHosts: true,
+    proxy: {
+      '/api/serpapi': {
+        target: 'https://serpapi.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/serpapi/, ''),
+      },
+    },
   },
   resolve: {
     alias: {

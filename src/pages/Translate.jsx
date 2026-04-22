@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { InvokeLLM } from '@/api/integrations';
+import { scrubPII } from '@/lib/SecurityModule';
 import { Copy, Check, Loader2, Languages, Sparkles, RotateCcw, ChevronRight, Wand2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -207,7 +208,7 @@ export default function Translate() {
     setToneError('');
     try {
       const result = await InvokeLLM({
-        prompt: buildTranslatePrompt(input.trim(), contentType, tone),
+        prompt: buildTranslatePrompt(scrubPII(input.trim()), contentType, tone),
         system_prompt: 'You are an expert Swedish translator for Bybit customer support. Your translations are natural, human, and professional. You never add explanations — only the translated text.',
       });
       setOutput(result.trim());
@@ -224,7 +225,7 @@ export default function Translate() {
     setToneError('');
     try {
       const raw = await InvokeLLM({
-        prompt: buildToneCheckPrompt(output.trim(), contentType),
+        prompt: buildToneCheckPrompt(scrubPII(output.trim()), contentType),
         system_prompt: 'You are a strict Swedish tone quality checker. Return only valid JSON — no markdown, no text before or after.',
       });
       const parsed = parseToneResult(raw);
@@ -242,7 +243,7 @@ export default function Translate() {
     setApplying(true);
     try {
       const result = await InvokeLLM({
-        prompt: buildApplyImprovementsPrompt(output.trim(), toneResult, contentType),
+        prompt: buildApplyImprovementsPrompt(scrubPII(output.trim()), toneResult, contentType),
         system_prompt: 'You are a native Swedish copyeditor. Apply the listed improvements precisely and return only the corrected Swedish text.',
       });
       setOutput(result.trim());
@@ -260,7 +261,7 @@ export default function Translate() {
     setToneResult(null);
     try {
       const result = await InvokeLLM({
-        prompt: buildHumanisePrompt(output.trim(), contentType),
+        prompt: buildHumanisePrompt(scrubPII(output.trim()), contentType),
         system_prompt: 'You are a native Swedish speaker polishing customer support copy. Return only the humanised Swedish text — no explanations, no commentary.',
       });
       setOutput(result.trim());

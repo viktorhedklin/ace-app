@@ -15,9 +15,13 @@ export default function TiltCard({ children, className = '', intensity = 7, glar
   const rotateX = useTransform(y, [-0.5, 0.5], [intensity, -intensity]);
   const rotateY = useTransform(x, [-0.5, 0.5], [-intensity, intensity]);
 
-  // Glare position: follows cursor within the card
+  // Glare position: follows cursor within the card (always called — React hooks rule)
   const glareX = useTransform(x, [-0.5, 0.5], [0, 100]);
   const glareY = useTransform(y, [-0.5, 0.5], [0, 100]);
+  const glareBackground = useTransform(
+    [glareX, glareY],
+    ([gx, gy]) => `radial-gradient(circle at ${gx}% ${gy}%, rgba(255,255,255,0.04) 0%, transparent 60%)`
+  );
 
   const springConfig = { stiffness: 300, damping: 28 };
   const springRotateX = useSpring(rotateX, springConfig);
@@ -55,12 +59,7 @@ export default function TiltCard({ children, className = '', intensity = 7, glar
       {glare && (
         <motion.div
           className="absolute inset-0 rounded-[inherit] pointer-events-none"
-          style={{
-            background: useTransform(
-              [glareX, glareY],
-              ([gx, gy]) => `radial-gradient(circle at ${gx}% ${gy}%, rgba(255,255,255,0.04) 0%, transparent 60%)`
-            ),
-          }}
+          style={{ background: glareBackground }}
         />
       )}
     </motion.div>

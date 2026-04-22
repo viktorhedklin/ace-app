@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { InvokeLLM } from '@/api/integrations';
-import { Loader2, Search, Plus, Trash2, ExternalLink } from 'lucide-react';
+import { InvokeLLM } from '@/api/claude';
+import { searchWeb, getSerpApiKey } from '@/api/search';
+import { scrubPII } from '@/lib/SecurityModule';
+import { Loader2, Search, Plus, Trash2, ExternalLink, Globe } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const PINNED_CAMPAIGNS = [
@@ -49,6 +51,7 @@ export default function Campaign() {
   const [customCampaigns, setCustomCampaigns] = useState(() => {
     try { return JSON.parse(localStorage.getItem('custom_campaigns')) || []; } catch { return []; }
   });
+  const [searchLinks, setSearchLinks] = useState([]);
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState('');
   const [newDesc, setNewDesc] = useState('');
@@ -61,20 +64,44 @@ export default function Campaign() {
     if (!lookup.name.trim()) return;
     setLoading(true);
     setResult(null);
+    setSearchLinks([]);
     try {
       const regionText = lookup.region === 'eu' ? 'Bybit EU (MiCA-regulated, European customers)'
         : lookup.region === 'global' ? 'Bybit Global (worldwide)'
         : 'Bybit EU and Bybit Global';
 
-      const res = await InvokeLLM({
-        prompt: `Search the web for the current Bybit campaign or promotion called "${lookup.name}" for ${regionText}.${lookup.context ? ` Additional context: ${lookup.context}` : ''}
+      // Step 1: Search the web via SerpAPI
+      let webContext = '';
+      let foundLinks = [];
+      if (getSerpApiKey()) {
+        try {
+          const regionQuery = lookup.region === 'eu' ? 'Bybit EU' : lookup.region === 'global' ? 'Bybit' : 'Bybit';
+          const query = `${regionQuery} ${scrubPII(lookup.name)} promotion campaign 2026`;
+          const { results, links } = await searchWeb(query);
+          webContext = results;
+          foundLinks = links;
+          setSearchLinks(links);
+        } catch (searchErr) {
+          // Search failed — fall through to Claude-only mode
+          // SerpAPI search failed — fall through to Claude-only mode
+        }
+      }
 
-Key pages to check:
+      // Step 2: Feed web results + prompt to Claude
+      const webBlock = webContext
+        ? `\n\nWEB SEARCH RESULTS (use these as your primary source — cite specific details found here):\n${webContext}`
+        : '\n\n(No web search results available — answer from your training data and flag that info may be outdated.)';
+
+      const res = await InvokeLLM({
+        prompt: `Find details about the Bybit campaign or promotion: "${scrubPII(lookup.name)}" for ${regionText}.${lookup.context ? ` Additional context from agent: ${scrubPII(lookup.context)}` : ''}
+${webBlock}
+
+Key Bybit pages for reference:
 - Global announcements: https://announcements.bybit.global/en/
 - Global welcome gift: https://www.bybit.com/en/promo/events/welcome-gift
 - EU Card signup promo: https://www.bybit.eu/en-EU/promo/campaign/Card-New-Signup
 
-Find and return:
+Return:
 1. What this campaign/promo is
 2. Eligibility requirements
 3. How to participate / claim
@@ -84,12 +111,11 @@ Find and return:
 
 Important: if this is a Bybit EU question, only return EU-applicable terms. Bybit EU and Bybit Global campaigns are separate and may have different conditions.
 Use plain text, no asterisk markdown. Be specific with actual numbers, dates and limits if found. If you find a direct link, include it clearly labeled as LINK:`,
-        system_prompt: 'You are a Bybit campaigns researcher. Search the web for accurate, current Bybit promotion details. Return factual information with direct links where possible. Plain text only, no markdown asterisks. Always distinguish between Bybit EU and Bybit Global campaigns — never mix them.',
-        add_context_from_internet: true,
+        system_prompt: 'You are a Bybit campaigns researcher. Analyze the provided web search results and extract accurate, current Bybit promotion details. Prioritize information from the search results over your training data. Return factual information with direct links where possible. Plain text only, no markdown asterisks. Always distinguish between Bybit EU and Bybit Global campaigns — never mix them.',
       });
       setResult(res);
     } catch (e) {
-      setResult(`Error: ${e.message}`);
+      setResult(`Error: ${e.message === 'NO_API_KEY' ? 'No Claude API key — add one in Settings.' : e.message}`);
     }
     setLoading(false);
   }
@@ -115,7 +141,7 @@ Use plain text, no asterisk markdown. Be specific with actual numbers, dates and
     return [...new Set([...linkMatch.map(l => l.replace(/^LINK:\s*/i, '')), ...urlMatch])];
   }
 
-  const links = result ? extractLinks(result) : [];
+  const links = result ? [...new Set([...searchLinks, ...extractLinks(result)])] : [];
 
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6">
@@ -190,16 +216,28 @@ Use plain text, no asterisk markdown. Be specific with actual numbers, dates and
             />
           </div>
 
-          <button
-            onClick={fetchCampaign}
-            disabled={!lookup.name.trim() || loading}
-            className="w-full bg-yellow-400 hover:bg-yellow-300 disabled:bg-slate-700 disabled:text-slate-500 text-slate-900 font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
-          >
-            {loading
-              ? <><Loader2 size={15} className="animate-spin" /> Searching the web...</>
-              : <><Search size={15} /> Search Bybit campaigns</>
-            }
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={fetchCampaign}
+              disabled={!lookup.name.trim() || loading}
+              className="flex-1 bg-yellow-400 hover:bg-yellow-300 disabled:bg-slate-700 disabled:text-slate-500 text-slate-900 font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              aria-label="Search Bybit campaigns"
+            >
+              {loading
+                ? <><Loader2 size={15} className="animate-spin" /> Searching...</>
+                : <><Search size={15} /> Search Bybit campaigns</>
+              }
+            </button>
+            <div className={cn(
+              'flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg border shrink-0',
+              getSerpApiKey()
+                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                : 'bg-slate-800 border-slate-700 text-slate-500'
+            )}>
+              <Globe size={12} />
+              {getSerpApiKey() ? 'Live search' : 'No SerpAPI key'}
+            </div>
+          </div>
         </div>
 
         {/* Result */}

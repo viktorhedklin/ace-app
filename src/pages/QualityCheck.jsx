@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { InvokeLLM } from '@/api/claude';
+import { scrubPII } from '@/lib/SecurityModule';
 import { Loader2 } from 'lucide-react';
 
 const CRITERIA = [
@@ -21,10 +22,11 @@ export default function QualityCheck() {
     setResult(null);
     try {
       const res = await InvokeLLM({
-        prompt: `Please review this Bybit customer support response for quality. ${context ? `Context: ${context}` : ''}
+        useKB: true,
+        prompt: `Please review this Bybit customer support response for quality. ${context ? `Context: ${scrubPII(context)}` : ''}
 
 RESPONSE TO REVIEW:
-"${draft}"
+"${scrubPII(draft)}"
 
 Score each category out of 100 and provide specific feedback. Return ONLY valid JSON in this exact format:
 {

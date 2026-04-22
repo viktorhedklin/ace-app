@@ -30,6 +30,7 @@ const Settings       = lazy(() => import('./Settings.jsx'));
 const MultiChat      = lazy(() => import('./MultiChat.jsx'));
 const SepaDelay      = lazy(() => import('./SepaDelay.jsx'));
 const CsatPredictor  = lazy(() => import('./CsatPredictor.jsx'));
+const Models         = lazy(() => import('./Models.jsx'));
 
 const EU_EMAIL = {
   id: 'bybit-eu',
@@ -38,6 +39,8 @@ const EU_EMAIL = {
   subtitle: 'European Exchange · MiCA Regulated',
   type: 'EMAIL',
   systemContext: `ACTIVE PLATFORM: BYBIT EU — confirmed. Do not ask to confirm the platform.
+
+CHANNEL AWARENESS: The agent is handling this customer via EMAIL support. Do NOT suggest the customer "email support", "contact us", or "reach out to our team" — this IS the support email response. Describe the next step directly (e.g., "reply with your TxID" not "contact our support team"). If internal escalation is needed, tell the agent what to do (submit a case, escalate to P2), not the customer.
 
 You are helping a Bybit EU support agent write professional email responses. Bybit EU operates under a separate EU regulatory framework (MiCA). Compliance tone is non-negotiable here.
 
@@ -61,6 +64,8 @@ const EU_CHAT = {
   subtitle: 'European Exchange · MiCA Regulated',
   type: 'CHAT',
   systemContext: `ACTIVE PLATFORM: BYBIT EU — confirmed. Do not ask to confirm the platform.
+
+CHANNEL AWARENESS: The customer is ALREADY in a live chat session with the agent RIGHT NOW. NEVER suggest the customer "contact support via Live Chat", "reach out to our support team", "submit a ticket", or "contact us" — the agent IS the support team and the customer is already being helped in real-time. If escalation is needed, tell the agent what to do internally (submit a case, escalate to P2), not tell the customer to contact support. The only exception is directing to the EU complaint webform when a formal complaint is requested.
 
 You're the agent's real-time partner on Bybit EU live chat. They're mid-conversation — fast, accurate, ready-to-send.
 
@@ -90,6 +95,8 @@ const GLOBAL_EMAIL = {
   type: 'EMAIL',
   systemContext: `ACTIVE PLATFORM: BYBIT GLOBAL — confirmed. Do not ask to confirm the platform.
 
+CHANNEL AWARENESS: The agent is handling this customer via EMAIL support. Do NOT suggest the customer "email support", "contact us", or "reach out to our team" — this IS the support email response. Describe the next step directly (e.g., "reply with your TxID" not "contact our support team"). If internal escalation is needed, tell the agent what to do (submit a case, escalate to P2), not the customer.
+
 You are helping a Bybit Global support agent write emails to customers across 180+ countries.
 
 Draft clear, professional, empathetic responses. Get to the point. Address the issue, give the resolution or next steps, close with warmth. Avoid jargon. Keep in mind customers may not speak English as a first language — simple, clear language wins every time.`,
@@ -102,6 +109,8 @@ const GLOBAL_CHAT = {
   subtitle: 'Global Exchange · 180+ Countries',
   type: 'CHAT',
   systemContext: `ACTIVE PLATFORM: BYBIT GLOBAL — confirmed. Do not ask to confirm the platform.
+
+CHANNEL AWARENESS: The customer is ALREADY in a live chat session with the agent RIGHT NOW. NEVER suggest the customer "contact support via Live Chat", "reach out to our support team", "submit a ticket", or "contact us" — the agent IS the support team and the customer is already being helped in real-time. If escalation is needed, tell the agent what to do internally (submit a case, escalate to P2), not tell the customer to contact support.
 
 You're the agent's real-time partner on Bybit Global live chat. They need fast answers and ready-to-send replies.
 
@@ -137,7 +146,7 @@ function AnimatedRoutes() {
         initial={{ opacity: 0, x: 10 }}
         animate={{ opacity: 1, x: 0, transition: PAGE_SPRING }}
         exit={{ opacity: 0, transition: { duration: 0.06 } }}
-        className="w-full"
+        className="w-full h-full"
       >
         <Suspense fallback={<PageLoader />}>
           <Routes location={location}>
@@ -168,6 +177,7 @@ function AnimatedRoutes() {
             <Route path="/workspace" element={<MultiChat />} />
             <Route path="/sepa-delay" element={<SepaDelay />} />
             <Route path="/csat-predictor" element={<CsatPredictor />} />
+            <Route path="/models" element={<Models />} />
           </Routes>
         </Suspense>
       </motion.div>

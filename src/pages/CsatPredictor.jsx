@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { InvokeLLM } from '@/api/claude';
+import { scrubPII } from '@/lib/SecurityModule';
 import { Loader2, Copy, Check, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -57,9 +58,9 @@ export default function CsatPredictor() {
       const res = await InvokeLLM({
         prompt: `You are predicting the CSAT score a real customer would give this Bybit support response.
 Think from the customer's perspective — not the quality assurance perspective.
-${customerMsg.trim() ? `\nCUSTOMER MESSAGE:\n"${customerMsg.trim()}"\n` : ''}
+${customerMsg.trim() ? `\nCUSTOMER MESSAGE:\n"${scrubPII(customerMsg.trim())}"\n` : ''}
 AGENT RESPONSE:
-"${agentResponse.trim()}"
+"${scrubPII(agentResponse.trim())}"
 
 Score 1.0–5.0 (one decimal). Be realistic — most responses land 3.0–4.5. Score 5.0 only if genuinely excellent in every dimension.
 

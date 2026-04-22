@@ -6,10 +6,12 @@ import {
   parseAndExtractMemory, InvokeNBA, parsePlanBlock, PLAN_INSTRUCTION, DEEP_INSTRUCTION,
 } from '@/api/claude';
 import { useAce, scrubPII, recordCaseEvent } from '@/context/AceContext';
+import { scrubMessagesForStorage, scrubForStorage } from '@/lib/SecurityModule';
 import { saveCase } from '@/lib/caseMemory';
-import { Send, Trash2, Copy, Check, Brain, X, Zap, ChevronDown, ChevronUp, FlashlightOff } from 'lucide-react';
+import { Send, Trash2, Copy, Check, Brain, X, Zap, ChevronDown, ChevronUp, XCircle, ArrowDownToLine, ImagePlus, Languages, Gauge } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import EscalationBuilder from './EscalationBuilder.jsx';
+import QuickReplies from '@/components/QuickReplies';
 
 // ── Markdown renderer ──────────────────────────────────────────────────────────
 
@@ -88,16 +90,43 @@ function PlanPanel({ plan }) {
   const [open, setOpen] = useState(false);
   const lines = plan.split('\n').filter(l => l.trim());
 
+  // Detect passes and policy citations for badge count
+  const passCount = lines.filter(l => /^PASS\s+\d/i.test(l.trim())).length;
+  const hasWarnings = lines.some(l => l.includes('✗'));
+  const hasCite = lines.some(l => l.includes('CITE:'));
+
   return (
-    <div className="mt-1 mb-1">
+    <div className="mt-1.5 mb-1">
       <button
         onClick={() => setOpen(o => !o)}
-        className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-400 transition-colors duration-150 cursor-pointer"
+        className="group flex items-center gap-2 text-xs cursor-pointer transition-colors duration-150"
         aria-expanded={open}
+        aria-label="Toggle Ace Logic reasoning panel"
       >
-        <span className="text-yellow-400/40">✦</span>
-        Ace&apos;s reasoning
-        {open ? <ChevronUp size={10} /> : <ChevronDown size={10} />}
+        <span
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border transition-colors duration-200"
+          style={{
+            background: open ? 'rgba(250,204,21,0.08)' : 'rgba(250,204,21,0.03)',
+            borderColor: open ? 'rgba(250,204,21,0.30)' : 'rgba(250,204,21,0.12)',
+          }}
+        >
+          <span style={{ color: '#facc15', fontSize: 10 }}>&#9670;</span>
+          <span className="text-yellow-400/80 font-medium tracking-wide" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            Ace Logic
+          </span>
+          {passCount > 0 && (
+            <span className="text-yellow-400/50 font-normal" style={{ fontSize: 9 }}>
+              {passCount}-pass
+            </span>
+          )}
+          {hasCite && (
+            <span className="text-cyan-400/60 font-normal" style={{ fontSize: 9 }}>cited</span>
+          )}
+          {hasWarnings && (
+            <span className="w-1.5 h-1.5 rounded-full bg-orange-400 shrink-0" />
+          )}
+        </span>
+        {open ? <ChevronUp size={10} className="text-yellow-400/40" /> : <ChevronDown size={10} className="text-slate-600 group-hover:text-yellow-400/40" />}
       </button>
       <AnimatePresence>
         {open && (
@@ -108,17 +137,30 @@ function PlanPanel({ plan }) {
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
             className="overflow-hidden"
           >
-            <div className="mt-2 bg-slate-950 border border-slate-800 rounded-lg p-3 space-y-1">
+            <div
+              className="mt-2 rounded-lg p-3 space-y-1"
+              style={{
+                background: 'rgba(15,10,5,0.50)',
+                border: '1px solid rgba(250,204,21,0.18)',
+                boxShadow: '0 0 12px rgba(250,204,21,0.04)',
+              }}
+            >
               {lines.map((line, i) => {
                 const sep = line.indexOf(':');
                 if (sep === -1) return <p key={i} className="text-xs text-slate-600">{line}</p>;
                 const key = line.slice(0, sep).trim();
                 const val = line.slice(sep + 1).trim();
-                const hasWarning = val.includes('✗');
+                const hasCheck = val.includes('✓');
+                const hasX = val.includes('✗');
+                const isPass = /^PASS\s+\d/i.test(key);
+                const isCite = val.startsWith('CITE:') || key.includes('CITATION');
                 return (
                   <div key={i} className="flex items-start gap-2 text-xs">
-                    <span className="text-slate-600 shrink-0 w-24 text-right">{key}</span>
-                    <span className={cn('flex-1', hasWarning ? 'text-orange-400' : 'text-slate-400')}>{val}</span>
+                    <span className={cn('shrink-0 w-28 text-right font-medium', isCite ? 'text-cyan-400/70' : isPass ? 'text-yellow-400/60' : 'text-slate-600')}>{key}</span>
+                    <span className={cn(
+                      'flex-1',
+                      isCite ? 'text-cyan-300/90 font-medium' : hasX ? 'text-orange-400' : hasCheck ? 'text-emerald-400/80' : 'text-slate-400'
+                    )}>{val}</span>
                   </div>
                 );
               })}
@@ -227,11 +269,118 @@ function getPlatform(channelId) {
   return null;
 }
 
+// ── Tone Alchemist (Email channels only) ─────────────────────────────────────
+
+const TONES = [
+  {
+    id: 'defensive',
+    label: 'Defensive',
+    color: 'slate',
+    instruction: 'TONE: Defensive — factual, policy-first. Lead with the rule or policy, cite specific clauses where possible. Be firm but professional. Avoid over-apologising. The goal is to protect both the company and the customer by being precise and transparent about what can and cannot be done.',
+    classes: {
+      active: 'bg-slate-400/15 border-slate-400/30 text-slate-300',
+      dot: 'bg-slate-400',
+    },
+  },
+  {
+    id: 'empathetic',
+    label: 'Empathetic',
+    color: 'cyan',
+    instruction: 'TONE: Empathetic — warm, understanding, human. Acknowledge the customer\'s frustration or concern first. Use phrases like "I understand how concerning this must be" and "I hear you". Show that you genuinely care about their situation before moving to the resolution. Be kind but still clear about next steps.',
+    classes: {
+      active: 'bg-cyan-400/15 border-cyan-400/30 text-cyan-300',
+      dot: 'bg-cyan-400',
+    },
+  },
+  {
+    id: 'concierge',
+    label: 'Concierge',
+    color: 'yellow',
+    instruction: 'TONE: Concierge — premium, white-glove service. Treat this customer as a VIP. Be exceptionally polished, proactive, and thorough. Offer to go above and beyond. Use language like "I\'d be happy to personally ensure", "Allow me to take care of this for you", "I\'ve taken the liberty of checking". Make them feel like the most important person in the room.',
+    classes: {
+      active: 'bg-yellow-400/15 border-yellow-400/30 text-yellow-300',
+      dot: 'bg-yellow-400',
+    },
+  },
+];
+
+function ToneSlider({ tone, setTone }) {
+  return (
+    <div className="flex items-center gap-1">
+      {TONES.map(t => (
+        <button
+          key={t.id}
+          onClick={() => setTone(t.id)}
+          className={cn(
+            'flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border font-medium transition-all duration-200 cursor-pointer',
+            tone === t.id
+              ? t.classes.active
+              : 'bg-slate-800/60 border-slate-700/50 text-slate-600 hover:text-slate-400 hover:border-slate-600'
+          )}
+          title={`${t.label} tone`}
+          aria-label={`Set tone to ${t.label}`}
+        >
+          <span className={cn('w-1.5 h-1.5 rounded-full shrink-0 transition-all duration-200', tone === t.id ? t.classes.dot : 'bg-slate-600')} />
+          {t.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ── Friction Detector — client-side sentiment analysis ──────────────────────
+
+const NEGATIVE_WORDS = /\b(frustrated|angry|upset|furious|scam|stolen|lost|hack|hacked|waiting|days|weeks|ridiculous|terrible|unacceptable|complaint|lawyer|legal|regulator|sue|fraud|lie|lying|worst|horrible|disgusted|fed up|sick of|rip.?off|incompetent|useless)\b/gi;
+const POSITIVE_WORDS = /\b(thank|thanks|appreciate|resolved|great|helpful|understand|perfect|excellent|wonderful|amazing|happy|pleased|satisfied|good job|well done|sorted)\b/gi;
+
+function analyzeSentiment(text) {
+  if (!text) return 0;
+  const negMatches = text.match(NEGATIVE_WORDS)?.length || 0;
+  const posMatches = text.match(POSITIVE_WORDS)?.length || 0;
+  return posMatches - negMatches; // positive = good, negative = bad
+}
+
+function SentimentMeter({ score }) {
+  // score: 0-100 where 50 is neutral, <25 is danger
+  const clamped = Math.max(0, Math.min(100, score));
+  const color = clamped >= 60 ? 'bg-emerald-400' : clamped >= 35 ? 'bg-yellow-400' : 'bg-red-400';
+  const label = clamped >= 60 ? 'Positive' : clamped >= 35 ? 'Neutral' : 'Friction';
+  const textColor = clamped >= 60 ? 'text-emerald-400/70' : clamped >= 35 ? 'text-yellow-400/70' : 'text-red-400/70';
+  return (
+    <div className="flex items-center gap-2" title={`Customer sentiment: ${label} (${clamped})`}>
+      <div className="w-16 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+        <div
+          className={cn('h-full rounded-full transition-all duration-500', color)}
+          style={{ width: `${clamped}%` }}
+        />
+      </div>
+      <span className={cn('text-[10px] font-medium', textColor)}>{label}</span>
+    </div>
+  );
+}
+
+// ── Visual Sentinel — screenshot audit instruction ───────────────────────────
+
+const VISUAL_AUDIT_INSTRUCTION = `VISUAL AUDIT — An image has been attached. Before your main response, you MUST extract ALL identifiable data from this screenshot and present it in this exact format:
+
+[VISUAL_AUDIT]
+UIDs found: <list or "None">
+TxHashes found: <list or "None">
+Wallet addresses: <list or "None">
+Order IDs: <list or "None">
+Error codes: <list or "None">
+Amounts/balances: <list or "None">
+Timestamps: <list or "None">
+Bybit UI section: <identified page/section or "Unknown">
+[/VISUAL_AUDIT]
+
+After the audit block, proceed with your normal response addressing the user's question about the image.`;
+
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export default function Chat({ channel }) {
   const navigate = useNavigate();
-  const { vipLevel, setVipLevel, isVIPCritical, vipLabel, vipColorClass, parsedData, pasteSignal, clearPasteSignal } = useAce();
+  const { vipLevel, setVipLevel, isVIPCritical, vipLabel, vipColorClass, parsedData, pasteSignal, clearPasteSignal, triggerHeartbeat } = useAce();
   const storageKey = `chat_history_${channel.id}`;
 
   const [messages, setMessages] = useState(() => {
@@ -248,15 +397,41 @@ export default function Chat({ channel }) {
   });
   const [autoSaved, setAutoSaved] = useState(null);
   const [showEscalation, setShowEscalation] = useState(false);
+  const isEmail = channel.type === 'EMAIL';
+  const [tone, setTone] = useState(() => {
+    try { return localStorage.getItem(`tone_${channel.id}`) || 'empathetic'; } catch { return 'empathetic'; }
+  });
   const [deepMode, setDeepMode] = useState(() => {
     try { return JSON.parse(localStorage.getItem(`deep_mode_${channel.id}`)) ?? false; } catch { return false; }
   });
+  // Close case
+  const [closingCase, setClosingCase] = useState(false);
+  const [closeSummary, setCloseSummary] = useState('');
+  const [closeSaving, setCloseSaving] = useState(false);
+
   // Magic Paste banner — show for 6s after Bybit signals auto-detected
   const [pasteDetected, setPasteDetected] = useState(null);
 
   // NBA state — per-message actions stored on the message object
   const [nbaLoading, setNbaLoading] = useState(false);
   const [latestNBA, setLatestNBA] = useState([]);
+
+  // Visual Sentinel — image attachment
+  const [imageAttachment, setImageAttachment] = useState(null); // { base64, mediaType, preview }
+  const fileInputRef = useRef(null);
+
+  // Friction Detector — running sentiment score (0-100, 50 = neutral)
+  const [sentimentScore, setSentimentScore] = useState(50);
+  const prevSentimentRef = useRef(50);
+
+  // Quick Replies panel
+  const [showQuickReplies, setShowQuickReplies] = useState(false);
+
+  // Auto-CSAT prediction
+  const [csatScores, setCsatScores] = useState({}); // { msgIndex: { grade, score } }
+  const [autoCsat, setAutoCsat] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('ace_auto_csat')) ?? false; } catch { return false; }
+  });
 
   const bottomRef = useRef(null);
   const textareaRef = useRef(null);
@@ -266,8 +441,13 @@ export default function Chat({ channel }) {
   }, [messages, loading]);
 
   useEffect(() => {
-    localStorage.setItem(storageKey, JSON.stringify(messages));
+    // STORAGE SHIELD: scrub ALL messages (user + assistant) before persisting
+    localStorage.setItem(storageKey, JSON.stringify(scrubMessagesForStorage(messages)));
   }, [messages, storageKey]);
+
+  useEffect(() => {
+    localStorage.setItem(`tone_${channel.id}`, tone);
+  }, [tone, channel.id]);
 
   // Magic Paste: react to Bybit signals detected from clipboard
   useEffect(() => {
@@ -308,6 +488,22 @@ export default function Chat({ channel }) {
     setNbaLoading(false);
   }
 
+  // Auto-CSAT: score the last assistant response (utility tier, no KB)
+  async function runAutoCsat(msgIndex, content) {
+    if (!autoCsat || csatScores[msgIndex] || content.length < 30) return;
+    try {
+      const res = await InvokeLLM({
+        prompt: `Rate this customer support response on a scale of 1-100 and assign a letter grade (A/B/C/D/F). Consider tone, clarity, completeness, and professionalism. Return ONLY JSON: {"score": <number>, "grade": "<letter>"}\n\nResponse: "${content.slice(0, 500)}"`,
+        system_prompt: 'You are a QA scorer. Return only valid JSON with score and grade fields.',
+      });
+      const match = res.match(/\{[\s\S]*\}/);
+      if (match) {
+        const parsed = JSON.parse(match[0]);
+        setCsatScores(prev => ({ ...prev, [msgIndex]: { score: parsed.score, grade: parsed.grade } }));
+      }
+    } catch { /* non-critical */ }
+  }
+
   // Handle NBA button click — navigate with context handoff
   function handleNBAAction(action) {
     navigate(action.toolPath, {
@@ -324,9 +520,28 @@ export default function Chat({ channel }) {
     });
   }
 
+  function handleImageAttach(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return;
+    if (file.size > 10 * 1024 * 1024) return; // 10MB max
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result.split(',')[1];
+      setImageAttachment({
+        base64,
+        mediaType: file.type,
+        preview: reader.result,
+        name: file.name,
+      });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = ''; // reset so same file can be re-selected
+  }
+
   async function send() {
     const text = input.trim();
-    if (!text || loading) return;
+    if ((!text && !imageAttachment) || loading) return;
 
     // Quick remember: shortcut
     if (text.toLowerCase().startsWith('remember:')) {
@@ -351,15 +566,36 @@ export default function Chat({ channel }) {
       }
     }
 
-    const newUserMsg = { role: 'user', content: text, ts: Date.now() };
-    const updatedMessages = [...messages, newUserMsg];
+    // Friction Detector: analyze sentiment of incoming user text
+    const sentimentDelta = analyzeSentiment(text) * 8; // each word shifts score by 8 points
+    const newSentiment = Math.max(0, Math.min(100, sentimentScore + sentimentDelta));
+    setSentimentScore(newSentiment);
+    // Trigger Nebula Heartbeat if sentiment drops below 25 (friction zone)
+    if (newSentiment < 25 && prevSentimentRef.current >= 25) {
+      triggerHeartbeat();
+    }
+    prevSentimentRef.current = newSentiment;
+
+    // GDPR: store ONLY scrubbed text in state — raw is destroyed here
+    const safeContent = scrubPII(text);
+    const hasImage = !!imageAttachment;
+
+    // Build display message (what user sees in chat)
+    const displayMsg = { role: 'user', content: safeContent, ts: Date.now(), hasImage: hasImage };
+    const updatedMessages = [...messages, displayMsg];
     setMessages(updatedMessages);
     setInput('');
+    const currentImage = imageAttachment;
+    setImageAttachment(null);
     setLoading(true);
     setLatestNBA([]);
 
     const vipContext = vipLevel > 0
       ? `\n\nAGENT CONTEXT — VIP OVERRIDE: Customer VIP Level is ${vipLevel}${isVIPCritical ? ' (HIGH-VALUE ACCOUNT — priority handling required)' : ''}.`
+      : '';
+
+    const toneContext = isEmail
+      ? `\n\n${TONES.find(t => t.id === tone)?.instruction || ''}`
       : '';
 
     // Add streaming placeholder immediately
@@ -368,12 +604,26 @@ export default function Chat({ channel }) {
     let fullRaw = '';
 
     try {
-      const historyForApi = updatedMessages.map(m => ({ role: m.role, content: scrubPII(m.content) }));
+      // Messages already scrubbed in state; API layer scrubs again (defense in depth)
+      const historyForApi = updatedMessages.map(m => ({ role: m.role, content: m.content }));
+
+      // Visual Sentinel: if image attached, build content array for the last user message
+      if (hasImage && currentImage) {
+        const lastIdx = historyForApi.length - 1;
+        historyForApi[lastIdx] = {
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: currentImage.mediaType, data: currentImage.base64 } },
+            { type: 'text', text: VISUAL_AUDIT_INSTRUCTION + '\n\n' + safeContent },
+          ],
+        };
+      }
+
       const reasoningInstruction = deepMode ? DEEP_INSTRUCTION : PLAN_INSTRUCTION;
 
       await InvokeChatWithHistory({
         messages: historyForApi,
-        system_prompt: channel.systemContext + vipContext + '\n\n' + reasoningInstruction,
+        system_prompt: channel.systemContext + vipContext + toneContext + '\n\n' + reasoningInstruction,
         autoMemory,
         onToken: (token, accumulated) => {
           fullRaw = accumulated;
@@ -414,10 +664,11 @@ export default function Chat({ channel }) {
       }
 
       recordCaseEvent({ vipLevel, channel: channel.id });
-      saveCase({ uid: parsedData.uid || '', tool: `/${channel.id}`, channel: channel.id, vipLevel });
+      saveCase({ uid: scrubPII(parsedData.uid || ''), tool: `/${channel.id}`, channel: channel.id, vipLevel });
 
       const withResponse = [...updatedMessages, { role: 'assistant', content: clean }];
       runNBA(withResponse);
+      runAutoCsat(updatedMessages.length, clean);
 
     } catch (e) {
       const errMsg = e.message === 'NO_API_KEY'
@@ -452,6 +703,40 @@ export default function Chat({ channel }) {
       setLatestNBA([]);
       localStorage.removeItem(storageKey);
     }
+  }
+
+  async function closeCase() {
+    setCloseSaving(true);
+    const summary = closeSummary.trim();
+    if (summary) {
+      const today = new Date().toLocaleDateString('en-GB');
+      const title = `Case: ${channel.name} — ${today}`;
+      const existing = getKnowledge();
+      saveKnowledge([...existing, { id: Date.now(), title, content: scrubForStorage(summary), active: true }]);
+    }
+    setMessages([]);
+    setLatestNBA([]);
+    localStorage.removeItem(storageKey);
+    setClosingCase(false);
+    setCloseSummary('');
+    setCloseSaving(false);
+  }
+
+  // Ghost-Writing Sync: pull latest chat reasoning into email composer
+  const CHAT_PAIR = { 'bybit-eu': 'eu-live-chat', 'bybit-global': 'global-live-chat' };
+  const pairedChatChannel = CHAT_PAIR[channel.id] || null;
+
+  function syncFromChat() {
+    if (!pairedChatChannel) return;
+    try {
+      const chatHistory = JSON.parse(localStorage.getItem(`chat_history_${pairedChatChannel}`) || '[]');
+      const lastAssistant = [...chatHistory].reverse().find(m => m.role === 'assistant');
+      if (!lastAssistant?.content) return;
+      const activeTone = TONES.find(t => t.id === tone);
+      const prompt = `Rewrite the following chat reasoning into a professional ${activeTone?.label || 'Empathetic'} email draft for the customer. Keep the facts and resolution, adapt the tone and format for email.\n\n--- CHAT REASONING ---\n${lastAssistant.content}`;
+      setInput(prompt);
+      textareaRef.current?.focus();
+    } catch { /* no chat history available */ }
   }
 
   function injectChip(text) { setInput(text); textareaRef.current?.focus(); }
@@ -524,6 +809,9 @@ export default function Chat({ channel }) {
               </motion.span>
             )}
 
+            {/* Friction Detector — sentiment meter */}
+            {messages.length > 0 && <SentimentMeter score={sentimentScore} />}
+
             {/* VIP Level selector */}
             <VIPSelector
               vipLevel={vipLevel}
@@ -569,7 +857,18 @@ export default function Chat({ channel }) {
               {autoMemory ? 'Auto' : 'Off'}
             </button>
             {messages.length > 0 && (
-              <span className="text-xs text-slate-700">{messages.length}</span>
+              <>
+                <span className="text-xs text-slate-700">{messages.length}</span>
+                <button
+                  onClick={() => { setClosingCase(true); }}
+                  className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-lg border bg-slate-800 border-slate-700 text-slate-500 hover:text-red-400 hover:border-red-400/30 transition-all duration-150 cursor-pointer"
+                  title="Close case"
+                  aria-label="Close case"
+                >
+                  <XCircle size={12} />
+                  <span className="hidden sm:inline">Close</span>
+                </button>
+              </>
             )}
             <button
               onClick={clearHistory}
@@ -598,6 +897,25 @@ export default function Chat({ channel }) {
               {item.label}
             </motion.button>
           ))}
+          {/* Tone Alchemist — email channels only */}
+          {isEmail && (
+            <>
+              <div className="w-px h-4 bg-slate-700/50 mx-1" />
+              <ToneSlider tone={tone} setTone={setTone} />
+              {pairedChatChannel && (
+                <motion.button
+                  whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
+                  onClick={syncFromChat}
+                  className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border font-medium transition-colors duration-150 bg-cyan-500/10 border-cyan-500/25 text-cyan-400 hover:bg-cyan-500/20 cursor-pointer"
+                  title="Sync latest chat reasoning into email composer"
+                  aria-label="Sync from live chat"
+                >
+                  <ArrowDownToLine size={11} />
+                  Live Sync
+                </motion.button>
+              )}
+            </>
+          )}
         </div>
       </div>
 
@@ -667,22 +985,44 @@ export default function Chat({ channel }) {
               className={cn('flex gap-2.5', m.role === 'user' ? 'justify-end' : 'justify-start')}
             >
               {m.role === 'assistant' && (
-                <div className="w-6 h-6 rounded-full bg-yellow-400/20 border border-yellow-400/15 flex items-center justify-center text-xs shrink-0 mt-1 select-none font-bold text-yellow-400">A</div>
+                <div
+                  className="w-7 h-7 rounded-xl bg-gradient-to-br from-yellow-400/25 to-amber-500/15 border border-yellow-400/20 backdrop-blur-sm flex items-center justify-center text-xs shrink-0 mt-1 select-none font-bold text-yellow-400"
+                  style={{ boxShadow: '0 0 12px rgba(250,204,21,0.08)' }}
+                >A</div>
               )}
               <div className="max-w-[80%] flex flex-col gap-1">
-                <div className={cn(
-                  'rounded-2xl px-4 py-3 relative group',
-                  m.role === 'user'
-                    ? 'bg-slate-700/80 border border-slate-600/60 text-slate-100 rounded-tr-sm'
-                    : 'bg-slate-800/50 border border-slate-700/40 text-slate-200 rounded-tl-sm backdrop-blur-sm'
-                )}>
+                <div
+                  className={cn(
+                    'rounded-2xl px-4 py-3 relative group transition-all duration-200',
+                    m.role === 'user'
+                      ? 'bg-blue-500/8 backdrop-blur-md border border-blue-400/15 text-slate-100 rounded-tr-sm'
+                      : 'bg-white/[0.04] backdrop-blur-lg border border-white/[0.08] text-slate-200 rounded-tl-sm'
+                  )}
+                  style={m.role === 'user'
+                    ? { boxShadow: '0 2px 16px rgba(59,130,246,0.06), inset 0 1px 0 rgba(255,255,255,0.03)' }
+                    : { boxShadow: '0 2px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.04)' }
+                  }
+                >
+                  {m.hasImage && (
+                    <div className="flex items-center gap-1.5 mb-1.5 text-xs text-yellow-400/60">
+                      <ImagePlus size={11} />
+                      <span>Screenshot attached — Visual Audit</span>
+                    </div>
+                  )}
                   <MarkdownMessage content={m.content} />
-                  {m.streaming && (
+                  {m.streaming && !m.content && (
+                    <div className="flex gap-1 items-center py-0.5">
+                      <span className="w-1.5 h-1.5 bg-yellow-400/70 rounded-full typing-dot" />
+                      <span className="w-1.5 h-1.5 bg-yellow-400/70 rounded-full typing-dot" />
+                      <span className="w-1.5 h-1.5 bg-yellow-400/70 rounded-full typing-dot" />
+                    </div>
+                  )}
+                  {m.streaming && m.content && (
                     <span className="inline-block w-0.5 h-3.5 rounded-sm bg-yellow-400/70 ml-0.5 align-middle animate-pulse" />
                   )}
 
                   {/* Action buttons on hover */}
-                  <div className="absolute -top-1.5 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-slate-900 border border-slate-700 rounded-lg px-1.5 py-1">
+                  <div className="absolute -top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1.5 bg-slate-900/90 backdrop-blur-md border border-white/10 rounded-xl px-2 py-1.5 shadow-lg">
                     {m.role === 'assistant' && (
                       <button
                         onClick={() => { setSavingMem(i); setMemTitle(''); }}
@@ -697,6 +1037,19 @@ export default function Chat({ channel }) {
                     </button>
                   </div>
                 </div>
+
+                {/* Auto-CSAT badge */}
+                {m.role === 'assistant' && csatScores[i] && (
+                  <div className="flex items-center gap-1.5 px-1">
+                    <span className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded',
+                      csatScores[i].grade === 'A' ? 'bg-green-500/20 text-green-400' :
+                      csatScores[i].grade === 'B' ? 'bg-blue-500/20 text-blue-400' :
+                      csatScores[i].grade === 'C' ? 'bg-yellow-500/20 text-yellow-400' :
+                      'bg-red-500/20 text-red-400'
+                    )}>{csatScores[i].grade}</span>
+                    <span className="text-[10px] text-slate-600">{csatScores[i].score}/100</span>
+                  </div>
+                )}
 
                 {/* PLAN reasoning panel — collapsible, below the message bubble */}
                 {m.role === 'assistant' && m.plan && (
@@ -741,7 +1094,7 @@ export default function Chat({ channel }) {
               </div>
 
               {m.role === 'user' && (
-                <div className="w-6 h-6 rounded-full bg-slate-700 border border-slate-600 flex items-center justify-center text-xs text-slate-400 shrink-0 mt-1 select-none font-medium">V</div>
+                <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/10 border border-blue-400/15 backdrop-blur-sm flex items-center justify-center text-xs text-blue-300 shrink-0 mt-1 select-none font-medium">V</div>
               )}
             </motion.div>
           );
@@ -750,12 +1103,18 @@ export default function Chat({ channel }) {
         {/* Loading dots — only before first streaming token arrives */}
         {loading && !messages.some(m => m.streaming) && (
           <div className="flex gap-2.5 justify-start">
-            <div className="w-6 h-6 rounded-full bg-yellow-400/20 border border-yellow-400/15 flex items-center justify-center text-xs shrink-0 mt-1 font-bold text-yellow-400">A</div>
-            <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl rounded-tl-sm px-4 py-3">
+            <div
+              className="w-7 h-7 rounded-xl bg-gradient-to-br from-yellow-400/25 to-amber-500/15 border border-yellow-400/20 backdrop-blur-sm flex items-center justify-center text-xs shrink-0 mt-1 font-bold text-yellow-400"
+              style={{ boxShadow: '0 0 12px rgba(250,204,21,0.08)' }}
+            >A</div>
+            <div
+              className="bg-white/[0.04] backdrop-blur-lg border border-white/[0.08] rounded-2xl rounded-tl-sm px-4 py-3"
+              style={{ boxShadow: '0 2px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.04)' }}
+            >
               <div className="flex gap-1 items-center">
-                {[0, 1, 2].map(i => (
-                  <div key={i} className="w-1.5 h-1.5 bg-yellow-400/60 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
-                ))}
+                <span className="w-1.5 h-1.5 bg-yellow-400/70 rounded-full typing-dot" />
+                <span className="w-1.5 h-1.5 bg-yellow-400/70 rounded-full typing-dot" />
+                <span className="w-1.5 h-1.5 bg-yellow-400/70 rounded-full typing-dot" />
               </div>
             </div>
           </div>
@@ -776,44 +1135,212 @@ export default function Chat({ channel }) {
         </div>{/* end messages wrapper */}
       </div>
 
+      {/* Close Case Panel */}
+      <AnimatePresence initial={false}>
+        {closingCase && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 12 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
+            className="shrink-0 bg-slate-900 border-t-2 border-red-500/30 px-5 py-4 space-y-3"
+          >
+            <div>
+              <p className="text-sm font-semibold text-slate-100">Close this case</p>
+              <p className="text-xs text-slate-500 mt-0.5">Save a case summary to Knowledge Base before clearing.</p>
+            </div>
+            <textarea
+              autoFocus
+              value={closeSummary}
+              onChange={e => setCloseSummary(e.target.value)}
+              placeholder="Case summary (optional) — what happened, resolution, follow-up needed..."
+              rows={3}
+              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-red-400/40 resize-none transition-colors duration-200"
+            />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={closeCase}
+                disabled={closeSaving}
+                className="flex items-center gap-1.5 text-xs bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-semibold px-4 py-2 rounded-lg transition-colors duration-150 disabled:opacity-60 cursor-pointer"
+              >
+                {closeSaving ? 'Saving...' : 'Save & Close'}
+              </button>
+              <button
+                onClick={() => {
+                  setMessages([]);
+                  setLatestNBA([]);
+                  localStorage.removeItem(storageKey);
+                  setClosingCase(false);
+                  setCloseSummary('');
+                }}
+                className="text-xs text-slate-400 hover:text-slate-100 px-4 py-2 rounded-lg border border-slate-700 hover:border-slate-600 transition-colors duration-150 cursor-pointer"
+              >
+                Just Clear
+              </button>
+              <button
+                onClick={() => { setClosingCase(false); setCloseSummary(''); }}
+                className="text-xs text-slate-600 hover:text-slate-400 px-3 py-2 transition-colors duration-150 cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Bottom — chips + input, unified glass panel */}
-      <div className="shrink-0 border-t border-slate-800/60 bg-slate-900/80 backdrop-blur-sm">
+      <div className="shrink-0 border-t border-white/[0.06] bg-slate-900/60 backdrop-blur-xl relative">
+        {/* Quick Replies panel */}
+        <QuickReplies
+          open={showQuickReplies}
+          onClose={() => setShowQuickReplies(false)}
+          onInsert={text => { setInput(text); setShowQuickReplies(false); textareaRef.current?.focus(); }}
+        />
+
+        {/* Quick Actions Bar — visible when conversation is active */}
+        {messages.length > 0 && (
+          <div className="px-4 pt-2 flex gap-1.5 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+            <button
+              onClick={() => {
+                const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant');
+                if (lastAssistant) { navigator.clipboard.writeText(lastAssistant.content); }
+              }}
+              className="text-xs whitespace-nowrap px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-400 hover:text-slate-200 hover:border-slate-600 transition-colors duration-150 shrink-0 flex items-center gap-1 cursor-pointer"
+              aria-label="Copy last AI response"
+            >
+              <Copy size={10} /> Copy Last
+            </button>
+            <button
+              onClick={() => setShowEscalation(true)}
+              className="text-xs whitespace-nowrap px-2.5 py-1.5 rounded-lg bg-red-500/10 border border-red-500/25 text-red-400 hover:bg-red-500/20 transition-colors duration-150 shrink-0 flex items-center gap-1 cursor-pointer"
+              aria-label="Open escalation builder"
+            >
+              📤 Escalate
+            </button>
+            <button
+              onClick={() => {
+                const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant');
+                if (lastAssistant) {
+                  const idx = messages.lastIndexOf(lastAssistant);
+                  setSavingMem(idx);
+                  setMemTitle('');
+                }
+              }}
+              className="text-xs whitespace-nowrap px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-400 hover:text-yellow-400 hover:border-yellow-400/30 transition-colors duration-150 shrink-0 flex items-center gap-1 cursor-pointer"
+              aria-label="Save to memory"
+            >
+              <Brain size={10} /> Save Memory
+            </button>
+            <button
+              onClick={() => setShowQuickReplies(!showQuickReplies)}
+              className={cn(
+                'text-xs whitespace-nowrap px-2.5 py-1.5 rounded-lg border transition-colors duration-150 shrink-0 flex items-center gap-1 cursor-pointer',
+                showQuickReplies
+                  ? 'bg-yellow-400/15 border-yellow-400/30 text-yellow-400'
+                  : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200 hover:border-slate-600'
+              )}
+              aria-label="Toggle quick replies"
+            >
+              <Languages size={10} /> SE/EN
+            </button>
+            <button
+              onClick={() => {
+                const next = !autoCsat;
+                setAutoCsat(next);
+                localStorage.setItem('ace_auto_csat', JSON.stringify(next));
+              }}
+              className={cn(
+                'text-xs whitespace-nowrap px-2.5 py-1.5 rounded-lg border transition-colors duration-150 shrink-0 flex items-center gap-1 cursor-pointer',
+                autoCsat
+                  ? 'bg-green-500/15 border-green-500/30 text-green-400'
+                  : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200 hover:border-slate-600'
+              )}
+              aria-label="Toggle auto quality scoring"
+            >
+              <Gauge size={10} /> {autoCsat ? 'CSAT On' : 'CSAT Off'}
+            </button>
+          </div>
+        )}
+
         {/* Quick chips */}
-        <div className="px-4 pt-2.5 flex gap-1.5 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+        <div className="px-4 pt-2 flex gap-1.5 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
           {QUICK_CHIPS.map(chip => (
             <motion.button
               key={chip.label}
               whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
               onClick={() => injectChip(chip.text)}
-              className="text-xs whitespace-nowrap px-3 py-1 rounded-full bg-slate-800/70 hover:bg-slate-700/80 border border-slate-700/50 hover:border-slate-600/70 text-slate-500 hover:text-slate-200 transition-all duration-150 shrink-0"
+              className="text-xs whitespace-nowrap px-3 py-1.5 rounded-full bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-sm border border-white/[0.06] hover:border-white/[0.12] text-slate-500 hover:text-slate-200 transition-all duration-200 shrink-0"
             >
               {chip.label}
             </motion.button>
           ))}
         </div>
 
+        {/* Image preview */}
+        <AnimatePresence>
+          {imageAttachment && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="px-4 pt-2 overflow-hidden"
+            >
+              <div className="inline-flex items-center gap-2 bg-slate-800/80 border border-slate-700 rounded-xl px-3 py-2">
+                <img src={imageAttachment.preview} alt="Attachment preview" className="w-10 h-10 rounded-lg object-cover" />
+                <div className="min-w-0">
+                  <p className="text-xs text-slate-300 truncate max-w-[160px]">{imageAttachment.name}</p>
+                  <p className="text-[10px] text-yellow-400/70">Visual Audit will run</p>
+                </div>
+                <button
+                  onClick={() => setImageAttachment(null)}
+                  className="text-slate-600 hover:text-red-400 transition-colors duration-150 shrink-0 cursor-pointer"
+                  aria-label="Remove image"
+                >
+                  <X size={13} />
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Input */}
         <div className="px-4 py-3">
           <div
-            className="flex gap-3 items-end bg-slate-800/60 border border-slate-700/50 focus-within:border-yellow-400/40 focus-within:bg-slate-800/80 rounded-2xl px-4 py-3 transition-all duration-200"
-            style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.03)' }}
+            className="flex gap-3 items-end bg-white/[0.03] backdrop-blur-lg border border-white/[0.08] focus-within:border-yellow-400/30 rounded-2xl px-4 py-3 transition-all duration-200"
+            style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.04)' }}
           >
+            {/* Image attach button */}
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageAttach} className="hidden" aria-label="Attach image" />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className={cn(
+                'w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-200 shrink-0 mb-0.5 cursor-pointer',
+                imageAttachment
+                  ? 'bg-yellow-400/15 text-yellow-400 border border-yellow-400/30'
+                  : 'bg-slate-800/60 text-slate-500 hover:text-slate-300 border border-slate-700/50 hover:border-slate-600'
+              )}
+              title="Attach screenshot for Visual Audit"
+              aria-label="Attach image for Visual Audit"
+            >
+              <ImagePlus size={14} />
+            </button>
             <textarea
               ref={textareaRef}
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKey}
-              placeholder="Ask Ace anything… (Enter to send, Shift+Enter for new line)"
+              placeholder={imageAttachment ? "Describe what you need from this screenshot…" : "Ask Ace anything… (Enter to send, Shift+Enter for new line)"}
               rows={1}
               className="flex-1 bg-transparent text-sm text-slate-100 placeholder-slate-500 resize-none outline-none min-h-[20px] max-h-[120px] leading-relaxed"
               onInput={e => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }}
             />
             <motion.button
               onClick={send}
-              disabled={!input.trim() || loading}
-              whileHover={input.trim() && !loading ? { scale: 1.1 } : {}}
-              whileTap={input.trim() && !loading ? { scale: 0.92 } : {}}
-              className="w-7 h-7 rounded-lg flex items-center justify-center bg-yellow-400 disabled:bg-slate-700 text-slate-900 disabled:text-slate-500 transition-all duration-150 shrink-0 mb-0.5"
+              disabled={(!input.trim() && !imageAttachment) || loading}
+              whileHover={(input.trim() || imageAttachment) && !loading ? { scale: 1.1 } : {}}
+              whileTap={(input.trim() || imageAttachment) && !loading ? { scale: 0.92 } : {}}
+              className="w-8 h-8 rounded-xl flex items-center justify-center bg-gradient-to-br from-yellow-400 to-amber-500 disabled:from-slate-700 disabled:to-slate-700 text-slate-900 disabled:text-slate-500 transition-all duration-200 shrink-0 mb-0.5"
+              style={(input.trim() || imageAttachment) && !loading ? { boxShadow: '0 0 16px rgba(250,204,21,0.25)' } : {}}
               aria-label="Send message"
             >
               <Send size={13} />

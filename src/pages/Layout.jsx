@@ -2,12 +2,28 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Menu, X, StickyNote } from 'lucide-react';
+import { Menu, X, StickyNote, WifiOff } from 'lucide-react';
 import CommandPalette, { useCommandPalette } from '@/components/CommandPalette';
 import CaseTimeline from '@/components/CaseTimeline';
+import SnippetSearch from '@/components/SnippetSearch';
 import NebulaBackground from '@/components/NebulaBackground';
 import { getMacros, executeMacro } from '@/lib/macros';
 import { useAce } from '@/context/AceContext';
+
+function useOnlineStatus() {
+  const [online, setOnline] = useState(navigator.onLine);
+  useEffect(() => {
+    const onOnline = () => setOnline(true);
+    const onOffline = () => setOnline(false);
+    window.addEventListener('online', onOnline);
+    window.addEventListener('offline', onOffline);
+    return () => {
+      window.removeEventListener('online', onOnline);
+      window.removeEventListener('offline', onOffline);
+    };
+  }, []);
+  return online;
+}
 
 const CHAT_CHANNELS = [
   { name: 'Bybit EU', type: 'EMAIL', flag: '🇪🇺', path: '/bybit-eu' },
@@ -18,7 +34,6 @@ const CHAT_CHANNELS = [
 ];
 
 const TOOLS = [
-  { name: 'Workspace', icon: '🗂️', path: '/workspace' },
   { name: 'SEPA Delay', icon: '💶', path: '/sepa-delay' },
   { name: 'Quick Lookup', icon: '⚡', path: '/quick-lookup' },
   { name: 'Campaign', icon: '🎁', path: '/campaign' },
@@ -64,13 +79,14 @@ function NavLink({ to, icon, label, badge, badgeType, onClick }) {
   );
 }
 
-function SidebarContent({ onNav, onOpenPalette }) {
+function SidebarContent({ onNav, onOpenPalette, ghostMode, setGhostMode }) {
   return (
     <div className="flex flex-col h-full w-64 bg-slate-900 border-r border-slate-800">
       <div className="p-4 border-b border-slate-800 shrink-0">
         <Link to="/" onClick={onNav} className="flex items-center gap-2">
-          <span className="text-yellow-400 font-bold text-xl tracking-tight">ACE</span>
+          <span className={cn('font-bold text-xl tracking-tight transition-colors duration-300', ghostMode ? 'text-slate-400' : 'text-yellow-400')}>ACE</span>
           <span className="text-slate-500 text-xs">Super Agent</span>
+          {ghostMode && <span className="text-xs text-slate-600 bg-slate-800 px-1.5 py-0.5 rounded font-mono">GHOST</span>}
         </Link>
       </div>
 
@@ -83,6 +99,8 @@ function SidebarContent({ onNav, onOpenPalette }) {
         <div>
           <p className="px-3 pt-1 pb-1 text-xs font-semibold text-slate-600 uppercase tracking-wider">Chat Channels</p>
           <div className="space-y-0.5">
+            <NavLink to="/workspace" icon="🗂️" label="Workspace" badge="4x" badgeType="CHAT" onClick={onNav} />
+            <div className="h-px bg-slate-800 mx-3 my-1" />
             {CHAT_CHANNELS.map(ch => (
               <NavLink key={ch.path} to={ch.path} icon={ch.flag} label={ch.name} badge={ch.type} badgeType={ch.type} onClick={onNav} />
             ))}
@@ -100,6 +118,7 @@ function SidebarContent({ onNav, onOpenPalette }) {
       </nav>
 
       <div className="p-3 border-t border-slate-800 shrink-0 space-y-1">
+        <NavLink to="/models" icon="🧪" label="Models & Usage" onClick={onNav} />
         <NavLink to="/settings" icon="⚙️" label="Settings" onClick={onNav} />
         <button
           onClick={onOpenPalette}
@@ -110,6 +129,21 @@ function SidebarContent({ onNav, onOpenPalette }) {
           <span className="flex items-center gap-1">
             <kbd className="bg-slate-800 border border-slate-700 px-1 py-0.5 rounded text-slate-600">⌘K</kbd>
           </span>
+        </button>
+        <button
+          onClick={() => setGhostMode(prev => !prev)}
+          className={cn(
+            'w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-all duration-200 cursor-pointer',
+            ghostMode
+              ? 'bg-slate-800 text-slate-400 hover:text-slate-300'
+              : 'text-slate-700 hover:text-slate-500 hover:bg-slate-800/50'
+          )}
+          title="Ghost Mode — hide VIP glow & accents (⌘H)"
+          aria-label="Toggle ghost mode"
+        >
+          <span className="text-base w-5 text-center shrink-0">👻</span>
+          <span className="truncate flex-1 text-left">{ghostMode ? 'Ghost Mode ON' : 'Ghost Mode'}</span>
+          <kbd className="bg-slate-800 border border-slate-700 px-1 py-0.5 rounded text-slate-600 text-xs shrink-0">⌘H</kbd>
         </button>
         <p className="text-xs text-slate-700 text-center pt-1">Ace v1.0</p>
       </div>
@@ -186,14 +220,22 @@ const CHAT_PATHS = ['/bybit-eu', '/eu-live-chat', '/bybit-global', '/global-live
 export default function Layout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { open: paletteOpen, setOpen: setPaletteOpen } = useCommandPalette();
-  const { vipLevel } = useAce();
+  const { vipLevel, ghostMode, setGhostMode } = useAce();
   const navigate = useNavigate();
   const location = useLocation();
   const isChatPage = CHAT_PATHS.includes(location.pathname);
+  const isOnline = useOnlineStatus();
 
-  // Macro Engine: Alt+1..9 global hotkeys
+  // Macro Engine: Alt+1..9 global hotkeys + Ghost Mode ⌘+H
   useEffect(() => {
-    function handleMacroKey(e) {
+    function handleKey(e) {
+      // Ghost Mode: ⌘+H (Mac) / Ctrl+H
+      if ((e.metaKey || e.ctrlKey) && e.key === 'h') {
+        e.preventDefault();
+        setGhostMode(prev => !prev);
+        return;
+      }
+      // Macros: Alt+1..9
       if (!e.altKey) return;
       const key = parseInt(e.key, 10);
       if (isNaN(key) || key < 1 || key > 9) return;
@@ -201,16 +243,16 @@ export default function Layout({ children }) {
       const macro = macros.find(m => m.key === key);
       if (macro) { e.preventDefault(); executeMacro(macro, navigate); }
     }
-    document.addEventListener('keydown', handleMacroKey);
-    return () => document.removeEventListener('keydown', handleMacroKey);
-  }, [navigate]);
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [navigate, setGhostMode]);
 
   return (
     <div className="flex h-screen bg-slate-950 text-slate-100 relative overflow-hidden">
-      <NebulaBackground vipLevel={vipLevel} />
+      <NebulaBackground vipLevel={ghostMode ? 0 : vipLevel} />
       {/* Desktop sidebar */}
       <div className="hidden md:flex flex-shrink-0 relative z-10">
-        <SidebarContent onNav={() => {}} onOpenPalette={() => setPaletteOpen(true)} />
+        <SidebarContent onNav={() => {}} onOpenPalette={() => setPaletteOpen(true)} ghostMode={ghostMode} setGhostMode={setGhostMode} />
       </div>
 
       {/* Mobile overlay */}
@@ -231,7 +273,7 @@ export default function Layout({ children }) {
               transition={{ duration: 0.2, ease: 'easeOut' }}
               className="absolute left-0 top-0 h-full z-10"
             >
-              <SidebarContent onNav={() => setMobileOpen(false)} onOpenPalette={() => { setMobileOpen(false); setPaletteOpen(true); }} />
+              <SidebarContent onNav={() => setMobileOpen(false)} onOpenPalette={() => { setMobileOpen(false); setPaletteOpen(true); }} ghostMode={ghostMode} setGhostMode={setGhostMode} />
             </motion.div>
           </motion.div>
         )}
@@ -252,6 +294,21 @@ export default function Layout({ children }) {
             <span className="text-xs bg-slate-800 border border-slate-700 px-2 py-1 rounded-md">⌘K</span>
           </button>
         </div>
+        {/* Offline banner */}
+        <AnimatePresence>
+          {!isOnline && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="bg-orange-500/15 border-b border-orange-500/30 px-4 py-2 flex items-center gap-2 shrink-0"
+            >
+              <WifiOff size={13} className="text-orange-400 shrink-0" />
+              <p className="text-xs text-orange-300">You are offline. KB articles and cached pages are still available. API features require a connection.</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
         <main className={cn('flex-1 min-h-0', isChatPage ? 'overflow-hidden' : 'overflow-y-auto')}>
           {children}
         </main>
@@ -259,6 +316,7 @@ export default function Layout({ children }) {
 
       <CasePad />
       <CaseTimeline />
+      <SnippetSearch />
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>
   );

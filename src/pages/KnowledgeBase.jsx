@@ -341,9 +341,25 @@ function BybitOfficialTab() {
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
+// One-time migration: tag untagged entries by matching against BYBIT_KB titles
+function migrateEntrySources(entries) {
+  const kbTitles = new Set(BYBIT_KB.map(a => a.title.toLowerCase()));
+  let changed = false;
+  const migrated = entries.map(e => {
+    if (e.source) return e; // already tagged
+    changed = true;
+    if (kbTitles.has(e.title.toLowerCase())) {
+      return { ...e, source: 'official' };
+    }
+    return { ...e, source: 'memory' };
+  });
+  if (changed) saveKnowledge(migrated);
+  return migrated;
+}
+
 export default function KnowledgeBase() {
   const [tab, setTab] = useState('ace'); // 'ace' | 'bybit'
-  const [entries, setEntries] = useState(getKnowledge);
+  const [entries, setEntries] = useState(() => migrateEntrySources(getKnowledge()));
   const [showAdd, setShowAdd] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newContent, setNewContent] = useState('');
@@ -357,7 +373,7 @@ export default function KnowledgeBase() {
 
   function addEntry(title, content) {
     if (!title.trim() || !content.trim()) return;
-    persist([...entries, { id: Date.now(), title: title.trim(), content: content.trim(), active: true }]);
+    persist([...entries, { id: Date.now(), title: title.trim(), content: content.trim(), active: true, source: 'custom' }]);
     setNewTitle('');
     setNewContent('');
     setShowAdd(false);
@@ -420,7 +436,11 @@ export default function KnowledgeBase() {
     e.target.value = '';
   }
 
-  const activeCount = entries.filter(e => e.active !== false).length;
+  // Separate memory entries from official KB entries
+  const memoryEntries = entries.filter(e => e.source !== 'official');
+  const officialCount = entries.filter(e => e.source === 'official').length;
+  const memoryActiveCount = memoryEntries.filter(e => e.active !== false).length;
+  const totalActiveCount = entries.filter(e => e.active !== false).length;
 
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-5">
@@ -444,8 +464,8 @@ export default function KnowledgeBase() {
           )}
         >
           🧠 Ace Memory
-          {activeCount > 0 && (
-            <span className="text-xs bg-yellow-400/20 text-yellow-400 px-1.5 py-0.5 rounded-md">{activeCount}</span>
+          {memoryActiveCount > 0 && (
+            <span className="text-xs bg-yellow-400/20 text-yellow-400 px-1.5 py-0.5 rounded-md">{memoryActiveCount}</span>
           )}
         </button>
         <button
@@ -458,7 +478,7 @@ export default function KnowledgeBase() {
           )}
         >
           🌐 Bybit Official
-          <span className="text-xs bg-slate-800 text-slate-500 px-1.5 py-0.5 rounded-md">15</span>
+          <span className="text-xs bg-slate-800 text-slate-500 px-1.5 py-0.5 rounded-md">{BYBIT_KB.length}{officialCount > 0 ? ` + ${officialCount} seeded` : ''}</span>
         </button>
       </div>
 
@@ -501,13 +521,13 @@ export default function KnowledgeBase() {
           {/* Status banner */}
           <div className={cn(
             'rounded-xl px-4 py-3 text-sm border',
-            activeCount > 0
+            memoryActiveCount > 0
               ? 'bg-green-500/10 border-green-500/20 text-green-400'
               : 'bg-slate-800 border-slate-700 text-slate-500'
           )}>
-            {activeCount > 0
-              ? `✦ ${activeCount} entr${activeCount === 1 ? 'y' : 'ies'} active — Ace carries this into every conversation`
-              : 'No active entries — Ace has no persistent memory yet'
+            {memoryActiveCount > 0
+              ? `✦ ${memoryActiveCount} memory entr${memoryActiveCount === 1 ? 'y' : 'ies'} active${officialCount > 0 ? ` · ${officialCount} Bybit KB articles loaded separately` : ''}`
+              : 'No active memory entries — Ace has no persistent memory yet'
             }
           </div>
 
@@ -534,9 +554,9 @@ export default function KnowledgeBase() {
           )}
 
           {/* Entries */}
-          {entries.length > 0 ? (
+          {memoryEntries.length > 0 ? (
             <div className="space-y-3">
-              {entries.map(entry => (
+              {memoryEntries.map(entry => (
                 <EntryCard key={entry.id} entry={entry} onToggle={toggleEntry} onDelete={deleteEntry} onEdit={editEntry} />
               ))}
             </div>
@@ -549,7 +569,7 @@ export default function KnowledgeBase() {
           )}
 
           {/* Suggested starters */}
-          {entries.length === 0 && (
+          {memoryEntries.length === 0 && (
             <div className="space-y-3">
               <p className="text-xs text-slate-500 uppercase tracking-wider">Quick starters</p>
               <div className="grid gap-2">
