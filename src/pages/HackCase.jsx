@@ -1,147 +1,363 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { CheckCircle2, Circle, Loader2, Copy, Check, RotateCcw, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, Circle, Loader2, Copy, Check, RotateCcw, AlertTriangle, ChevronRight, Shield, ShieldAlert, ShieldOff, Clock, ArrowLeft } from 'lucide-react';
 import { InvokeLLM } from '@/api/integrations';
+import { hasAnyApiKey } from '@/api/claude';
 import { scrubPII } from '@/lib/SecurityModule';
 
-const SOP_STEPS = [
-  { key: 'type_confirmed', label: 'Confirmed: EXCHANGE hack or Web3 hack?' },
-  { key: 'uid_confirmed', label: 'UID / registered email / phone confirmed from system' },
-  { key: 'access_checked', label: 'Checked if customer still has account access' },
-  { key: 'ban_offered', label: 'Offered account ban — verified Full Name (KYC doc) + Date of Birth if yes' },
-  { key: 'ban_applied', label: 'Shift-co notified: Withdraw Ban (All) + Trading Ban (Close Only) + Transfer Ban' },
-  { key: 'withdrawals_checked', label: 'Withdrawal history checked in CS:GO — Status 2-13 or 2-14: tag Risk Ops to cancel' },
-  { key: 'positions_checked', label: 'Open positions checked — customer informed trading ban allows close-only' },
-  { key: 'vip_assessed', label: 'VIP level confirmed — VIP2+ or amount ≥ 100,000: tag KYC SME + shift-co for hotline' },
-  { key: 'internal_note', label: 'Internal note written and saved in SF' },
-  { key: 'case_type_set', label: 'Case type: E01-Account Matters > Security Issue > Hack (+ Level 4 if applicable)' },
-  { key: 'expedition_raised', label: 'Case Expedition Form raised' },
-  { key: 'pool_macro', label: 'Macro run: Pool 1 → Pool 2' },
+/* ─── CONSTANTS ─────────────────────────────────────────────────────────────── */
+
+const SECURITY_SETTINGS = ['Password', 'Email Address', 'Mobile Number', 'Google Authenticator (2FA)'];
+
+const VERIFICATION_LOGGED_IN = [
+  { key: 'fullName', label: 'Full Name', required: true },
+  { key: 'dob', label: 'Date of Birth', required: true },
 ];
 
+const VERIFICATION_LOGGED_OUT = [
+  { key: 'fullName', label: 'Full Name', required: true },
+  { key: 'dob', label: 'Date of Birth', required: true },
+  { key: 'lastToken', label: 'Last Deposited Token', required: true },
+  { key: 'regDate', label: 'Account Registration Year & Month (+/- 3 months OK)', required: true },
+];
+
+const SOP_CHECKLIST = {
+  exchange: [
+    { key: 'type_confirmed', label: 'Confirmed: Exchange account hack' },
+    { key: 'uid_confirmed', label: 'UID / registered email / phone confirmed from system' },
+    { key: 'kyc_checked', label: 'KYC verification status checked' },
+    { key: 'access_checked', label: 'Checked if customer still has account access' },
+    { key: 'asset_loss', label: 'Confirmed whether asset loss occurred' },
+    { key: 'identity_verified', label: 'Identity verification completed (Name + DOB / full 4-field)' },
+    { key: 'ban_applied', label: 'Account ban executed within 2 minutes — Shift-Co tagged' },
+    { key: 'withdrawals_checked', label: 'Withdrawal history checked — Status 2-13 or 2-14: tag Risk Ops' },
+    { key: 'positions_checked', label: 'Open positions checked — close-only mode confirmed' },
+    { key: 'vip_assessed', label: 'VIP level confirmed — VIP 2+ = tag KYC SME for hotline' },
+    { key: 'internal_note', label: 'Internal note written and saved in SF' },
+    { key: 'case_type_set', label: 'Case type: E01 > Account Matters > Security Issue > Hack' },
+    { key: 'level4_updated', label: 'Level 4 Form updated: Main Issue > Hacked Account Alert' },
+    { key: 'expedition_raised', label: 'Case Expedition Form raised' },
+    { key: 'pool_macro', label: 'Macro run: Pool 1 > Pool 2' },
+    { key: 'no_merge', label: 'Confirmed: tickets NOT merged with P2 cases' },
+  ],
+  web3: [
+    { key: 'type_confirmed', label: 'Confirmed: Web3 wallet hack (not Exchange)' },
+    { key: 'uid_confirmed', label: 'UID confirmed' },
+    { key: 'acknowledged', label: 'Acknowledged user concern empathetically' },
+    { key: 'informed', label: 'Informed user: Bybit cannot assist with Web3 wallet hacks' },
+    { key: 'template_sent', label: 'Web3 hack email template applied' },
+    { key: 'no_restriction', label: 'Confirmed: NO account restriction applied' },
+    { key: 'no_escalation', label: 'Confirmed: NOT escalated as standard hack case' },
+  ],
+  noAssetLoss: [
+    { key: 'type_confirmed', label: 'Confirmed: Exchange account hack' },
+    { key: 'uid_confirmed', label: 'UID confirmed' },
+    { key: 'no_loss_confirmed', label: 'User confirmed: NO asset loss' },
+    { key: 'password_changed', label: 'Advised: Change Password' },
+    { key: 'email_changed', label: 'Advised: Update Email Address' },
+    { key: 'mobile_changed', label: 'Advised: Update Mobile Number' },
+    { key: 'ga_changed', label: 'Advised: Reset Google Authenticator (2FA)' },
+    { key: 'no_restriction', label: 'Confirmed: NO account restriction offered (unless user requests)' },
+  ],
+};
+
 const LARK_TEMPLATE_EU = (uid, sf, remark) =>
-`@Pool Escalation Log EU
-📑 Inquiry directed to: EU:
-👤 UID(s): ${uid || '[INPUT UID]'}
-💼 SF(s): ${sf || '[CASE_ID]'}
-🏷️ Remark(s) in the Thread: ${remark || '[case summary]'}
-Can you please assist in checking this?
-Thank you`;
+  `@Pool Escalation Log EU\n📑 Inquiry directed to: EU:\n👤 UID(s): ${uid || '[INPUT UID]'}\n💼 SF(s): ${sf || '[CASE_ID]'}\n🏷️ Remark(s) in the Thread: ${remark || '[case summary]'}\nCan you please assist in checking this?\nThank you`;
 
 const LARK_TEMPLATE_GLOBAL = (uid, sf, remark) =>
-`@Pool Escalation Log
-📑 Inquiry directed to:
-👤 UID(s): ${uid || '[INPUT UID]'}
-💼 SF(s): ${sf || '[CASE_ID]'}
-🏷️ Remark(s) in the Thread: ${remark || '[case summary]'}
-Can you please assist in checking this? Thank you`;
+  `@Pool Escalation Log\n📑 Inquiry directed to:\n👤 UID(s): ${uid || '[INPUT UID]'}\n💼 SF(s): ${sf || '[CASE_ID]'}\n🏷️ Remark(s) in the Thread: ${remark || '[case summary]'}\nCan you please assist in checking this? Thank you`;
+
+/* ─── WEB3 CUSTOMER TEMPLATE ───────────────────────────────────────────────── */
+
+const WEB3_CUSTOMER_TEMPLATE = `Dear Trader,
+
+Thank you for contacting Bybit Customer Support.
+
+We understand this is a concerning situation and sincerely empathize with your experience.
+
+However, please be informed that Bybit Web3 wallets are fully non-custodial. This means they operate independently from Bybit's centralized exchange systems. Bybit does NOT store, manage, or have access to seed phrases or private keys associated with Web3 wallets.
+
+As such, Bybit is unable to intervene, freeze, recover assets, or reverse any transactions involving Web3 wallets.
+
+Please note that Cloud and Keyless Wallets were officially delisted on 31 May 2025 and are no longer supported.
+
+For your security, we recommend:
+- Revoking any suspicious token approvals immediately
+- Transferring remaining assets to a new wallet with a fresh seed phrase
+- Never sharing your seed phrase or private keys with anyone
+- Reporting the incident to relevant blockchain security services
+
+We apologize for the inconvenience and hope you understand the limitations of non-custodial wallet services.
+
+With warmest regards,
+Bybit Support | Help Center`;
+
+/* ─── NO ASSET LOSS TEMPLATE ───────────────────────────────────────────────── */
+
+function buildNoAssetLossReply() {
+  return `Thank you for reporting this concern. After reviewing your account, we can confirm that no asset loss has occurred at this time.
+
+To secure your account immediately, please update ALL of the following security settings:
+
+1. Password - Change to a new, strong password
+2. Email Address - Update if you suspect it may be compromised
+3. Mobile Number - Update your bound phone number
+4. Google Authenticator (2FA) - Reset and rebind your 2FA
+
+You can update these settings by going to Account & Security in your Bybit account.
+
+If you notice any unauthorized activity in the future, please contact us immediately and we will assist you further.`;
+}
+
+/* ─── INTERNAL NOTE TEMPLATES ──────────────────────────────────────────────── */
+
+function buildInternalNote(form) {
+  const accessLabel = form.accessStatus === 'has_access' ? 'Logged-in (has access)' : 'Logged-out (no access)';
+  const vipLabel = form.vipLevel === 'vip2plus' ? 'VIP 2+' : form.vipLevel === 'vip1' ? 'VIP 1' : 'Non-VIP';
+
+  return `UID: ${form.uid || '[INPUT UID]'}
+VIP Level: ${vipLabel}
+Account Access: ${accessLabel}
+Account Status: Withdraw Ban (All) + Trading Ban (Close Only) + Transfer Ban
+Request Origin: Live chat / Email (update as needed)
+Request Category: Hack (Exchange)
+
+Summary:
+(a) How user discovered abnormality: ${form.additionalNotes || '[to be filled]'}
+(b) Affected timeframe: ${form.incidentTime || '[to be filled]'}
+(c) Capital loss: ${form.missingAssets || 'To be confirmed'}
+(d) 2FA status: ${form.twoFaStatus || 'Unknown'}
+(e) API keys: ${form.apiKeys || 'Unknown'}
+(f) Contactable email: ${form.accessStatus === 'no_access' ? '[confirm — user locked out]' : '[if applicable]'}
+(g) Screenshots: [attach if provided]
+
+Identity Verification: ${form.accessStatus === 'has_access' ? '2/2 (Full Name + DOB)' : '4/4 (Full Name + DOB + Last Token + Registration)'} — ${form.verificationResult === 'matched' ? 'MATCHED' : 'PENDING'}
+
+Case Type: E01 > Account Matters > Security Issue > Hack
+Level 4: Main Issue > Hacked Account Alert`;
+}
+
+/* ─── COMPONENTS ────────────────────────────────────────────────────────────── */
+
+function OptionButton({ selected, onClick, children, danger, className }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label={typeof children === 'string' ? children : undefined}
+      className={cn(
+        'flex items-center gap-2 px-4 py-3 rounded-xl border text-left transition-all duration-150 cursor-pointer',
+        selected
+          ? danger
+            ? 'bg-red-500/10 border-red-500/40 text-red-400'
+            : 'bg-yellow-400/10 border-yellow-400/30 text-yellow-400'
+          : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200 hover:border-slate-600',
+        className
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+function Section({ title, icon: Icon, children, alert, alertColor }) {
+  return (
+    <div className={cn('bg-slate-900 border rounded-xl overflow-hidden', alert ? `border-${alertColor || 'yellow'}-400/30` : 'border-slate-800')}>
+      <div className="px-5 py-4 border-b border-slate-800 flex items-center gap-2">
+        {Icon && <Icon size={15} className="text-yellow-400" />}
+        <h2 className="font-semibold text-slate-100 text-sm">{title}</h2>
+      </div>
+      <div className="p-5">{children}</div>
+    </div>
+  );
+}
+
+function CopyButton({ text, copyKey, copied, onCopy }) {
+  return (
+    <button
+      onClick={() => onCopy(text, copyKey)}
+      className="flex items-center gap-1 text-xs text-slate-500 hover:text-yellow-400 transition-colors duration-150 cursor-pointer"
+      aria-label={`Copy ${copyKey}`}
+    >
+      {copied === copyKey ? <><Check size={12} /> Copied</> : <><Copy size={12} /> Copy</>}
+    </button>
+  );
+}
+
+function OutputBlock({ title, titleColor, borderColor, text, copyKey, copied, onCopy, mono }) {
+  return (
+    <div className={cn('bg-slate-900 border rounded-xl p-5', borderColor)}>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className={cn('font-semibold text-sm', titleColor)}>{title}</h3>
+        <CopyButton text={text} copyKey={copyKey} copied={copied} onCopy={onCopy} />
+      </div>
+      <p className={cn('text-sm text-slate-300 whitespace-pre-wrap leading-relaxed', mono && 'font-mono')}>{text}</p>
+    </div>
+  );
+}
+
+/* ─── MAIN COMPONENT ────────────────────────────────────────────────────────── */
 
 export default function HackCase() {
-  const [checked, setChecked] = useState({});
   const [form, setForm] = useState({
     team: 'EU',
-    hackType: 'exchange',
-    vipLevel: 'non-vip',
+    hackType: '',
+    kycStatus: '',
+    accessStatus: '',
+    assetLoss: '',
+    correctAccount: '',
+    vipLevel: '',
+    verificationResult: '',
+    uid: '',
     incidentTime: '',
     missingAssets: '',
     twoFaStatus: '',
     apiKeys: '',
-    accessStatus: 'has_access',
     additionalNotes: '',
   });
+  const [checked, setChecked] = useState({});
   const [generated, setGenerated] = useState(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(null);
+
+  function update(field, val) {
+    setForm(p => {
+      const next = { ...p, [field]: val };
+      // Reset downstream state when changing upstream decisions
+      if (field === 'hackType') {
+        next.kycStatus = '';
+        next.accessStatus = '';
+        next.assetLoss = '';
+        next.correctAccount = '';
+        next.vipLevel = '';
+        next.verificationResult = '';
+        setChecked({});
+        setGenerated(null);
+      }
+      if (field === 'kycStatus') {
+        next.accessStatus = '';
+        next.assetLoss = '';
+        next.correctAccount = '';
+        next.vipLevel = '';
+        next.verificationResult = '';
+      }
+      if (field === 'accessStatus') {
+        next.assetLoss = '';
+        next.vipLevel = '';
+        next.verificationResult = '';
+      }
+      if (field === 'assetLoss') {
+        next.vipLevel = '';
+        next.verificationResult = '';
+      }
+      return next;
+    });
+  }
 
   function tick(key) {
     setChecked(p => ({ ...p, [key]: !p[key] }));
   }
 
-  function update(field, val) {
-    setForm(p => ({ ...p, [field]: val }));
-  }
-
   function reset() {
     if (!confirm('Reset this case?')) return;
+    setForm({ team: 'EU', hackType: '', kycStatus: '', accessStatus: '', assetLoss: '', correctAccount: '', vipLevel: '', verificationResult: '', uid: '', incidentTime: '', missingAssets: '', twoFaStatus: '', apiKeys: '', additionalNotes: '' });
     setChecked({});
-    setForm({ team: 'EU', hackType: 'exchange', vipLevel: 'non-vip', incidentTime: '', missingAssets: '', twoFaStatus: '', apiKeys: '', accessStatus: 'has_access', additionalNotes: '' });
     setGenerated(null);
   }
 
-  // Kinetic SOP Sensing: auto-check steps confirmed by AI response
-  function autoCheckFromResponse(responseText) {
-    if (!responseText) return;
-    const lower = responseText.toLowerCase();
-    const signals = {
-      type_confirmed: /hack\s*type|exchange\s*hack|web3\s*hack|confirmed.*hack/i,
-      uid_confirmed: /uid[:\s]|registered\s*email|user\s*id/i,
-      access_checked: /account\s*access|still\s*has\s*access|locked\s*out|access\s*status/i,
-      ban_offered: /ban.*offered|full\s*name.*date\s*of\s*birth|verified.*identity/i,
-      ban_applied: /withdraw\s*ban|trading\s*ban|transfer\s*ban|close[- ]only/i,
-      withdrawals_checked: /withdrawal\s*history|status\s*2-1[34]|risk\s*ops/i,
-      positions_checked: /open\s*positions|close[- ]only\s*mode/i,
-      vip_assessed: /vip\s*level|vip\s*\d|hotline|kyc\s*sme/i,
-      internal_note: /internal\s*note|saved\s*in\s*sf|summary.*uid/i,
-      case_type_set: /e01[- ]account|security\s*issue.*hack|case\s*type/i,
-      expedition_raised: /expedition\s*form|case\s*expedition/i,
-      pool_macro: /pool\s*1.*pool\s*2|macro.*pool/i,
-    };
-    const updates = {};
-    for (const [key, rx] of Object.entries(signals)) {
-      if (rx.test(responseText) && !checked[key]) {
-        updates[key] = true;
-      }
-    }
-    if (Object.keys(updates).length > 0) {
-      setChecked(prev => ({ ...prev, ...updates }));
-    }
+  function copy(text, key) {
+    navigator.clipboard.writeText(text);
+    setCopied(key);
+    setTimeout(() => setCopied(null), 2000);
   }
 
-  const isHighPriority = form.vipLevel === 'vip2plus';
+  /* ─── Derived state ─────────────────────────────────────────────────────── */
+
+  const isWeb3 = form.hackType === 'web3';
+  const isExchange = form.hackType === 'exchange';
+  const kycVerified = form.kycStatus === 'verified';
+  const kycUnverified = form.kycStatus === 'unverified';
+  const hasAccess = form.accessStatus === 'has_access';
+  const noAccess = form.accessStatus === 'no_access';
+  const noAssetLoss = form.assetLoss === 'none';
+  const assetLost = form.assetLoss === 'confirmed';
+  const isVip2Plus = form.vipLevel === 'vip2plus';
+  const verMatched = form.verificationResult === 'matched';
+  const verMismatched = form.verificationResult === 'mismatched';
+
+  // Determine which checklist to show
+  const activeChecklist = useMemo(() => {
+    if (isWeb3) return SOP_CHECKLIST.web3;
+    if (isExchange && noAssetLoss) return SOP_CHECKLIST.noAssetLoss;
+    if (isExchange) return SOP_CHECKLIST.exchange;
+    return [];
+  }, [isWeb3, isExchange, noAssetLoss]);
+
+  const doneCount = activeChecklist.filter(s => checked[s.key]).length;
+
+  // Determine the current path/outcome
+  const currentPath = useMemo(() => {
+    if (isWeb3) return 'web3';
+    if (!isExchange) return 'pending';
+    if (kycUnverified && form.correctAccount === 'correct') return 'escalate_p2_unverified';
+    if (kycUnverified && form.correctAccount === 'wrong') return 'request_new_info';
+    if (!kycVerified) return 'pending';
+    if (noAssetLoss) return 'no_asset_loss';
+    if (!assetLost) return 'pending';
+    if (verMismatched) return 'verification_failed';
+    if (!verMatched) return 'pending';
+    if (isVip2Plus) return 'escalate_vip2plus';
+    if (form.vipLevel) return 'escalate_standard';
+    return 'pending';
+  }, [form, isWeb3, isExchange, kycVerified, kycUnverified, noAssetLoss, assetLost, verMatched, verMismatched, isVip2Plus]);
+
+  const verificationFields = hasAccess ? VERIFICATION_LOGGED_IN : VERIFICATION_LOGGED_OUT;
+
+  const larkRemark = form.incidentTime
+    ? `Hack report — Exchange — ${form.incidentTime}${form.missingAssets ? ` — Assets: ${form.missingAssets}` : ''}`
+    : '[case summary]';
   const larkTemplate = form.team === 'EU'
-    ? LARK_TEMPLATE_EU('[INPUT UID]', '[CASE_ID]', form.incidentTime ? `Hack report — ${form.hackType === 'web3' ? 'Web3' : 'Exchange'} — ${form.incidentTime}${form.missingAssets ? ` — Assets: ${form.missingAssets}` : ''}` : '')
-    : LARK_TEMPLATE_GLOBAL('[INPUT UID]', '[CASE_ID]', form.incidentTime ? `Hack report — ${form.hackType === 'web3' ? 'Web3' : 'Exchange'} — ${form.incidentTime}${form.missingAssets ? ` — Assets: ${form.missingAssets}` : ''}` : '');
+    ? LARK_TEMPLATE_EU(form.uid, '[CASE_ID]', larkRemark)
+    : LARK_TEMPLATE_GLOBAL(form.uid, '[CASE_ID]', larkRemark);
+
+  /* ─── AI Generate ───────────────────────────────────────────────────────── */
 
   async function generate() {
     setLoading(true);
     setGenerated(null);
     try {
-      const isWeb3 = form.hackType === 'web3';
+      const accessLabel = hasAccess ? 'Logged-in (has access)' : 'Logged-out (no access)';
+      const vipLabel = isVip2Plus ? 'VIP 2+' : form.vipLevel === 'vip1' ? 'VIP 1' : 'Non-VIP';
+
       const res = await InvokeLLM({
-        prompt: `Generate outputs for a Bybit ${isWeb3 ? 'Web3' : 'Exchange'} account hack case. Team: Bybit ${form.team}. VIP Level: ${form.vipLevel}.
+        prompt: `Generate outputs for a Bybit Exchange account hack case.
+Team: Bybit ${form.team}. VIP Level: ${vipLabel}. Account access: ${accessLabel}.
 
 CASE DETAILS:
-- Hack type: ${isWeb3 ? 'Web3 wallet hack' : 'Exchange account hack'}
+- UID: ${form.uid || '[INPUT UID]'}
 - Incident time: ${form.incidentTime || 'Not specified'}
 - Missing/moved assets: ${scrubPII(form.missingAssets || 'Not specified')}
 - 2FA status: ${form.twoFaStatus || 'Unknown'}
 - API keys on account: ${form.apiKeys || 'Unknown'}
-- Account access: ${form.accessStatus === 'has_access' ? 'Customer can still access account' : 'Customer locked out'}
 - Additional notes: ${scrubPII(form.additionalNotes || 'None')}
+
+IMPORTANT RULES (April 2026 SOP):
+- Account ban must be executed within 2 MINUTES of verification
+- NEVER merge tickets with P2 cases
+- Hotline call only for VIP 2+ (NOT based on asset amount)
+- ${hasAccess ? 'Verification: Full Name + DOB (2/2 must match)' : 'Verification: Full Name + DOB + Last Deposited Token + Registration Year & Month (4/4 must match)'}
+- Level 4 Form: E01 > Account Matters > Security Issue > Hack > Main Issue > Hacked Account Alert
 
 Generate THREE sections exactly:
 
 CUSTOMER MESSAGE:
-A warm, empathetic, professional message to send to the customer. Acknowledge the distressing situation, confirm you are escalating to the security team urgently, provide the immediate security steps they should take now, and set expectations (investigation takes 3–7 business days). Use [INPUT UID] where UID appears and [CASE_ID] for case reference. No markdown asterisks — plain text only.
+A warm, empathetic, professional message to the customer. Acknowledge the distressing situation. Confirm you are escalating urgently. Provide immediate security steps. Set expectations (3-7 business days for investigation). Use ${form.uid || '[INPUT UID]'} where UID appears. Plain text only, no markdown asterisks.
 
 INTERNAL NOTE:
-Use this exact format:
-UID: [INPUT UID]
-VIP level: ${form.vipLevel}
-Account status: Withdraw Ban (All) + Trading Ban (Close Only) + Transfer Ban
-Request origin: Live chat / Email (update as needed)
-Request category: Hack${isWeb3 ? ' (Web3)' : ''}
-Summary:
-(a) How user discovered abnormality: ${form.additionalNotes || '[to be filled]'}
-(b) Affected timeframe: ${form.incidentTime || '[to be filled]'}
-(c) Capital loss: ${form.missingAssets || 'To be confirmed'}
-(d) Other info: 2FA — ${form.twoFaStatus || 'unknown'} | API keys — ${form.apiKeys || 'unknown'}
-(e) Screenshots: [attach if provided]
-${isWeb3 ? 'User wallet address: [confirm]\nType of wallet: [Bybit cloud / seed phrase / keyless]\nAffected TXID: [confirm]\nChain: [confirm]' : 'Contactable email: [if user lost email access]'}
+${buildInternalNote(form)}
 
 CASE TYPE:
-E01-Account Matters > Security Issue > Hack${isWeb3 ? ' | Level 4: Hacked (Web3)' : ' | Level 4: Hacked Account Alert'}`,
-        system_prompt: 'You are a Bybit security case specialist. Generate professional, accurate outputs for the agent. Use plain text only — no markdown asterisks. Follow the exact format requested.',
+E01 > Account Matters > Security Issue > Hack | Level 4: Main Issue > Hacked Account Alert`,
+        system_prompt: 'You are a Bybit security case specialist following the April 2026 SOP. Generate professional, accurate outputs. Use plain text only — no markdown asterisks. Follow the exact format requested.',
         useKB: true,
       });
 
@@ -151,233 +367,489 @@ E01-Account Matters > Security Issue > Hack${isWeb3 ? ' | Level 4: Hacked (Web3)
 
       setGenerated({
         customer: customerMatch?.[1]?.trim() || res,
-        internalNote: internalNoteMatch?.[1]?.trim() || '',
-        caseType: caseTypeMatch?.[1]?.trim() || `E01-Account Matters > Security Issue > Hack`,
+        internalNote: internalNoteMatch?.[1]?.trim() || buildInternalNote(form),
+        caseType: caseTypeMatch?.[1]?.trim() || 'E01 > Account Matters > Security Issue > Hack',
         lark: larkTemplate,
       });
-      // Kinetic SOP: auto-check steps confirmed by the AI response + form data
-      autoCheckFromResponse(res + ' ' + JSON.stringify(form));
     } catch (e) {
       setGenerated({ error: e.message });
     }
     setLoading(false);
   }
 
-  function copy(text, key) {
-    navigator.clipboard.writeText(text);
-    setCopied(key);
-    setTimeout(() => setCopied(null), 2000);
-  }
-
-  const doneCount = Object.values(checked).filter(Boolean).length;
-  const canGenerate = form.incidentTime || form.missingAssets;
+  /* ─── RENDER ────────────────────────────────────────────────────────────── */
 
   return (
-    <div className="p-6 max-w-3xl mx-auto space-y-6">
+    <div className="p-6 max-w-3xl mx-auto space-y-5">
+      {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-xl font-bold text-slate-100">🔴 Hack Case</h1>
-          <p className="text-sm text-slate-500">Real-time SOP + auto-generates customer message, internal note & Lark escalation</p>
+          <p className="text-sm text-slate-500">Guided SOP workflow — April 2026</p>
         </div>
-        <button onClick={reset} className="flex items-center gap-1 text-xs text-slate-500 hover:text-red-400 transition-colors cursor-pointer" aria-label="Reset hack case form">
+        <button onClick={reset} className="flex items-center gap-1 text-xs text-slate-500 hover:text-red-400 transition-colors duration-150 cursor-pointer" aria-label="Reset hack case form">
           <RotateCcw size={13} /> Reset
         </button>
       </div>
 
-      {/* High priority alert */}
-      {isHighPriority && (
-        <div className="bg-red-500/10 border border-red-500/40 rounded-xl px-4 py-3 flex items-center gap-3">
-          <AlertTriangle size={16} className="text-red-400 shrink-0" />
+      {/* Critical reminders */}
+      <div className="bg-red-500/5 border border-red-500/20 rounded-xl px-4 py-3 space-y-1.5">
+        <div className="flex items-center gap-2">
+          <AlertTriangle size={14} className="text-red-400 shrink-0" />
+          <p className="text-xs font-semibold text-red-400">Critical Reminders</p>
+        </div>
+        <ul className="text-xs text-slate-400 space-y-1 ml-5">
+          <li>Account ban must be executed <strong className="text-red-300">within 2 minutes</strong> upon verification</li>
+          <li><strong className="text-red-300">NEVER</strong> merge tickets with P2 cases</li>
+          <li>Hotline call required for <strong className="text-red-300">VIP 2+ only</strong> — tag KYC SME</li>
+          <li>Level 4 Form: E01 &gt; Account Matters &gt; Security Issue &gt; Hack</li>
+        </ul>
+      </div>
+
+      {/* ─── STEP 1: Team + Hack Type ────────────────────────────────────── */}
+      <Section title="Step 1 — Team & Hack Type" icon={Shield}>
+        <div className="space-y-4">
           <div>
-            <p className="text-sm font-semibold text-red-400">VIP 2+ — Hotline Required</p>
-            <p className="text-xs text-slate-400 mt-0.5">Tag KYC SME + shift-co immediately. Call P0 → 33 Account-Security (or 34 Web3-Security for Web3). Do not wait.</p>
+            <label className="text-xs text-slate-500 mb-2 block" id="hc-team-label">Team</label>
+            <div className="flex gap-2" role="group" aria-labelledby="hc-team-label">
+              {['EU', 'Global'].map(t => (
+                <OptionButton key={t} selected={form.team === t} onClick={() => update('team', t)}>
+                  <span className="text-sm font-medium">{t === 'EU' ? '🇪🇺' : '🌍'} {t}</span>
+                </OptionButton>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs text-slate-500 mb-2 block" id="hc-type-label">Hack Type</label>
+            <div className="grid grid-cols-2 gap-2" role="group" aria-labelledby="hc-type-label">
+              <OptionButton selected={isExchange} onClick={() => update('hackType', 'exchange')}>
+                <ShieldAlert size={16} className="shrink-0" />
+                <div>
+                  <p className="text-sm font-medium">Exchange Hack</p>
+                  <p className="text-xs text-slate-500">Bybit account compromised</p>
+                </div>
+              </OptionButton>
+              <OptionButton selected={isWeb3} onClick={() => update('hackType', 'web3')}>
+                <ShieldOff size={16} className="shrink-0" />
+                <div>
+                  <p className="text-sm font-medium">Web3 Wallet Hack</p>
+                  <p className="text-xs text-slate-500">Non-custodial — simplified flow</p>
+                </div>
+              </OptionButton>
+            </div>
           </div>
         </div>
+      </Section>
+
+      {/* ─── WEB3 PATH — Simplified ──────────────────────────────────────── */}
+      {isWeb3 && (
+        <>
+          <div className="bg-orange-500/5 border border-orange-500/20 rounded-xl px-4 py-3">
+            <div className="flex items-center gap-2 mb-2">
+              <ShieldOff size={14} className="text-orange-400 shrink-0" />
+              <p className="text-xs font-semibold text-orange-400">Web3 Wallet — Non-Custodial (Simplified Handling)</p>
+            </div>
+            <ul className="text-xs text-slate-400 space-y-1 ml-5">
+              <li>Web3 wallets operate <strong className="text-orange-300">independently</strong> from Bybit's systems</li>
+              <li>Bybit does NOT store, manage, or access seed phrases / private keys</li>
+              <li>Bybit CANNOT intervene, freeze, recover, or reverse Web3 transactions</li>
+              <li>Cloud/Keyless wallets were delisted on <strong className="text-orange-300">31 May 2025</strong></li>
+              <li className="text-red-400">Do NOT apply account restrictions or escalate as standard hack</li>
+            </ul>
+          </div>
+
+          <div>
+            <label htmlFor="hc-uid-web3" className="text-xs text-slate-500 mb-1 block">UID</label>
+            <input id="hc-uid-web3" value={form.uid} onChange={e => update('uid', e.target.value)} placeholder="Enter customer UID"
+              className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none" />
+          </div>
+
+          <OutputBlock
+            title="Customer Reply (Web3 Hack)"
+            titleColor="text-green-400"
+            borderColor="border-green-500/20"
+            text={WEB3_CUSTOMER_TEMPLATE}
+            copyKey="web3-customer"
+            copied={copied}
+            onCopy={copy}
+          />
+        </>
       )}
 
-      {/* Case info form */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
-        <h2 className="font-semibold text-slate-100 text-sm">📋 Case Details</h2>
+      {/* ─── EXCHANGE PATH ───────────────────────────────────────────────── */}
+      {isExchange && (
+        <>
+          {/* ─── STEP 2: KYC & Access ─────────────────────────────────────── */}
+          <Section title="Step 2 — KYC & Account Status" icon={Shield}>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="hc-uid" className="text-xs text-slate-500 mb-1 block">UID</label>
+                <input id="hc-uid" value={form.uid} onChange={e => update('uid', e.target.value)} placeholder="Enter customer UID"
+                  className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none" />
+              </div>
 
-        {/* Team + Hack type + VIP */}
-        <div className="grid grid-cols-3 gap-2">
-          <div>
-            <label className="text-xs text-slate-500 mb-1 block" id="hc-team-label">Team</label>
-            <div className="flex gap-1" role="group" aria-labelledby="hc-team-label">
-              {['EU', 'Global'].map(t => (
-                <button key={t} onClick={() => update('team', t)} aria-label={`Select team ${t}`}
-                  className={cn('flex-1 text-sm py-2 rounded-lg border transition-all cursor-pointer',
-                    form.team === t ? 'bg-yellow-400/15 border-yellow-400/40 text-yellow-400' : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200')}>
-                  {t}
-                </button>
-              ))}
+              <div>
+                <label className="text-xs text-slate-500 mb-2 block" id="hc-kyc-label">KYC Verification Status</label>
+                <div className="grid grid-cols-2 gap-2" role="group" aria-labelledby="hc-kyc-label">
+                  <OptionButton selected={kycVerified} onClick={() => update('kycStatus', 'verified')}>
+                    <CheckCircle2 size={14} className="shrink-0" /> KYC Verified
+                  </OptionButton>
+                  <OptionButton selected={kycUnverified} onClick={() => update('kycStatus', 'unverified')}>
+                    <AlertTriangle size={14} className="shrink-0" /> KYC Unverified
+                  </OptionButton>
+                </div>
+              </div>
+
+              {/* KYC Unverified → Correct account check */}
+              {kycUnverified && (
+                <div className="bg-slate-800/50 rounded-xl p-4 space-y-3">
+                  <p className="text-xs text-slate-400">KYC Unverified — confirm if reporting to the correct account:</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <OptionButton selected={form.correctAccount === 'correct'} onClick={() => update('correctAccount', 'correct')}>
+                      Correct Account
+                    </OptionButton>
+                    <OptionButton selected={form.correctAccount === 'wrong'} onClick={() => update('correctAccount', 'wrong')} danger>
+                      Wrong Account
+                    </OptionButton>
+                  </div>
+
+                  {form.correctAccount === 'correct' && (
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg px-4 py-3">
+                      <p className="text-xs text-blue-400 font-semibold">Action: Escalate to P2 for further investigation</p>
+                      <p className="text-xs text-slate-400 mt-1">KYC unverified but correct account — run macro Pool 1 &gt; Pool 2</p>
+                    </div>
+                  )}
+
+                  {form.correctAccount === 'wrong' && (
+                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg px-4 py-3">
+                      <p className="text-xs text-orange-400 font-semibold">Action: Request another email/mobile/UID</p>
+                      <p className="text-xs text-slate-400 mt-1">Ask customer to provide the correct account details. Check KYC status of the new account.</p>
+                      <p className="text-xs text-slate-400 mt-1">If new account also KYC Unverified or Not Found &rarr; Escalate to P2</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* KYC Verified → Access check */}
+              {kycVerified && (
+                <div>
+                  <label className="text-xs text-slate-500 mb-2 block" id="hc-access-label">Account Access Status</label>
+                  <div className="grid grid-cols-2 gap-2" role="group" aria-labelledby="hc-access-label">
+                    <OptionButton selected={hasAccess} onClick={() => update('accessStatus', 'has_access')}>
+                      <CheckCircle2 size={14} className="shrink-0" /> Has Access (Logged-in)
+                    </OptionButton>
+                    <OptionButton selected={noAccess} onClick={() => update('accessStatus', 'no_access')} danger>
+                      <ShieldOff size={14} className="shrink-0" /> No Access (Logged-out)
+                    </OptionButton>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-          <div>
-            <label className="text-xs text-slate-500 mb-1 block" id="hc-type-label">Hack type</label>
-            <div className="flex gap-1" role="group" aria-labelledby="hc-type-label">
-              {[{ val: 'exchange', label: 'Exchange' }, { val: 'web3', label: 'Web3' }].map(o => (
-                <button key={o.val} onClick={() => update('hackType', o.val)} aria-label={`Select ${o.label} hack type`}
-                  className={cn('flex-1 text-xs py-2 rounded-lg border transition-all cursor-pointer',
-                    form.hackType === o.val ? 'bg-yellow-400/15 border-yellow-400/40 text-yellow-400' : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200')}>
-                  {o.label}
-                </button>
-              ))}
+          </Section>
+
+          {/* ─── STEP 3: Asset Loss Assessment (only if has access) ────── */}
+          {kycVerified && hasAccess && (
+            <Section title="Step 3 — Asset Loss Assessment" icon={ShieldAlert}>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs text-slate-500 mb-2 block" id="hc-asset-label">Confirm with user: has any asset been lost?</label>
+                  <div className="grid grid-cols-2 gap-2" role="group" aria-labelledby="hc-asset-label">
+                    <OptionButton selected={noAssetLoss} onClick={() => update('assetLoss', 'none')}>
+                      <Shield size={14} className="shrink-0" /> No Asset Lost
+                    </OptionButton>
+                    <OptionButton selected={assetLost} onClick={() => update('assetLoss', 'confirmed')} danger>
+                      <AlertTriangle size={14} className="shrink-0" /> Asset Lost
+                    </OptionButton>
+                  </div>
+                </div>
+
+                {/* No asset loss → Security advice only */}
+                {noAssetLoss && (
+                  <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Shield size={14} className="text-emerald-400" />
+                      <p className="text-xs font-semibold text-emerald-400">No Asset Loss — Advise Security Settings Update</p>
+                    </div>
+                    <p className="text-xs text-slate-400">Guide the user to update <strong className="text-slate-300">ALL</strong> of the following immediately:</p>
+                    <div className="space-y-1.5">
+                      {SECURITY_SETTINGS.map((s, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <CheckCircle2 size={12} className="text-emerald-500 shrink-0" />
+                          <span className="text-xs text-slate-300">{s}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="bg-red-500/5 border border-red-500/20 rounded-lg px-3 py-2 mt-2">
+                      <p className="text-xs text-red-400">Do NOT offer account restriction unless the user explicitly requests it</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Section>
+          )}
+
+          {/* ─── STEP 3 (alt): No Access → Direct to Verification ────── */}
+          {kycVerified && noAccess && (
+            <div className="bg-red-500/5 border border-red-500/20 rounded-xl px-4 py-3">
+              <p className="text-xs text-red-400 font-semibold">User Locked Out — Proceed directly to Ban Account Procedure</p>
+              <p className="text-xs text-slate-400 mt-1">Full 4-field verification required (Name + DOB + Last Token + Registration)</p>
             </div>
-          </div>
-          <div>
-            <label htmlFor="hc-vip" className="text-xs text-slate-500 mb-1 block">VIP level</label>
-            <select id="hc-vip" value={form.vipLevel} onChange={e => update('vipLevel', e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 outline-none focus:border-yellow-400/50 cursor-pointer">
-              <option value="non-vip">Non-VIP</option>
-              <option value="vip1">VIP 1</option>
-              <option value="vip2plus">VIP 2+ 🔥</option>
-            </select>
-          </div>
-        </div>
+          )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label htmlFor="hc-time" className="text-xs text-slate-500 mb-1 block">When did it happen?</label>
-            <input id="hc-time" value={form.incidentTime} onChange={e => update('incidentTime', e.target.value)}
-              placeholder="e.g. Today around 2pm, yesterday evening..."
-              className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none" />
-          </div>
-          <div>
-            <label htmlFor="hc-assets" className="text-xs text-slate-500 mb-1 block">Missing / moved assets</label>
-            <input id="hc-assets" value={form.missingAssets} onChange={e => update('missingAssets', e.target.value)}
-              placeholder="e.g. 500 USDT withdrawn, BTC transfer..."
-              className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none" />
-          </div>
-          <div>
-            <label htmlFor="hc-2fa" className="text-xs text-slate-500 mb-1 block">2FA status at time</label>
-            <input id="hc-2fa" value={form.twoFaStatus} onChange={e => update('twoFaStatus', e.target.value)}
-              placeholder="e.g. GA active, SMS only, disabled..."
-              className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none" />
-          </div>
-          <div>
-            <label htmlFor="hc-api" className="text-xs text-slate-500 mb-1 block">API keys on account?</label>
-            <input id="hc-api" value={form.apiKeys} onChange={e => update('apiKeys', e.target.value)}
-              placeholder="e.g. Yes - 2 active keys, None found..."
-              className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none" />
-          </div>
-        </div>
+          {/* ─── STEP 4: Identity Verification (asset lost OR no access) ── */}
+          {kycVerified && (assetLost || noAccess) && (
+            <Section title={`Step ${noAccess ? '3' : '4'} — Identity Verification`} icon={Shield}>
+              <div className="space-y-4">
+                <div className="bg-slate-800/50 rounded-lg px-4 py-3">
+                  <p className="text-xs text-slate-500 font-medium mb-2">
+                    {hasAccess ? 'Logged-In Verification (2/2 must match)' : 'Logged-Out Verification (4/4 must match)'}
+                  </p>
+                  <div className="space-y-2">
+                    {verificationFields.map(f => (
+                      <div key={f.key} className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-yellow-400 shrink-0" />
+                        <span className="text-sm text-slate-300">{f.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {!hasAccess && (
+                    <p className="text-xs text-slate-500 mt-2 italic">+/- 3 months is acceptable for Account Registration Month</p>
+                  )}
+                </div>
 
-        <div>
-          <label className="text-xs text-slate-500 mb-1 block" id="hc-access-label">Account access</label>
-          <div className="flex gap-2" role="group" aria-labelledby="hc-access-label">
-            {[{ val: 'has_access', label: 'Customer can access account' }, { val: 'locked_out', label: 'Customer locked out' }].map(opt => (
-              <button key={opt.val} onClick={() => update('accessStatus', opt.val)} aria-label={opt.label}
-                className={cn('flex-1 text-sm px-3 py-2 rounded-lg border transition-all cursor-pointer',
-                  form.accessStatus === opt.val ? 'bg-yellow-400/15 border-yellow-400/40 text-yellow-400' : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200')}>
-                {opt.label}
+                <div>
+                  <label className="text-xs text-slate-500 mb-2 block" id="hc-ver-label">Verification Result</label>
+                  <div className="grid grid-cols-2 gap-2" role="group" aria-labelledby="hc-ver-label">
+                    <OptionButton selected={verMatched} onClick={() => update('verificationResult', 'matched')}>
+                      <CheckCircle2 size={14} className="shrink-0" /> Information Matched
+                    </OptionButton>
+                    <OptionButton selected={verMismatched} onClick={() => update('verificationResult', 'mismatched')} danger>
+                      <AlertTriangle size={14} className="shrink-0" /> Information Mismatched
+                    </OptionButton>
+                  </div>
+                </div>
+
+                {verMismatched && (
+                  <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3">
+                    <p className="text-xs text-red-400 font-semibold">Verification Failed — Offer follow-up and reject user</p>
+                    <p className="text-xs text-slate-400 mt-1">Cannot proceed with account ban. Advise user to submit a support ticket with valid identification documents.</p>
+                  </div>
+                )}
+              </div>
+            </Section>
+          )}
+
+          {/* ─── STEP 5: VIP Level & Escalation (verification matched) ── */}
+          {kycVerified && verMatched && (assetLost || noAccess) && (
+            <Section title={`Step ${noAccess ? '4' : '5'} — VIP Level & Escalation`} icon={Clock}>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs text-slate-500 mb-2 block" id="hc-vip-label">VIP Level</label>
+                  <div className="grid grid-cols-3 gap-2" role="group" aria-labelledby="hc-vip-label">
+                    <OptionButton selected={form.vipLevel === 'non-vip'} onClick={() => update('vipLevel', 'non-vip')}>
+                      Non-VIP
+                    </OptionButton>
+                    <OptionButton selected={form.vipLevel === 'vip1'} onClick={() => update('vipLevel', 'vip1')}>
+                      VIP 1
+                    </OptionButton>
+                    <OptionButton selected={isVip2Plus} onClick={() => update('vipLevel', 'vip2plus')}>
+                      VIP 2+ 🔥
+                    </OptionButton>
+                  </div>
+                </div>
+
+                {/* VIP 2+ Alert */}
+                {isVip2Plus && (
+                  <div className="bg-red-500/10 border border-red-500/40 rounded-xl px-4 py-3 space-y-1">
+                    <p className="text-sm font-semibold text-red-400">VIP 2+ — Hotline Required</p>
+                    <ol className="text-xs text-slate-400 space-y-0.5 list-decimal ml-4">
+                      <li>Tag Shift-Co to ban account <strong className="text-red-300">immediately</strong></li>
+                      <li>Tag <strong className="text-red-300">KYC SME</strong> for hotline call</li>
+                      <li>Escalate to P2</li>
+                    </ol>
+                  </div>
+                )}
+
+                {/* Non-VIP / VIP 1 */}
+                {(form.vipLevel === 'non-vip' || form.vipLevel === 'vip1') && form.vipLevel && (
+                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl px-4 py-3 space-y-1">
+                    <p className="text-sm font-semibold text-blue-400">Standard Escalation</p>
+                    <ol className="text-xs text-slate-400 space-y-0.5 list-decimal ml-4">
+                      <li>Tag Shift-Co to ban account <strong className="text-blue-300">within 2 minutes</strong></li>
+                      <li>Escalate to P2</li>
+                      <li>Submit Case Expedition Form</li>
+                    </ol>
+                  </div>
+                )}
+
+                {/* Account ban details */}
+                {form.vipLevel && (
+                  <div className="bg-slate-800/50 rounded-lg px-4 py-3 space-y-1.5">
+                    <p className="text-xs text-slate-500 font-medium">Account Ban (Tag Shift-Co)</p>
+                    <div className="space-y-1">
+                      <p className="text-xs text-slate-300">Withdraw Ban (All) + Trading Ban (Close Only) + Transfer Ban</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Section>
+          )}
+
+          {/* ─── Case Details ─────────────────────────────────────────── */}
+          {isExchange && form.hackType && (currentPath !== 'pending') && (
+            <Section title="Case Details" icon={Shield}>
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label htmlFor="hc-time" className="text-xs text-slate-500 mb-1 block">When did it happen?</label>
+                    <input id="hc-time" value={form.incidentTime} onChange={e => update('incidentTime', e.target.value)}
+                      placeholder="e.g. Today around 2pm..."
+                      className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none" />
+                  </div>
+                  <div>
+                    <label htmlFor="hc-assets" className="text-xs text-slate-500 mb-1 block">Missing / moved assets</label>
+                    <input id="hc-assets" value={form.missingAssets} onChange={e => update('missingAssets', e.target.value)}
+                      placeholder="e.g. 500 USDT withdrawn..."
+                      className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none" />
+                  </div>
+                  <div>
+                    <label htmlFor="hc-2fa" className="text-xs text-slate-500 mb-1 block">2FA status</label>
+                    <input id="hc-2fa" value={form.twoFaStatus} onChange={e => update('twoFaStatus', e.target.value)}
+                      placeholder="e.g. GA active, SMS only..."
+                      className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none" />
+                  </div>
+                  <div>
+                    <label htmlFor="hc-api" className="text-xs text-slate-500 mb-1 block">API keys on account?</label>
+                    <input id="hc-api" value={form.apiKeys} onChange={e => update('apiKeys', e.target.value)}
+                      placeholder="e.g. 2 active keys, None..."
+                      className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none" />
+                  </div>
+                </div>
+                <div>
+                  <label htmlFor="hc-notes" className="text-xs text-slate-500 mb-1 block">Additional notes</label>
+                  <textarea id="hc-notes" value={form.additionalNotes} onChange={e => update('additionalNotes', e.target.value)}
+                    placeholder="Suspicious emails, phishing links, how they noticed..."
+                    rows={2}
+                    className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none resize-none" />
+                </div>
+              </div>
+            </Section>
+          )}
+        </>
+      )}
+
+      {/* ─── SOP Checklist ───────────────────────────────────────────────── */}
+      {form.hackType && activeChecklist.length > 0 && (
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold text-slate-100 text-sm">
+              {isWeb3 ? '✅ Web3 Checklist' : noAssetLoss ? '✅ No Asset Loss Checklist' : '✅ SOP Checklist'}
+            </h2>
+            <span className="text-xs text-slate-500">{doneCount}/{activeChecklist.length}</span>
+          </div>
+          <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
+            <div className="h-full bg-yellow-400 rounded-full transition-all duration-300" style={{ width: `${(doneCount / activeChecklist.length) * 100}%` }} />
+          </div>
+          <div className="space-y-2 pt-1">
+            {activeChecklist.map(step => (
+              <button key={step.key} onClick={() => tick(step.key)} className="flex items-center gap-3 w-full text-left group cursor-pointer" aria-label={`Toggle: ${step.label}`}>
+                {checked[step.key]
+                  ? <CheckCircle2 size={16} className="text-green-400 shrink-0" />
+                  : <Circle size={16} className="text-slate-600 group-hover:text-slate-400 shrink-0" />}
+                <span className={cn('text-sm', checked[step.key] ? 'line-through text-slate-600' : 'text-slate-300')}>
+                  {step.label}
+                </span>
               </button>
             ))}
           </div>
         </div>
+      )}
 
-        <div>
-          <label htmlFor="hc-notes" className="text-xs text-slate-500 mb-1 block">Additional notes</label>
-          <textarea id="hc-notes" value={form.additionalNotes} onChange={e => update('additionalNotes', e.target.value)}
-            placeholder="Suspicious emails, phishing links, third-party app access, how they noticed the hack..."
-            rows={2}
-            className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none resize-none" />
-        </div>
-      </div>
+      {/* ─── Pre-built templates (no asset loss) ─────────────────────── */}
+      {isExchange && noAssetLoss && (
+        <OutputBlock
+          title="Customer Reply (No Asset Loss)"
+          titleColor="text-green-400"
+          borderColor="border-green-500/20"
+          text={buildNoAssetLossReply()}
+          copyKey="no-loss-reply"
+          copied={copied}
+          onCopy={copy}
+        />
+      )}
 
-      {/* SOP Checklist */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="font-semibold text-slate-100 text-sm">✅ SOP Checklist</h2>
-          <span className="text-xs text-slate-500">{doneCount}/{SOP_STEPS.length}</span>
+      {/* ─── Lark Escalation (exchange with escalation path) ──────── */}
+      {isExchange && form.vipLevel && verMatched && (
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-semibold text-slate-400">Lark {form.team} Escalation Template</p>
+            <CopyButton text={larkTemplate} copyKey="lark-preview" copied={copied} onCopy={copy} />
+          </div>
+          <p className="text-xs text-slate-400 font-mono whitespace-pre-wrap leading-relaxed">{larkTemplate}</p>
         </div>
-        <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
-          <div className="h-full bg-yellow-400 rounded-full transition-all duration-300" style={{ width: `${(doneCount / SOP_STEPS.length) * 100}%` }} />
-        </div>
-        <div className="space-y-2 pt-1">
-          {SOP_STEPS.map(step => (
-            <button key={step.key} onClick={() => tick(step.key)} className="flex items-center gap-3 w-full text-left group cursor-pointer" aria-label={`Toggle: ${step.label}`}>
-              {checked[step.key]
-                ? <CheckCircle2 size={16} className="text-green-400 shrink-0" />
-                : <Circle size={16} className="text-slate-600 group-hover:text-slate-400 shrink-0" />}
-              <span className={cn('text-sm', checked[step.key] ? 'line-through text-slate-600' : 'text-slate-300')}>
-                {step.label}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
+      )}
 
-      {/* Lark template preview */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-xs font-semibold text-slate-400">📲 Lark {form.team} Escalation Template</p>
-          <button onClick={() => copy(larkTemplate, 'lark-preview')} className="flex items-center gap-1 text-xs text-slate-500 hover:text-yellow-400 transition-colors cursor-pointer" aria-label="Copy Lark escalation template">
-            {copied === 'lark-preview' ? <><Check size={12} /> Copied</> : <><Copy size={12} /> Copy</>}
+      {/* ─── Pre-built Internal Note (exchange with escalation) ───── */}
+      {isExchange && form.vipLevel && verMatched && (
+        <OutputBlock
+          title="Internal Note (Template)"
+          titleColor="text-blue-400"
+          borderColor="border-blue-500/20"
+          text={buildInternalNote(form)}
+          copyKey="internal-note-template"
+          copied={copied}
+          onCopy={copy}
+          mono
+        />
+      )}
+
+      {/* ─── Generate with ACE button ────────────────────────────────── */}
+      {isExchange && form.vipLevel && verMatched && hasAnyApiKey() && (
+        <>
+          <button onClick={generate} disabled={loading} aria-label="Generate customer message and internal note with ACE"
+            className="w-full bg-yellow-400 hover:bg-yellow-300 disabled:bg-slate-800 disabled:text-slate-600 text-slate-900 font-semibold py-3 rounded-xl transition-colors duration-150 flex items-center justify-center gap-2 cursor-pointer">
+            {loading ? <><Loader2 size={16} className="animate-spin" /> Generating...</> : '✦ Generate with ACE — Customer message + polished note'}
           </button>
-        </div>
-        <p className="text-xs text-slate-400 font-mono whitespace-pre-wrap leading-relaxed">{larkTemplate}</p>
-      </div>
 
-      {/* Generate button */}
-      <button onClick={generate} disabled={loading || !canGenerate} aria-label="Generate customer message and internal note"
-        className="w-full bg-yellow-400 hover:bg-yellow-300 disabled:bg-slate-800 disabled:text-slate-600 text-slate-900 font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer">
-        {loading ? <><Loader2 size={16} className="animate-spin" /> Generating...</> : '✦ Generate customer message + internal note'}
-      </button>
-      {!canGenerate && !loading && (
-        <p className="text-xs text-slate-600 text-center -mt-4">Fill in incident time or missing assets to generate</p>
+          {generated?.error && (
+            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-sm text-red-400">{generated.error}</div>
+          )}
+
+          {generated && !generated.error && (
+            <div className="space-y-4">
+              {generated.customer && (
+                <OutputBlock title="Customer Message (ACE)" titleColor="text-green-400" borderColor="border-green-500/20"
+                  text={generated.customer} copyKey="customer" copied={copied} onCopy={copy} />
+              )}
+              {generated.internalNote && (
+                <OutputBlock title="Internal Note (ACE)" titleColor="text-blue-400" borderColor="border-blue-500/20"
+                  text={generated.internalNote} copyKey="note" copied={copied} onCopy={copy} mono />
+              )}
+              {generated.lark && (
+                <OutputBlock title={`Lark ${form.team} Escalation (ACE)`} titleColor="text-yellow-400" borderColor="border-yellow-400/20"
+                  text={generated.lark} copyKey="lark" copied={copied} onCopy={copy} mono />
+              )}
+              {generated.caseType && (
+                <div className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-3">
+                  <p className="text-xs text-slate-500 mb-1">Case Type</p>
+                  <p className="text-sm text-slate-200 font-mono">{generated.caseType}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </>
       )}
 
-      {/* Error */}
-      {generated?.error && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-sm text-red-400">{generated.error}</div>
-      )}
-
-      {/* Generated outputs */}
-      {generated && !generated.error && (
-        <div className="space-y-4">
-          {generated.customer && (
-            <div className="bg-slate-900 border border-green-500/20 rounded-xl p-5">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-green-400 text-sm">💬 Customer Message</h3>
-                <button onClick={() => copy(generated.customer, 'customer')} className="flex items-center gap-1 text-xs text-slate-500 hover:text-yellow-400 transition-colors">
-                  {copied === 'customer' ? <><Check size={12} /> Copied</> : <><Copy size={12} /> Copy</>}
-                </button>
-              </div>
-              <p className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">{generated.customer}</p>
-            </div>
-          )}
-
-          {generated.internalNote && (
-            <div className="bg-slate-900 border border-blue-500/20 rounded-xl p-5">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-blue-400 text-sm">📝 Internal Note</h3>
-                <button onClick={() => copy(generated.internalNote, 'note')} className="flex items-center gap-1 text-xs text-slate-500 hover:text-yellow-400 transition-colors">
-                  {copied === 'note' ? <><Check size={12} /> Copied</> : <><Copy size={12} /> Copy</>}
-                </button>
-              </div>
-              <p className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed font-mono">{generated.internalNote}</p>
-            </div>
-          )}
-
-          {generated.lark && (
-            <div className="bg-slate-900 border border-yellow-400/20 rounded-xl p-5">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-yellow-400 text-sm">📲 Lark {form.team} Escalation</h3>
-                <button onClick={() => copy(generated.lark, 'lark')} className="flex items-center gap-1 text-xs text-slate-500 hover:text-yellow-400 transition-colors">
-                  {copied === 'lark' ? <><Check size={12} /> Copied</> : <><Copy size={12} /> Copy</>}
-                </button>
-              </div>
-              <p className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed font-mono">{generated.lark}</p>
-            </div>
-          )}
-
-          {generated.caseType && (
-            <div className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-3">
-              <p className="text-xs text-slate-500 mb-1">Case Type</p>
-              <p className="text-sm text-slate-200 font-mono">{generated.caseType}</p>
-            </div>
-          )}
+      {/* ─── Case Type reminder ──────────────────────────────────────── */}
+      {form.hackType && (
+        <div className="bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3">
+          <p className="text-xs text-slate-500 mb-1">Case Type</p>
+          <p className="text-sm text-slate-200 font-mono">
+            {isWeb3
+              ? 'E01 > Account Matters > Security Issue > Hack | Level 4: Hacked (Web3)'
+              : 'E01 > Account Matters > Security Issue > Hack | Level 4: Main Issue > Hacked Account Alert'}
+          </p>
         </div>
       )}
     </div>

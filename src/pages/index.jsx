@@ -17,6 +17,8 @@ const MissingDeposit = lazy(() => import('./MissingDeposit.jsx'));
 const AccountMatters = lazy(() => import('./AccountMatters.jsx'));
 const P2PAdvertiser  = lazy(() => import('./P2PAdvertiser.jsx'));
 const P2PDispute     = lazy(() => import('./P2PDispute.jsx'));
+const FiatWithdrawal = lazy(() => import('./FiatWithdrawal.jsx'));
+const ReferralProgram = lazy(() => import('./ReferralProgram.jsx'));
 const CardDecline    = lazy(() => import('./CardDecline.jsx'));
 const ChainLookup    = lazy(() => import('./ChainLookup.jsx'));
 const QualityCheck   = lazy(() => import('./QualityCheck.jsx'));
@@ -30,7 +32,9 @@ const Settings       = lazy(() => import('./Settings.jsx'));
 const MultiChat      = lazy(() => import('./MultiChat.jsx'));
 const SepaDelay      = lazy(() => import('./SepaDelay.jsx'));
 const CsatPredictor  = lazy(() => import('./CsatPredictor.jsx'));
+const FiatDeposit    = lazy(() => import('./FiatDeposit.jsx'));
 const Models         = lazy(() => import('./Models.jsx'));
+const Workflows      = lazy(() => import('./Workflows.jsx'));
 
 const EU_EMAIL = {
   id: 'bybit-eu',
@@ -164,6 +168,8 @@ function AnimatedRoutes() {
             <Route path="/account-matters" element={<AccountMatters />} />
             <Route path="/p2p-advertiser" element={<P2PAdvertiser />} />
             <Route path="/p2p-dispute" element={<P2PDispute />} />
+            <Route path="/fiat-withdrawal" element={<FiatWithdrawal />} />
+            <Route path="/referral-program" element={<ReferralProgram />} />
             <Route path="/card-decline" element={<CardDecline />} />
             <Route path="/chain-lookup" element={<ChainLookup />} />
             <Route path="/quality-check" element={<QualityCheck />} />
@@ -176,8 +182,10 @@ function AnimatedRoutes() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/workspace" element={<MultiChat />} />
             <Route path="/sepa-delay" element={<SepaDelay />} />
+            <Route path="/fiat-deposit" element={<FiatDeposit />} />
             <Route path="/csat-predictor" element={<CsatPredictor />} />
             <Route path="/models" element={<Models />} />
+            <Route path="/workflows" element={<Workflows />} />
           </Routes>
         </Suspense>
       </motion.div>

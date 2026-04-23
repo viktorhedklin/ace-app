@@ -34,6 +34,7 @@ const CHAT_CHANNELS = [
 ];
 
 const TOOLS = [
+  { name: 'Workflow Hub', icon: '🔄', path: '/workflows' },
   { name: 'SEPA Delay', icon: '💶', path: '/sepa-delay' },
   { name: 'Quick Lookup', icon: '⚡', path: '/quick-lookup' },
   { name: 'Campaign', icon: '🎁', path: '/campaign' },
@@ -43,6 +44,9 @@ const TOOLS = [
   { name: 'Account Matters', icon: '👤', path: '/account-matters' },
   { name: 'P2P Advertiser', icon: '🤝', path: '/p2p-advertiser' },
   { name: 'P2P Dispute', icon: '⚖️', path: '/p2p-dispute' },
+  { name: 'Fiat Deposit', icon: '🏦', path: '/fiat-deposit' },
+  { name: 'Fiat Withdrawal', icon: '💶', path: '/fiat-withdrawal' },
+  { name: 'Referral Program', icon: '🎁', path: '/referral-program' },
   { name: 'Card Decline', icon: '💳', path: '/card-decline' },
   { name: 'Chain Lookup', icon: '🔗', path: '/chain-lookup' },
   { name: 'Quality Check', icon: '🎯', path: '/quality-check' },
