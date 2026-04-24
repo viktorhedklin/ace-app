@@ -4,12 +4,12 @@ import { Plus, FileText, Loader2, TrendingUp, BarChart3, ChevronLeft, ChevronRig
 import { getRecentCases } from '@/lib/caseMemory';
 import { InvokeLLM } from '@/api/claude';
 import { cn } from '@/lib/utils';
+import { loadShift, saveShift, listShifts } from '@/lib/shifts';
 import QAReviewInput from '@/components/QAReviewInput';
 
 /* ─── Date helpers ────────────────────────────────────────────────────────── */
 function toIso(d) { return d.toISOString().split('T')[0]; }
 function todayIso() { return toIso(new Date()); }
-function dateKey(iso) { return `shift_${iso}`; }
 function addDays(iso, n) { const d = new Date(iso); d.setDate(d.getDate() + n); return toIso(d); }
 function friendlyDate(iso) {
   const d = new Date(iso + 'T12:00:00');
@@ -38,26 +38,19 @@ const DEFAULT_DATA = {
 };
 
 function loadForDate(iso) {
-  try {
-    const d = JSON.parse(localStorage.getItem(dateKey(iso)));
-    return d ? { ...DEFAULT_DATA, ...d } : { ...DEFAULT_DATA };
-  } catch { return { ...DEFAULT_DATA }; }
+  const d = loadShift(iso);
+  return d ? { ...DEFAULT_DATA, ...d } : { ...DEFAULT_DATA };
 }
 
 function loadHistory() {
-  const keys = Object.keys(localStorage).filter(k => k.startsWith('shift_')).sort().reverse();
-  return keys.map(k => {
-    try {
-      const d = JSON.parse(localStorage.getItem(k));
-      const date = k.replace('shift_', '');
-      const avgChat = d.csatLiveChat?.length
-        ? (d.csatLiveChat.reduce((a, b) => a + b, 0) / d.csatLiveChat.length).toFixed(1) : '—';
-      const avgMsg = d.csatMessaging?.length
-        ? (d.csatMessaging.reduce((a, b) => a + b, 0) / d.csatMessaging.length).toFixed(1) : '—';
-      const total = (d.chatsTaken || 0) + (d.messagingTaken || 0) + (d.emailProd || 0) + (d.internalNotes || 0) * 0.5 + (d.taskHours || 0) * 10;
-      return { date, ...d, avgChat, avgMsg, total };
-    } catch { return null; }
-  }).filter(Boolean);
+  return listShifts().map(({ date, data: d }) => {
+    const avgChat = d.csatLiveChat?.length
+      ? (d.csatLiveChat.reduce((a, b) => a + b, 0) / d.csatLiveChat.length).toFixed(1) : '—';
+    const avgMsg = d.csatMessaging?.length
+      ? (d.csatMessaging.reduce((a, b) => a + b, 0) / d.csatMessaging.length).toFixed(1) : '—';
+    const total = (d.chatsTaken || 0) + (d.messagingTaken || 0) + (d.emailProd || 0) + (d.internalNotes || 0) * 0.5 + (d.taskHours || 0) * 10;
+    return { date, ...d, avgChat, avgMsg, total };
+  });
 }
 
 function Counter({ label, icon, value, onInc, onDec }) {
@@ -93,7 +86,7 @@ export default function ShiftTracker() {
 
   // Persist whenever data changes — keyed to selectedDate
   useEffect(() => {
-    localStorage.setItem(dateKey(selectedDate), JSON.stringify(data));
+    saveShift(selectedDate, data).catch(() => { /* storage is local-first */ });
     setHistory(loadHistory());
   }, [data, selectedDate]);
 

@@ -9,6 +9,7 @@ import SnippetSearch from '@/components/SnippetSearch';
 import NebulaBackground from '@/components/NebulaBackground';
 import { getMacros, executeMacro } from '@/lib/macros';
 import { useAce } from '@/context/AceContext';
+import { get as storageGet, set as storageSet, remove as storageRemove, NAMESPACES } from '@/lib/storage';
 
 function useOnlineStatus() {
   const [online, setOnline] = useState(navigator.onLine);
@@ -161,21 +162,36 @@ function SidebarContent({ onNav, onOpenPalette, ghostMode, setGhostMode }) {
 
 function CasePad() {
   const [open, setOpen] = useState(false);
-  const [notes, setNotes] = useState(() => localStorage.getItem('casepad_notes') || '');
+  // Prefer adapter; fall back to legacy `casepad_notes` key during transition.
+  const [notes, setNotes] = useState(() =>
+    storageGet(NAMESPACES.SETTINGS, 'casepad_notes') ?? localStorage.getItem('casepad_notes') ?? ''
+  );
   const textareaRef = useRef(null);
+  const saveTimerRef = useRef(null);
 
   useEffect(() => {
     if (open && textareaRef.current) textareaRef.current.focus();
   }, [open]);
 
+  // Cleanup pending save on unmount so we don't fire after component is gone.
+  useEffect(() => () => clearTimeout(saveTimerRef.current), []);
+
   function handleChange(e) {
-    setNotes(e.target.value);
-    localStorage.setItem('casepad_notes', e.target.value);
+    const val = e.target.value;
+    setNotes(val);
+    // Debounced cloud write — avoids an upsert per keystroke.
+    clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      storageSet(NAMESPACES.SETTINGS, 'casepad_notes', val);
+      localStorage.removeItem('casepad_notes'); // drop legacy once adapter owns it
+    }, 600);
   }
 
   function clear() {
     if (!window.confirm('Clear the scratchpad?')) return;
+    clearTimeout(saveTimerRef.current);
     setNotes('');
+    storageRemove(NAMESPACES.SETTINGS, 'casepad_notes');
     localStorage.removeItem('casepad_notes');
   }
 

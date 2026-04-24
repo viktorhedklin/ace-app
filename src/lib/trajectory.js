@@ -8,6 +8,8 @@
 
 import { InvokeLLM } from '@/api/claude';
 import { get, set, remove, NAMESPACES } from './storage';
+import { listShifts } from './shifts';
+import { getQueue as getQAQueue } from './qaMemory';
 
 const LEGACY_KEY = 'ace_trajectory';
 
@@ -103,18 +105,15 @@ Generate the trajectory plan.`;
 
 /* ─── Coach context builder ───────────────────────────────────────────────── */
 
-// Reads shift + QA state from localStorage and builds a compact context block
-// that gets injected into every coach chat turn.
+// Reads shift + QA state through the cloud-mirrored adapter helpers and
+// builds a compact context block that gets injected into every coach
+// chat turn.
 export function buildCoachContext() {
   const trajectory = loadTrajectory();
   if (!trajectory) return 'No trajectory plan set yet.';
 
-  // Recent shift metrics (last 7 days)
-  const shiftKeys = Object.keys(localStorage).filter(k => k.startsWith('shift_')).sort().reverse().slice(0, 7);
-  const days = shiftKeys.map(k => {
-    try { return { date: k.replace('shift_', ''), ...JSON.parse(localStorage.getItem(k)) }; }
-    catch { return null; }
-  }).filter(Boolean);
+  // Recent shift metrics (last 7 days) — listShifts returns newest first.
+  const days = listShifts().slice(0, 7).map(({ date, data }) => ({ date, ...data }));
 
   const cases = days.reduce((s, d) => s + (d.chatsTaken || 0) + (d.messagingTaken || 0) + (d.emailProd || 0), 0);
   const csatAll = days.flatMap(d => [...(d.csatLiveChat || []), ...(d.csatMessaging || [])]);
@@ -124,12 +123,7 @@ export function buildCoachContext() {
   const escalations = days.reduce((s, d) => s + (d.chatEscalations || 0) + (d.msgEscalations || 0), 0);
 
   // Recent QA issues from memory queue
-  const qaMemory = (() => {
-    try { return JSON.parse(localStorage.getItem('ace_qa_memory_queue') || '[]'); }
-    catch { return []; }
-  })().slice(-10);
-
-  const recurringIssues = findRecurring(qaMemory);
+  const recurringIssues = findRecurring(getQAQueue().slice(-10));
 
   return `## Agent's trajectory
 Goal: ${trajectory.goal}
@@ -178,9 +172,5 @@ function findRecurring(queue) {
 }
 
 export function getRecurringQAIssues() {
-  const queue = (() => {
-    try { return JSON.parse(localStorage.getItem('ace_qa_memory_queue') || '[]'); }
-    catch { return []; }
-  })();
-  return findRecurring(queue);
+  return findRecurring(getQAQueue());
 }

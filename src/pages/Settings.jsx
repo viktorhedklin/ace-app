@@ -6,7 +6,8 @@ import { Check, Eye, EyeOff, Trash2, AlertTriangle, ShieldCheck, FolderOpen, Loa
 import KnowledgeManager from '@/components/KnowledgeManager';
 import { getAllCases } from '@/lib/caseMemory';
 import { isConfigured as supabaseConfigured, sendMagicLink, signOut as supabaseSignOut, getSession, getUserEmail, onAuthChange } from '@/lib/supabase';
-import { pullAll, flushQueue, migrateFromLocalStorage } from '@/lib/storage';
+import { pullAll, flushQueue, migrateFromLocalStorage, remove as storageRemove, NAMESPACES } from '@/lib/storage';
+import { clearAllShifts, listShifts } from '@/lib/shifts';
 
 function Section({ title, children }) {
   return (
@@ -531,14 +532,29 @@ export default function Settings() {
 
   const maskedKey = apiKey ? `sk-...${apiKey.slice(-6)}` : 'Not set';
 
+  const shiftCount = listShifts().length;
+
+  async function clearShifts() {
+    if (!confirm(`Clear all ${shiftCount} shift log${shiftCount === 1 ? '' : 's'}? This removes them from cloud sync too.`)) return;
+    await clearAllShifts();
+    window.location.reload();
+  }
+
+  async function clearCasepad() {
+    if (!confirm('Clear CasePad notes? Removes from cloud sync too.')) return;
+    await storageRemove(NAMESPACES.SETTINGS, 'casepad_notes');
+    localStorage.removeItem('casepad_notes');
+    window.location.reload();
+  }
+
   const DATA_STORES = [
-    { key: null, label: 'Shift Tracker logs', desc: 'Daily case counts, CSAT scores, points', keys: Object.keys(localStorage).filter(k => k.startsWith('shift_')) },
+    { label: 'Shift Tracker logs', desc: `${shiftCount} day${shiftCount === 1 ? '' : 's'} tracked (cloud-synced)`, onClear: clearShifts },
     { key: 'closed_cases', label: 'Closed Cases', desc: 'All logged case records' },
     // Knowledge Base managed by KnowledgeManager component above
     { key: 'custom_campaigns', label: 'Campaign notes', desc: 'Custom campaign entries' },
     { key: 'custom_templates', label: 'Custom Templates', desc: 'User-added response templates' },
     { key: 'pinned_templates', label: 'Pinned Templates', desc: 'Template pin preferences' },
-    { key: 'casepad_notes', label: 'CasePad notes', desc: 'Sticky note scratchpad' },
+    { label: 'CasePad notes', desc: 'Sticky note scratchpad (cloud-synced)', onClear: clearCasepad },
   ];
 
   // Chat histories
@@ -709,13 +725,8 @@ export default function Settings() {
               </div>
               <button
                 onClick={() => {
-                  if (store.keys) {
-                    if (!confirm(`Clear all ${store.label}?`)) return;
-                    store.keys.forEach(k => localStorage.removeItem(k));
-                    window.location.reload();
-                  } else {
-                    clearData(store.key, store.label);
-                  }
+                  if (store.onClear) store.onClear();
+                  else clearData(store.key, store.label);
                 }}
                 className="text-xs text-fg-2 hover:text-crit transition-colors shrink-0 ml-4"
               >

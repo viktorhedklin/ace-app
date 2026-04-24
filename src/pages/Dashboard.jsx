@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import TiltCard from '@/components/TiltCard';
 import { ArrowRight, AlertTriangle, Target } from 'lucide-react';
 import { loadTrajectory, getRecurringQAIssues } from '@/lib/trajectory';
+import { loadShift, listShifts } from '@/lib/shifts';
 
 const MotionLink = motion.create ? motion.create(Link) : motion(Link);
 
@@ -41,21 +42,16 @@ const TOOLS = [
 // ─── Case data helpers ────────────────────────────────────────────────────────
 
 function getStats() {
-  try {
-    const today = new Date().toISOString().split('T')[0];
-    const raw = localStorage.getItem(`shift_${today}`);
-    if (!raw) return { cases: 0, closed: 0, csat: '—', escalations: 0 };
-    const d = JSON.parse(raw);
-    const allCsat = [...(d.csatLiveChat || []), ...(d.csatMessaging || [])];
-    const avgCsat = allCsat.length
-      ? (allCsat.reduce((a, b) => a + b, 0) / allCsat.length).toFixed(1)
-      : '—';
-    const cases = (d.chatsTaken || 0) + (d.messagingTaken || 0) + (d.emailProd || 0);
-    const escalations = (d.chatEscalations || 0) + (d.msgEscalations || 0);
-    return { cases, closed: d.closedCases || 0, csat: avgCsat, escalations };
-  } catch {
-    return { cases: 0, closed: 0, csat: '—', escalations: 0 };
-  }
+  const today = new Date().toISOString().split('T')[0];
+  const d = loadShift(today);
+  if (!d) return { cases: 0, closed: 0, csat: '—', escalations: 0 };
+  const allCsat = [...(d.csatLiveChat || []), ...(d.csatMessaging || [])];
+  const avgCsat = allCsat.length
+    ? (allCsat.reduce((a, b) => a + b, 0) / allCsat.length).toFixed(1)
+    : '—';
+  const cases = (d.chatsTaken || 0) + (d.messagingTaken || 0) + (d.emailProd || 0);
+  const escalations = (d.chatEscalations || 0) + (d.msgEscalations || 0);
+  return { cases, closed: d.closedCases || 0, csat: avgCsat, escalations };
 }
 
 function getCaseEvents() {
@@ -64,15 +60,12 @@ function getCaseEvents() {
 }
 
 // ─── Shift history helpers ────────────────────────────────────────────────────
-// Walk all shift_YYYY-MM-DD entries in localStorage and return parsed array.
+// Pulls every persisted shift via the adapter (cloud-mirrored) and flattens
+// into the { date, ...metrics } shape the Dashboard consumes.
 function getShiftHistory() {
-  const keys = Object.keys(localStorage).filter(k => k.startsWith('shift_')).sort();
-  return keys.map(k => {
-    try {
-      const d = JSON.parse(localStorage.getItem(k));
-      return { date: k.replace('shift_', ''), ...d };
-    } catch { return null; }
-  }).filter(Boolean);
+  return listShifts()
+    .map(({ date, data }) => ({ date, ...data }))
+    .sort((a, b) => a.date.localeCompare(b.date));
 }
 
 // Rolling average over shift history for a given channel's QA scores.

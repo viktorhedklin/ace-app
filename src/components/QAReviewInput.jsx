@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Loader2, ImageIcon, X, CheckCircle2, Trash2, AlertTriangle } from 'lucide-react';
 import { InvokeLLM, hasAnyApiKey } from '@/api/claude';
 import { cn } from '@/lib/utils';
+import { pushEntry as pushQAMemory } from '@/lib/qaMemory';
 
 /* ═══════════════════════════════════════════════════════════════
    QA Review Input — paste a QA review (text or screenshot), Ace
@@ -138,13 +139,9 @@ export default function QAReviewInput({ data, onAdd, onRemove }) {
       system_prompt: MEMORY_WRITER_PROMPT,
     });
 
-    // Append to a localStorage-backed "pending memories" queue.
-    // (Actual memory-file writing happens through Claude Code's memory system
-    //  — this queue keeps a trail the user can review later in Settings.)
-    const key = 'ace_qa_memory_queue';
-    const queue = JSON.parse(localStorage.getItem(key) || '[]');
-    queue.push({ ts: Date.now(), sourceEntry: entry, body: memoryBlob });
-    localStorage.setItem(key, JSON.stringify(queue.slice(-50))); // cap 50
+    // Append to the cloud-mirrored QA memory queue. The adapter caps at 50,
+    // mirrors to localStorage immediately, and upserts to Supabase async.
+    await pushQAMemory({ ts: Date.now(), sourceEntry: entry, body: memoryBlob });
   }
 
   return (
