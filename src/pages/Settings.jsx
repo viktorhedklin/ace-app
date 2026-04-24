@@ -250,8 +250,13 @@ function CloudSync() {
     setMigrating(true);
     try {
       const res = await migrateFromLocalStorage();
-      if (!res.ok) setError(res.reason || 'Migration failed.');
-      else setStatus(`Migrated ${res.migrated} item${res.migrated === 1 ? '' : 's'} to cloud.`);
+      if (!res.ok) { setError(res.reason || 'Migration failed.'); }
+      else {
+        const parts = [`${res.migrated} pushed to cloud`];
+        if (res.queued > 0) parts.push(`${res.queued} queued (last error: ${res.lastReason || 'unknown'})`);
+        setStatus(parts.join(' · '));
+        console.log('[CloudSync] migrate:', res);
+      }
     } catch (err) {
       setError(err.message || 'Migration failed.');
     } finally {

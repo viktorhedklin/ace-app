@@ -95,7 +95,10 @@ async function cloudUpsert(namespace, key, value) {
       { user_id: userId, namespace, key, value },
       { onConflict: 'user_id,namespace,key' }
     );
-  if (error) return { ok: false, reason: error.message };
+  if (error) {
+    console.warn('[storage] cloud upsert failed', { namespace, key, reason: error.message, code: error.code, details: error.details, hint: error.hint });
+    return { ok: false, reason: error.message };
+  }
   return { ok: true };
 }
 
@@ -129,8 +132,10 @@ export function list(namespace) {
 export async function set(namespace, key, value) {
   writeCache(namespace, key, value);
   const res = await cloudUpsert(namespace, key, value);
-  if (!res.ok) enqueue({ op: 'set', namespace, key, value });
-  return value;
+  if (!res.ok) {
+    enqueue({ op: 'set', namespace, key, value, lastReason: res.reason });
+  }
+  return { value, cloud: res.ok, reason: res.reason };
 }
 
 export async function remove(namespace, key) {
@@ -194,25 +199,24 @@ const LEGACY_KEY_MAP = [
 ];
 
 export async function migrateFromLocalStorage() {
-  if (!supabase) return { ok: false, reason: 'not_configured', migrated: 0 };
+  if (!supabase) return { ok: false, reason: 'not_configured', migrated: 0, queued: 0 };
   const userId = await getUserId();
-  if (!userId) return { ok: false, reason: 'not_signed_in', migrated: 0 };
+  if (!userId) return { ok: false, reason: 'not_signed_in', migrated: 0, queued: 0 };
 
   let migrated = 0;
+  let queued = 0;
+  let lastReason = null;
 
   // 1. Direct legacy keys
   for (const m of LEGACY_KEY_MAP) {
     const raw = localStorage.getItem(m.legacy);
     if (!raw) continue;
-    try {
-      const value = JSON.parse(raw);
-      await set(m.namespace, m.key, value);
-      migrated++;
-    } catch {
-      // not JSON — store as-is string
-      await set(m.namespace, m.key, raw);
-      migrated++;
-    }
+    let value;
+    try { value = JSON.parse(raw); }
+    catch { value = raw; }
+    const res = await set(m.namespace, m.key, value);
+    if (res.cloud) migrated++;
+    else { queued++; lastReason = res.reason; }
   }
 
   // 2. Shifts: shift_YYYY-MM-DD → namespace shifts, key = date
@@ -225,12 +229,13 @@ export async function migrateFromLocalStorage() {
     const date = k.slice('shift_'.length);
     try {
       const value = JSON.parse(localStorage.getItem(k));
-      await set(NAMESPACES.SHIFTS, date, value);
-      migrated++;
+      const res = await set(NAMESPACES.SHIFTS, date, value);
+      if (res.cloud) migrated++;
+      else { queued++; lastReason = res.reason; }
     } catch { /* skip malformed */ }
   }
 
-  return { ok: true, migrated };
+  return { ok: true, migrated, queued, lastReason };
 }
 
 /* ─── Safe boot hook ──────────────────────────────────────────────────────── */
