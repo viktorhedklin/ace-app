@@ -1,7 +1,10 @@
 import { scrubPII } from '@/lib/SecurityModule';
 import { getOpenAIKey, openaiChat, openaiChatStream } from '@/api/openai';
 import { retrieveArticles } from '@/lib/semanticSearch';
-import { get as storageGet, set as storageSet, NAMESPACES } from '@/lib/storage';
+import {
+  get as storageGet, set as storageSet, remove as storageRemove,
+  list as storageList, NAMESPACES,
+} from '@/lib/storage';
 
 export function getApiKey() {
   return localStorage.getItem('claude_api_key') || localStorage.getItem('openai_api_key') || '';
@@ -23,18 +26,86 @@ export function clearApiKey() {
 }
 
 // --- Knowledge Base ---
+//
+// Article storage shape: one row per article in the kb_articles namespace,
+// key `article_<id>`. Lets Sentinel upsert individual findings without
+// race-overwriting the whole array. Metadata rows (sync_url, last_sync) are
+// keyed directly — they live in the same namespace but don't start with
+// `article_`, so the list reader filters them out.
+
+const ARTICLE_KEY_PREFIX = 'article_';
+const articleKey = (id) => `${ARTICLE_KEY_PREFIX}${id}`;
+
+// One-shot lift: if the old `kb_articles/entries` row exists, split into
+// per-article rows and drop the aggregate. Runs at most once per device.
+let _perRowMigrationRan = false;
+function migrateEntriesRowIfNeeded() {
+  if (_perRowMigrationRan) return;
+  _perRowMigrationRan = true;
+  const legacyArray = storageGet(NAMESPACES.KB, 'entries');
+  if (!Array.isArray(legacyArray) || !legacyArray.length) return;
+  for (const entry of legacyArray) {
+    if (!entry || entry.id == null) continue;
+    // Preserve existing row if caller wrote one already with the same id.
+    const current = storageGet(NAMESPACES.KB, articleKey(entry.id));
+    if (current == null) storageSet(NAMESPACES.KB, articleKey(entry.id), entry);
+  }
+  storageRemove(NAMESPACES.KB, 'entries');
+}
 
 export function getKnowledge() {
-  const fromCloud = storageGet(NAMESPACES.KB, 'entries');
-  if (Array.isArray(fromCloud)) return fromCloud;
-  // Legacy fallback — one-shot read, migration button lifts it properly.
+  migrateEntriesRowIfNeeded();
+  const rows = storageList(NAMESPACES.KB);
+  const articles = rows
+    .filter(r => r.key.startsWith(ARTICLE_KEY_PREFIX) && r.value)
+    .map(r => r.value);
+  if (articles.length) return articles;
+  // Legacy fallback — raw localStorage pre-cloud-sync. Migration button lifts it.
   try { return JSON.parse(localStorage.getItem('ace_knowledge')) || []; }
   catch { return []; }
 }
 
+// Diff-based save: upsert entries that changed, remove rows that were dropped.
+// Keeps the existing whole-array API so hand-edit callers don't have to change.
 export function saveKnowledge(entries) {
-  storageSet(NAMESPACES.KB, 'entries', entries);
+  migrateEntriesRowIfNeeded();
+  const next = Array.isArray(entries) ? entries : [];
+  const current = storageList(NAMESPACES.KB)
+    .filter(r => r.key.startsWith(ARTICLE_KEY_PREFIX));
+
+  const nextById = new Map();
+  for (const e of next) {
+    if (!e || e.id == null) continue;
+    nextById.set(String(e.id), e);
+  }
+
+  // Delete rows that are no longer present.
+  for (const row of current) {
+    const id = row.key.slice(ARTICLE_KEY_PREFIX.length);
+    if (!nextById.has(id)) storageRemove(NAMESPACES.KB, row.key);
+  }
+
+  // Upsert only rows that changed — avoids needless cloud writes.
+  for (const [id, entry] of nextById) {
+    const existing = storageGet(NAMESPACES.KB, articleKey(id));
+    if (JSON.stringify(existing) !== JSON.stringify(entry)) {
+      storageSet(NAMESPACES.KB, articleKey(id), entry);
+    }
+  }
+
   localStorage.removeItem('ace_knowledge');
+}
+
+// Granular APIs — preferred path for Sentinel autosync. One article in,
+// one row updated. Call these directly when upserting a single finding.
+export function saveKnowledgeEntry(entry) {
+  if (!entry || entry.id == null) return;
+  storageSet(NAMESPACES.KB, articleKey(entry.id), entry);
+}
+
+export function removeKnowledgeEntry(id) {
+  if (id == null) return;
+  storageRemove(NAMESPACES.KB, articleKey(id));
 }
 
 // --- Remote KB Sync ---
