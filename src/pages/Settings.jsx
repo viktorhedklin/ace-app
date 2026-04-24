@@ -226,10 +226,16 @@ function CloudSync() {
     try {
       const flushed = await flushQueue();
       const pulled = await pullAll();
-      const parts = [];
-      if (flushed.flushed > 0) parts.push(`pushed ${flushed.flushed} queued`);
-      if (pulled.ok) parts.push(`pulled ${pulled.count} rows`);
-      setStatus(parts.join(' · ') || 'Already in sync.');
+      // Always show real numbers so we can diagnose "not syncing" issues.
+      const parts = [
+        `queued: pushed ${flushed.flushed}, failed ${flushed.failed}`,
+        pulled.ok
+          ? `pulled ${pulled.count} rows`
+          : `pull failed (${pulled.reason || 'unknown'})`,
+      ];
+      setStatus(parts.join(' · '));
+      // Also console log for remote debugging
+      console.log('[CloudSync] flush:', flushed, 'pull:', pulled);
     } catch (err) {
       setError(err.message || 'Sync failed.');
     } finally {
