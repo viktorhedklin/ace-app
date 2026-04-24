@@ -8,6 +8,7 @@ import {
 import { useAce, scrubPII, recordCaseEvent } from '@/context/AceContext';
 import { scrubMessagesForStorage, scrubForStorage } from '@/lib/SecurityModule';
 import { saveCase } from '@/lib/caseMemory';
+import { get as storageGet, set as storageSet, remove as storageRemove, NAMESPACES } from '@/lib/storage';
 import { Send, Trash2, Copy, Check, Brain, X, Zap, ChevronDown, ChevronUp, XCircle, ArrowDownToLine, ImagePlus, Languages, Gauge } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import EscalationBuilder from './EscalationBuilder.jsx';
@@ -381,10 +382,13 @@ After the audit block, proceed with your normal response addressing the user's q
 export default function Chat({ channel }) {
   const navigate = useNavigate();
   const { vipLevel, setVipLevel, isVIPCritical, vipLabel, vipColorClass, parsedData, pasteSignal, clearPasteSignal, triggerHeartbeat } = useAce();
-  const storageKey = `chat_history_${channel.id}`;
+  const historyKey = `history_${channel.id}`;
+  const legacyHistoryKey = `chat_history_${channel.id}`;
 
   const [messages, setMessages] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(storageKey)) || []; } catch { return []; }
+    const fromCloud = storageGet(NAMESPACES.CHAT, historyKey);
+    if (Array.isArray(fromCloud)) return fromCloud;
+    try { return JSON.parse(localStorage.getItem(legacyHistoryKey)) || []; } catch { return []; }
   });
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -393,15 +397,21 @@ export default function Chat({ channel }) {
   const [memTitle, setMemTitle] = useState('');
   const [memSaved, setMemSaved] = useState(null);
   const [autoMemory, setAutoMemory] = useState(() => {
+    const fromCloud = storageGet(NAMESPACES.CHAT, `auto_${channel.id}`);
+    if (typeof fromCloud === 'boolean') return fromCloud;
     try { return JSON.parse(localStorage.getItem(`auto_memory_${channel.id}`)) ?? false; } catch { return false; }
   });
   const [autoSaved, setAutoSaved] = useState(null);
   const [showEscalation, setShowEscalation] = useState(false);
   const isEmail = channel.type === 'EMAIL';
   const [tone, setTone] = useState(() => {
+    const fromCloud = storageGet(NAMESPACES.CHAT, `tone_${channel.id}`);
+    if (typeof fromCloud === 'string') return fromCloud;
     try { return localStorage.getItem(`tone_${channel.id}`) || 'empathetic'; } catch { return 'empathetic'; }
   });
   const [deepMode, setDeepMode] = useState(() => {
+    const fromCloud = storageGet(NAMESPACES.CHAT, `deep_${channel.id}`);
+    if (typeof fromCloud === 'boolean') return fromCloud;
     try { return JSON.parse(localStorage.getItem(`deep_mode_${channel.id}`)) ?? false; } catch { return false; }
   });
   // Close case
@@ -430,23 +440,33 @@ export default function Chat({ channel }) {
   // Auto-CSAT prediction
   const [csatScores, setCsatScores] = useState({}); // { msgIndex: { grade, score } }
   const [autoCsat, setAutoCsat] = useState(() => {
+    const fromCloud = storageGet(NAMESPACES.SETTINGS, 'auto_csat');
+    if (typeof fromCloud === 'boolean') return fromCloud;
     try { return JSON.parse(localStorage.getItem('ace_auto_csat')) ?? false; } catch { return false; }
   });
 
   const bottomRef = useRef(null);
   const textareaRef = useRef(null);
+  const historySaveTimerRef = useRef(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
+  // STORAGE SHIELD: scrub ALL messages (user + assistant) before persisting.
+  // Debounced so streaming doesn't fire an upsert per token.
   useEffect(() => {
-    // STORAGE SHIELD: scrub ALL messages (user + assistant) before persisting
-    localStorage.setItem(storageKey, JSON.stringify(scrubMessagesForStorage(messages)));
-  }, [messages, storageKey]);
+    clearTimeout(historySaveTimerRef.current);
+    historySaveTimerRef.current = setTimeout(() => {
+      storageSet(NAMESPACES.CHAT, historyKey, scrubMessagesForStorage(messages));
+      localStorage.removeItem(legacyHistoryKey);
+    }, 700);
+    return () => clearTimeout(historySaveTimerRef.current);
+  }, [messages, historyKey, legacyHistoryKey]);
 
   useEffect(() => {
-    localStorage.setItem(`tone_${channel.id}`, tone);
+    storageSet(NAMESPACES.CHAT, `tone_${channel.id}`, tone);
+    localStorage.removeItem(`tone_${channel.id}`);
   }, [tone, channel.id]);
 
   // Magic Paste: react to Bybit signals detected from clipboard
@@ -699,9 +719,11 @@ export default function Chat({ channel }) {
 
   function clearHistory() {
     if (confirm('Clear this conversation?')) {
+      clearTimeout(historySaveTimerRef.current);
       setMessages([]);
       setLatestNBA([]);
-      localStorage.removeItem(storageKey);
+      storageRemove(NAMESPACES.CHAT, historyKey);
+      localStorage.removeItem(legacyHistoryKey);
     }
   }
 
@@ -714,9 +736,11 @@ export default function Chat({ channel }) {
       const existing = getKnowledge();
       saveKnowledge([...existing, { id: Date.now(), title, content: scrubForStorage(summary), active: true }]);
     }
+    clearTimeout(historySaveTimerRef.current);
     setMessages([]);
     setLatestNBA([]);
-    localStorage.removeItem(storageKey);
+    storageRemove(NAMESPACES.CHAT, historyKey);
+    localStorage.removeItem(legacyHistoryKey);
     setClosingCase(false);
     setCloseSummary('');
     setCloseSaving(false);
@@ -729,7 +753,9 @@ export default function Chat({ channel }) {
   function syncFromChat() {
     if (!pairedChatChannel) return;
     try {
-      const chatHistory = JSON.parse(localStorage.getItem(`chat_history_${pairedChatChannel}`) || '[]');
+      const chatHistory =
+        storageGet(NAMESPACES.CHAT, `history_${pairedChatChannel}`)
+        ?? JSON.parse(localStorage.getItem(`chat_history_${pairedChatChannel}`) || '[]');
       const lastAssistant = [...chatHistory].reverse().find(m => m.role === 'assistant');
       if (!lastAssistant?.content) return;
       const activeTone = TONES.find(t => t.id === tone);
@@ -825,7 +851,8 @@ export default function Chat({ channel }) {
               onClick={() => {
                 const next = !deepMode;
                 setDeepMode(next);
-                localStorage.setItem(`deep_mode_${channel.id}`, JSON.stringify(next));
+                storageSet(NAMESPACES.CHAT, `deep_${channel.id}`, next);
+                localStorage.removeItem(`deep_mode_${channel.id}`);
               }}
               className={cn(
                 'flex items-center gap-1.5 text-xs px-2 py-1 rounded-lg border transition-colors duration-150',
@@ -844,7 +871,8 @@ export default function Chat({ channel }) {
               onClick={() => {
                 const next = !autoMemory;
                 setAutoMemory(next);
-                localStorage.setItem(`auto_memory_${channel.id}`, JSON.stringify(next));
+                storageSet(NAMESPACES.CHAT, `auto_${channel.id}`, next);
+                localStorage.removeItem(`auto_memory_${channel.id}`);
               }}
               className={cn(
                 'flex items-center gap-1.5 text-xs px-2 py-1 rounded-lg border transition-colors duration-150',
@@ -1167,9 +1195,11 @@ export default function Chat({ channel }) {
               </button>
               <button
                 onClick={() => {
+                  clearTimeout(historySaveTimerRef.current);
                   setMessages([]);
                   setLatestNBA([]);
-                  localStorage.removeItem(storageKey);
+                  storageRemove(NAMESPACES.CHAT, historyKey);
+                  localStorage.removeItem(legacyHistoryKey);
                   setClosingCase(false);
                   setCloseSummary('');
                 }}
@@ -1247,7 +1277,8 @@ export default function Chat({ channel }) {
               onClick={() => {
                 const next = !autoCsat;
                 setAutoCsat(next);
-                localStorage.setItem('ace_auto_csat', JSON.stringify(next));
+                storageSet(NAMESPACES.SETTINGS, 'auto_csat', next);
+                localStorage.removeItem('ace_auto_csat');
               }}
               className={cn(
                 'text-xs whitespace-nowrap px-2.5 py-1.5 rounded-lg border transition-colors duration-150 shrink-0 flex items-center gap-1 cursor-pointer',

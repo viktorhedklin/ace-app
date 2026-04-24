@@ -1,6 +1,7 @@
 import { scrubPII } from '@/lib/SecurityModule';
 import { getOpenAIKey, openaiChat, openaiChatStream } from '@/api/openai';
 import { retrieveArticles } from '@/lib/semanticSearch';
+import { get as storageGet, set as storageSet, NAMESPACES } from '@/lib/storage';
 
 export function getApiKey() {
   return localStorage.getItem('claude_api_key') || localStorage.getItem('openai_api_key') || '';
@@ -24,27 +25,29 @@ export function clearApiKey() {
 // --- Knowledge Base ---
 
 export function getKnowledge() {
-  try {
-    return JSON.parse(localStorage.getItem('ace_knowledge')) || [];
-  } catch {
-    return [];
-  }
+  const fromCloud = storageGet(NAMESPACES.KB, 'entries');
+  if (Array.isArray(fromCloud)) return fromCloud;
+  // Legacy fallback — one-shot read, migration button lifts it properly.
+  try { return JSON.parse(localStorage.getItem('ace_knowledge')) || []; }
+  catch { return []; }
 }
 
 export function saveKnowledge(entries) {
-  localStorage.setItem('ace_knowledge', JSON.stringify(entries));
+  storageSet(NAMESPACES.KB, 'entries', entries);
+  localStorage.removeItem('ace_knowledge');
 }
 
 // --- Remote KB Sync ---
 
-const KB_SYNC_URL_KEY = 'ace_kb_sync_url';
-
 export function getKBSyncUrl() {
-  return localStorage.getItem(KB_SYNC_URL_KEY) || '';
+  const fromCloud = storageGet(NAMESPACES.KB, 'sync_url');
+  if (typeof fromCloud === 'string') return fromCloud;
+  return localStorage.getItem('ace_kb_sync_url') || '';
 }
 
 export function setKBSyncUrl(url) {
-  localStorage.setItem(KB_SYNC_URL_KEY, url.trim());
+  storageSet(NAMESPACES.KB, 'sync_url', url.trim());
+  localStorage.removeItem('ace_kb_sync_url');
 }
 
 // Fetch remote KB and merge with local — remote wins on title conflicts
@@ -108,7 +111,8 @@ export async function syncKnowledgeFromRemote() {
     }
 
     saveKnowledge(merged);
-    localStorage.setItem('ace_kb_last_sync', new Date().toISOString());
+    storageSet(NAMESPACES.KB, 'last_sync', new Date().toISOString());
+    localStorage.removeItem('ace_kb_last_sync');
     return { synced: true, added, updated, total: merged.length };
   } catch (e) {
     return { synced: false, reason: e.message || 'network_error' };
@@ -116,6 +120,8 @@ export async function syncKnowledgeFromRemote() {
 }
 
 export function getLastSyncTime() {
+  const fromCloud = storageGet(NAMESPACES.KB, 'last_sync');
+  if (typeof fromCloud === 'string') return fromCloud;
   return localStorage.getItem('ace_kb_last_sync') || null;
 }
 

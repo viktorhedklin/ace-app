@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Copy, Check, Plus, Trash2, Star, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { get as storageGet, set as storageSet, NAMESPACES } from '@/lib/storage';
 
 const BUILT_IN = [
   // Greetings
@@ -151,9 +152,13 @@ export default function QuickTemplates() {
   const [search, setSearch] = useState('');
   const [copied, setCopied] = useState(null);
   const [pinned, setPinned] = useState(() => {
+    const fromCloud = storageGet(NAMESPACES.SETTINGS, 'pinned_templates');
+    if (Array.isArray(fromCloud)) return fromCloud;
     try { return JSON.parse(localStorage.getItem('pinned_templates')) || []; } catch { return []; }
   });
   const [custom, setCustom] = useState(() => {
+    const fromCloud = storageGet(NAMESPACES.SETTINGS, 'custom_templates');
+    if (Array.isArray(fromCloud)) return fromCloud;
     try { return JSON.parse(localStorage.getItem('custom_templates')) || []; } catch { return []; }
   });
   const [showAdd, setShowAdd] = useState(false);
@@ -168,7 +173,8 @@ export default function QuickTemplates() {
   function pin(id) {
     const updated = pinned.includes(id) ? pinned.filter(p => p !== id) : [...pinned, id];
     setPinned(updated);
-    localStorage.setItem('pinned_templates', JSON.stringify(updated));
+    storageSet(NAMESPACES.SETTINGS, 'pinned_templates', updated);
+    localStorage.removeItem('pinned_templates');
   }
 
   function addCustom() {
@@ -176,7 +182,8 @@ export default function QuickTemplates() {
     const entry = { ...newForm, id: `c_${Date.now()}` };
     const updated = [...custom, entry];
     setCustom(updated);
-    localStorage.setItem('custom_templates', JSON.stringify(updated));
+    storageSet(NAMESPACES.SETTINGS, 'custom_templates', updated);
+    localStorage.removeItem('custom_templates');
     setNewForm({ cat: 'Custom', title: '', text: '' });
     setShowAdd(false);
   }
@@ -184,7 +191,8 @@ export default function QuickTemplates() {
   function deleteCustom(id) {
     const updated = custom.filter(t => t.id !== id);
     setCustom(updated);
-    localStorage.setItem('custom_templates', JSON.stringify(updated));
+    storageSet(NAMESPACES.SETTINGS, 'custom_templates', updated);
+    localStorage.removeItem('custom_templates');
   }
 
   const all = [...BUILT_IN, ...custom];

@@ -244,7 +244,7 @@ function CloudSync() {
   }
 
   async function handleMigrate() {
-    if (!confirm('Upload your existing localStorage data (shifts, trajectory, QA memory, saved cases) to the cloud? This is a one-time one-way push.')) return;
+    if (!confirm('Upload your existing localStorage data (shifts, trajectory, QA memory, saved cases, chat histories, KB, templates, closed cases, snippets) to the cloud? This is a one-time one-way push.')) return;
     setError('');
     setStatus('');
     setMigrating(true);
@@ -287,7 +287,7 @@ function CloudSync() {
     <Section title="☁️ Cloud Sync">
       <div className="space-y-3">
         <p className="text-xs text-fg-2">
-          Keeps your trajectory, shifts, QA memory, saved cases, and knowledge base in sync across devices. End-to-end in your own Supabase project. Row-level security + magic-link auth.
+          Keeps trajectory, shifts, QA memory, chat histories, closed cases, knowledge base, templates, and snippets in sync across devices. Your own Supabase project — row-level security + magic-link auth.
         </p>
 
         {userEmail ? (

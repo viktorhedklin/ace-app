@@ -6,6 +6,7 @@ import TiltCard from '@/components/TiltCard';
 import { ArrowRight, AlertTriangle, Target } from 'lucide-react';
 import { loadTrajectory, getRecurringQAIssues } from '@/lib/trajectory';
 import { loadShift, listShifts } from '@/lib/shifts';
+import { get as storageGet, NAMESPACES } from '@/lib/storage';
 
 const MotionLink = motion.create ? motion.create(Link) : motion(Link);
 
@@ -55,6 +56,8 @@ function getStats() {
 }
 
 function getCaseEvents() {
+  const fromCloud = storageGet(NAMESPACES.SETTINGS, 'case_events');
+  if (Array.isArray(fromCloud)) return fromCloud;
   try { return JSON.parse(localStorage.getItem('ace_case_events') || '[]'); }
   catch { return []; }
 }

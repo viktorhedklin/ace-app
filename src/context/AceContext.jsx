@@ -2,7 +2,8 @@ import { createContext, useContext, useState, useCallback, useEffect, useRef } f
 import { BYBIT_KB, parseErrorCodes } from '@/data/bybitKB';
 import { scrubPII } from '@/lib/SecurityModule';
 import { toast } from '@/components/ui/use-toast';
-import { syncKnowledgeFromRemote, getKBSyncUrl } from '@/api/claude';  // kept for optional manual sync
+import { syncKnowledgeFromRemote, getKBSyncUrl, setKBSyncUrl } from '@/api/claude';  // kept for optional manual sync
+import { get as storageGet, set as storageSet, remove as storageRemove, NAMESPACES } from '@/lib/storage';
 
 // Re-export from SecurityModule — single source of truth for all PII scrubbing.
 // Every file that imports scrubPII from AceContext gets the SecurityModule version.
@@ -63,25 +64,31 @@ function hasBybitSignals(parsed) {
 // ─── Case event recorder (for Efficiency Heatmap) ────────────────────────────
 export function recordCaseEvent({ vipLevel = 0, channel = '' } = {}) {
   try {
-    const raw = localStorage.getItem('ace_case_events') || '[]';
-    const events = JSON.parse(raw);
+    const existing = storageGet(NAMESPACES.SETTINGS, 'case_events');
+    const legacy = !Array.isArray(existing)
+      ? JSON.parse(localStorage.getItem('ace_case_events') || '[]')
+      : null;
+    const events = Array.isArray(existing) ? existing : (legacy || []);
     events.push({ ts: Date.now(), vipLevel, channel });
-    // Keep only last 90 days
     const cutoff = Date.now() - 90 * 24 * 60 * 60 * 1000;
-    localStorage.setItem('ace_case_events', JSON.stringify(events.filter(e => e.ts > cutoff)));
+    const trimmed = events.filter(e => e.ts > cutoff);
+    storageSet(NAMESPACES.SETTINGS, 'case_events', trimmed);
+    localStorage.removeItem('ace_case_events');
   } catch { /* non-critical */ }
 }
 
 // ─── Secure Snippets — local-only snippet storage ────────────────────────────
-const SNIPPETS_KEY = 'ace_snippets';
 
 function loadSnippets() {
-  try { return JSON.parse(localStorage.getItem(SNIPPETS_KEY) || '[]'); }
+  const fromCloud = storageGet(NAMESPACES.SETTINGS, 'snippets');
+  if (Array.isArray(fromCloud)) return fromCloud;
+  try { return JSON.parse(localStorage.getItem('ace_snippets') || '[]'); }
   catch { return []; }
 }
 
 function persistSnippets(snippets) {
-  localStorage.setItem(SNIPPETS_KEY, JSON.stringify(snippets));
+  storageSet(NAMESPACES.SETTINGS, 'snippets', snippets);
+  localStorage.removeItem('ace_snippets');
 }
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
@@ -198,6 +205,8 @@ export function AceProvider({ children }) {
     // Kill any Base44 remnants — Base44 was permanently excluded in Phase 1
     const url = getKBSyncUrl();
     if (url && /base44|b44\./i.test(url)) {
+      setKBSyncUrl('');
+      storageRemove(NAMESPACES.KB, 'sync_url');
       localStorage.removeItem('ace_kb_sync_url');
     }
     // Also clean up any leftover GitHub token from previous version

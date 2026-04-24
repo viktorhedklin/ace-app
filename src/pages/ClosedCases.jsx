@@ -2,8 +2,11 @@ import { useState } from 'react';
 import { Plus, Trash2, Search, ChevronDown, ChevronUp, Tag, X } from 'lucide-react';
 import { scrubForStorage } from '@/lib/SecurityModule';
 import { cn } from '@/lib/utils';
+import { get as storageGet, set as storageSet, NAMESPACES } from '@/lib/storage';
 
 function load() {
+  const fromCloud = storageGet(NAMESPACES.SAVED_CASES, 'closed');
+  if (Array.isArray(fromCloud)) return fromCloud;
   try { return JSON.parse(localStorage.getItem('closed_cases')) || []; } catch { return []; }
 }
 function save(cases) {
@@ -15,7 +18,8 @@ function save(cases) {
     notes: scrubForStorage(c.notes),
     tags: c.tags || [],
   }));
-  localStorage.setItem('closed_cases', JSON.stringify(scrubbed));
+  storageSet(NAMESPACES.SAVED_CASES, 'closed', scrubbed);
+  localStorage.removeItem('closed_cases');
 }
 
 const CATEGORIES = ['All', 'P2P', 'Deposit', 'Withdrawal', 'Account', 'Card', 'Trading', 'Security', 'Other'];
