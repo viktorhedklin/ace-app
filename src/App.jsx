@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster"
 import ApiKeySetup from "@/components/ApiKeySetup.jsx"
 import { getApiKey, hasAnyApiKey } from '@/api/claude'
 import { AceProvider } from '@/context/AceContext'
+import { syncOnBoot } from '@/lib/storage'
+import { onAuthChange } from '@/lib/supabase'
 
 const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 
@@ -98,6 +100,15 @@ function App() {
     !gateEnabled || sessionStorage.getItem('ace_terminal_unlocked') === '1'
   );
   const [hasKey, setHasKey] = useState(() => hasAnyApiKey() || sessionStorage.getItem('ace_browse_mode_unlocked') === 'true');
+
+  // ── Cloud sync: pull latest state on boot, re-sync on sign-in ─────────────
+  useEffect(() => {
+    syncOnBoot().catch(() => { /* storage stays local-first on failure */ });
+    const unsub = onAuthChange(session => {
+      if (session) syncOnBoot().catch(() => {});
+    });
+    return () => unsub();
+  }, []);
 
   // ── Dead Man's Switch — 30 min inactivity locks the gate ──────────────────
   const timerRef = useRef(null);

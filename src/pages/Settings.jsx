@@ -2,9 +2,11 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { getApiKey, setApiKey, clearApiKey, getCostMode, setCostMode } from '@/api/claude';
 import { getSerpApiKey, setSerpApiKey, clearSerpApiKey } from '@/api/search';
 import { getOpenAIKey, setOpenAIKey, clearOpenAIKey } from '@/api/openai';
-import { Check, Eye, EyeOff, Trash2, AlertTriangle, ShieldCheck, FolderOpen, Loader2, Globe, Zap, Scale, Leaf } from 'lucide-react';
+import { Check, Eye, EyeOff, Trash2, AlertTriangle, ShieldCheck, FolderOpen, Loader2, Globe, Zap, Scale, Leaf, Cloud, CloudOff, Mail, LogOut, RefreshCw, Upload } from 'lucide-react';
 import KnowledgeManager from '@/components/KnowledgeManager';
 import { getAllCases } from '@/lib/caseMemory';
+import { isConfigured as supabaseConfigured, sendMagicLink, signOut as supabaseSignOut, getSession, getUserEmail, onAuthChange } from '@/lib/supabase';
+import { pullAll, flushQueue, migrateFromLocalStorage } from '@/lib/storage';
 
 function Section({ title, children }) {
   return (
@@ -169,6 +171,196 @@ function AutoVault() {
         <p className="text-[10px] text-fg-3">
           Encrypted with AES-256-GCM. Key derived from Terminal Gate hash via PBKDF2 (100k iterations).
         </p>
+      </div>
+    </Section>
+  );
+}
+
+// ── Cloud Sync — Supabase-backed persistence ───────────────────────────────
+
+function CloudSync() {
+  const [email, setEmail] = useState('');
+  const [sendingLink, setSendingLink] = useState(false);
+  const [linkSent, setLinkSent] = useState(false);
+  const [userEmail, setUserEmailState] = useState(null);
+  const [syncing, setSyncing] = useState(false);
+  const [migrating, setMigrating] = useState(false);
+  const [status, setStatus] = useState('');
+  const [error, setError] = useState('');
+
+  // Track auth state so the panel reacts to sign-in / sign-out.
+  useEffect(() => {
+    let mounted = true;
+    getSession().then(session => {
+      if (mounted) setUserEmailState(session?.user?.email || null);
+    });
+    const unsub = onAuthChange(session => {
+      if (mounted) {
+        setUserEmailState(session?.user?.email || null);
+        setLinkSent(false);
+      }
+    });
+    return () => { mounted = false; unsub(); };
+  }, []);
+
+  async function handleSendLink() {
+    setError('');
+    const trimmed = email.trim();
+    if (!trimmed || !trimmed.includes('@')) { setError('Enter a valid email address.'); return; }
+    setSendingLink(true);
+    try {
+      await sendMagicLink(trimmed);
+      setLinkSent(true);
+    } catch (err) {
+      setError(err.message || 'Could not send magic link.');
+    } finally {
+      setSendingLink(false);
+    }
+  }
+
+  async function handleSyncNow() {
+    setError('');
+    setStatus('');
+    setSyncing(true);
+    try {
+      const flushed = await flushQueue();
+      const pulled = await pullAll();
+      const parts = [];
+      if (flushed.flushed > 0) parts.push(`pushed ${flushed.flushed} queued`);
+      if (pulled.ok) parts.push(`pulled ${pulled.count} rows`);
+      setStatus(parts.join(' · ') || 'Already in sync.');
+    } catch (err) {
+      setError(err.message || 'Sync failed.');
+    } finally {
+      setSyncing(false);
+    }
+  }
+
+  async function handleMigrate() {
+    if (!confirm('Upload your existing localStorage data (shifts, trajectory, QA memory, saved cases) to the cloud? This is a one-time one-way push.')) return;
+    setError('');
+    setStatus('');
+    setMigrating(true);
+    try {
+      const res = await migrateFromLocalStorage();
+      if (!res.ok) setError(res.reason || 'Migration failed.');
+      else setStatus(`Migrated ${res.migrated} item${res.migrated === 1 ? '' : 's'} to cloud.`);
+    } catch (err) {
+      setError(err.message || 'Migration failed.');
+    } finally {
+      setMigrating(false);
+    }
+  }
+
+  async function handleSignOut() {
+    if (!confirm('Sign out of cloud sync? Your local data stays on this device but will no longer sync.')) return;
+    await supabaseSignOut();
+  }
+
+  if (!supabaseConfigured) {
+    return (
+      <Section title="☁️ Cloud Sync">
+        <div className="flex items-center gap-2 bg-warn/10 border border-warn/30 rounded-lg px-3 py-2">
+          <CloudOff size={14} className="text-warn shrink-0" />
+          <div className="flex-1">
+            <p className="text-xs text-warn font-medium">Not configured</p>
+            <p className="text-[10px] text-fg-2">Add <span className="font-mono">VITE_SUPABASE_URL</span> and <span className="font-mono">VITE_SUPABASE_ANON_KEY</span> to <span className="font-mono">.env.local</span> and restart the dev server.</p>
+          </div>
+        </div>
+      </Section>
+    );
+  }
+
+  return (
+    <Section title="☁️ Cloud Sync">
+      <div className="space-y-3">
+        <p className="text-xs text-fg-2">
+          Keeps your trajectory, shifts, QA memory, saved cases, and knowledge base in sync across devices. End-to-end in your own Supabase project. Row-level security + magic-link auth.
+        </p>
+
+        {userEmail ? (
+          <>
+            <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2">
+              <Cloud size={14} className="text-emerald-400 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-emerald-400 font-medium">Signed in as {userEmail}</p>
+                <p className="text-[10px] text-fg-2">Writes sync automatically. Pull happens on app boot.</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={handleSyncNow}
+                disabled={syncing}
+                className="flex items-center justify-center gap-2 text-xs bg-bg-2 hover:bg-hero/15 border border-border-0 hover:border-hero/30 text-fg-1 hover:text-hero px-3 py-2 rounded-lg transition-colors duration-150 cursor-pointer disabled:opacity-50"
+                aria-label="Sync now"
+              >
+                {syncing ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />}
+                {syncing ? 'Syncing…' : 'Sync now'}
+              </button>
+              <button
+                onClick={handleMigrate}
+                disabled={migrating}
+                className="flex items-center justify-center gap-2 text-xs bg-bg-2 hover:bg-hero/15 border border-border-0 hover:border-hero/30 text-fg-1 hover:text-hero px-3 py-2 rounded-lg transition-colors duration-150 cursor-pointer disabled:opacity-50"
+                aria-label="Migrate localStorage to cloud"
+              >
+                {migrating ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
+                {migrating ? 'Migrating…' : 'Push local → cloud'}
+              </button>
+            </div>
+
+            <button
+              onClick={handleSignOut}
+              className="flex items-center gap-2 text-xs text-fg-2 hover:text-crit transition-colors cursor-pointer"
+              aria-label="Sign out of cloud sync"
+            >
+              <LogOut size={12} /> Sign out
+            </button>
+          </>
+        ) : linkSent ? (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 bg-hero/10 border border-hero/30 rounded-lg px-3 py-2">
+              <Mail size={14} className="text-hero shrink-0" />
+              <div className="flex-1">
+                <p className="text-xs text-hero font-medium">Magic link sent to {email}</p>
+                <p className="text-[10px] text-fg-2">Click the link in your inbox. You'll be redirected back to Ace signed in.</p>
+              </div>
+            </div>
+            <button
+              onClick={() => { setLinkSent(false); setEmail(''); }}
+              className="text-xs text-fg-2 hover:text-fg-1 transition-colors cursor-pointer"
+            >
+              Send to a different email
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <label htmlFor="cloud-email" className="text-xs text-fg-2 block">Email address</label>
+            <div className="flex gap-2">
+              <input
+                id="cloud-email"
+                type="email"
+                value={email}
+                onChange={e => { setEmail(e.target.value); setError(''); }}
+                onKeyDown={e => e.key === 'Enter' && handleSendLink()}
+                placeholder="you@example.com"
+                className="flex-1 bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-sm text-fg-0 placeholder-fg-3 outline-none"
+              />
+              <button
+                onClick={handleSendLink}
+                disabled={sendingLink || !email.trim()}
+                className="bg-hero disabled:bg-bg-3 disabled:text-fg-2 text-[#021418] font-medium text-sm px-4 rounded-lg hover:bg-hero transition-colors flex items-center gap-1 cursor-pointer"
+                aria-label="Send magic link"
+              >
+                {sendingLink ? <Loader2 size={13} className="animate-spin" /> : <><Mail size={13} /> Send link</>}
+              </button>
+            </div>
+            <p className="text-[10px] text-fg-3">No password. Click the link we email you to sign in on this device.</p>
+          </div>
+        )}
+
+        {status && <p className="text-xs text-emerald-400">{status}</p>}
+        {error && <p className="text-xs text-crit">{error}</p>}
       </div>
     </Section>
   );
@@ -552,6 +744,9 @@ export default function Settings() {
           )}
         </div>
       </Section>
+
+      {/* Cloud Sync */}
+      <CloudSync />
 
       {/* Auto-Vault */}
       <AutoVault />

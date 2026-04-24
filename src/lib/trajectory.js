@@ -1,26 +1,37 @@
 // ─── Trajectory — Personal coach storage + LLM plan generation ────────────────
 // User enters goals once. Ace generates a milestone plan. Coach chat gets
 // rich context (plan + live shift/QA data + memory queue) on every ask.
+//
+// Storage routes through the cloud-mirrored adapter (src/lib/storage.js).
+// Reads stay synchronous (localStorage mirror). Writes are fire-and-forget
+// from the caller's perspective — they don't need to await.
 
 import { InvokeLLM } from '@/api/claude';
+import { get, set, remove, NAMESPACES } from './storage';
 
-const STORAGE_KEY = 'ace_trajectory';
+const LEGACY_KEY = 'ace_trajectory';
 
 export function loadTrajectory() {
+  // Prefer adapter mirror; fall back to the legacy key for pre-migration data.
+  const fromAdapter = get(NAMESPACES.TRAJECTORY, 'plan');
+  if (fromAdapter) return fromAdapter;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(LEGACY_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }
 }
 
-export function saveTrajectory(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+export async function saveTrajectory(data) {
+  await set(NAMESPACES.TRAJECTORY, 'plan', data);
+  // Drop the legacy key so we don't end up with two sources of truth.
+  localStorage.removeItem(LEGACY_KEY);
 }
 
-export function clearTrajectory() {
-  localStorage.removeItem(STORAGE_KEY);
+export async function clearTrajectory() {
+  await remove(NAMESPACES.TRAJECTORY, 'plan');
+  localStorage.removeItem(LEGACY_KEY);
 }
 
 export function isOnboarded() {
