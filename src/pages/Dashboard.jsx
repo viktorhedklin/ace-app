@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import TiltCard from '@/components/TiltCard';
-import { ArrowRight, AlertTriangle } from 'lucide-react';
+import { ArrowRight, AlertTriangle, Target } from 'lucide-react';
+import { loadTrajectory, getRecurringQAIssues } from '@/lib/trajectory';
 
 const MotionLink = motion.create ? motion.create(Link) : motion(Link);
 
@@ -226,6 +227,11 @@ export default function Dashboard() {
     return (all.reduce((a, b) => a + b, 0) / all.length).toFixed(0);
   }, [history]);
 
+  // Trajectory tie-in
+  const trajectory = useMemo(() => loadTrajectory(), []);
+  const recurringIssues = useMemo(() => getRecurringQAIssues(), []);
+  const weekFocus = trajectory?.plan?.thisWeekFocus;
+
   // Rotating daily brief — picks a line based on what's most interesting today.
   const dailyBrief = useMemo(() => {
     if (isHighPressure) {
@@ -233,6 +239,20 @@ export default function Dashboard() {
         icon: <AlertTriangle size={14} className="inline mr-1.5 -mt-0.5" />,
         text: `${vipPressure} VIP 3+ case${vipPressure !== 1 ? 's' : ''} in the last 60 minutes. Stay sharp.`,
         cls: 'text-warn',
+      };
+    }
+    if (recurringIssues.length >= 1) {
+      return {
+        icon: <span className="mr-1.5">🎯</span>,
+        text: `Pattern flagged: "${recurringIssues[0].issue}" × ${recurringIssues[0].count}. Open Trajectory to work on it.`,
+        cls: 'text-warn',
+      };
+    }
+    if (weekFocus) {
+      return {
+        icon: <Target size={14} className="inline mr-1.5 -mt-0.5 text-hero" />,
+        text: `Focus this week: ${weekFocus.title}. ${weekFocus.action}`,
+        cls: 'text-fg-1',
       };
     }
     if (streak >= 3) {
@@ -254,7 +274,7 @@ export default function Dashboard() {
       text: "Three months in. You've handled things that stumped people with years of experience.",
       cls: 'text-fg-1',
     };
-  }, [isHighPressure, vipPressure, streak, qaCombined]);
+  }, [isHighPressure, vipPressure, streak, qaCombined, recurringIssues, weekFocus]);
 
   const csatDelta = stats.csat !== '—' && parseFloat(stats.csat) >= 4.5
     ? { text: `★ ${stats.csat} / 5.0`, cls: 'text-ok' }

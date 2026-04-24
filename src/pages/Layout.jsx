@@ -51,7 +51,7 @@ const TOOLS = [
   { name: 'Chain Lookup', icon: '🔗', path: '/chain-lookup' },
   { name: 'Quality Check', icon: '🎯', path: '/quality-check' },
   { name: 'Closed Cases', icon: '📋', path: '/closed-cases' },
-  { name: 'Probation Prep', icon: '🎓', path: '/probation-prep' },
+  { name: 'Trajectory', icon: '🎯', path: '/trajectory' },
   { name: 'Quick Templates', icon: '💬', path: '/quick-templates' },
   { name: 'Follow-up', icon: '📬', path: '/follow-up' },
   { name: 'Translate 🇸🇪', icon: '🌐', path: '/translate' },

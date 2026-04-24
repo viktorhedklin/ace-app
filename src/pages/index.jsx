@@ -24,7 +24,7 @@ const CardDecline    = lazy(() => import('./CardDecline.jsx'));
 const ChainLookup    = lazy(() => import('./ChainLookup.jsx'));
 const QualityCheck   = lazy(() => import('./QualityCheck.jsx'));
 const ClosedCases    = lazy(() => import('./ClosedCases.jsx'));
-const ProbationPrep  = lazy(() => import('./ProbationPrep.jsx'));
+const Trajectory     = lazy(() => import('./Trajectory.jsx'));
 const KnowledgeBase  = lazy(() => import('./KnowledgeBase.jsx'));
 const QuickTemplates = lazy(() => import('./QuickTemplates.jsx'));
 const FollowUp       = lazy(() => import('./FollowUp.jsx'));
@@ -176,7 +176,8 @@ function AnimatedRoutes() {
             <Route path="/chain-lookup" element={<ChainLookup />} />
             <Route path="/quality-check" element={<QualityCheck />} />
             <Route path="/closed-cases" element={<ClosedCases />} />
-            <Route path="/probation-prep" element={<ProbationPrep />} />
+            <Route path="/trajectory" element={<Trajectory />} />
+            <Route path="/probation-prep" element={<Trajectory />} />
             <Route path="/knowledge" element={<KnowledgeBase />} />
             <Route path="/quick-templates" element={<QuickTemplates />} />
             <Route path="/follow-up" element={<FollowUp />} />
