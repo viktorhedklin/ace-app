@@ -22,6 +22,7 @@ const CATEGORIES = [
     items: [
       { name: 'P2P Trading & Advertise', icon: '🤝', path: '/p2p-advertiser', desc: 'Payment methods, nicknames, reviews, advertiser status' },
       { name: 'P2P Dispute', icon: '⚖️', path: '/p2p-dispute', desc: 'Order disputes, appeals, and resolution' },
+      { name: 'P2P Restriction', icon: '🔒', path: '/p2p-restriction', desc: '13 scenarios: high risk, violation, scammer, reports, frozen' },
     ],
   },
   {

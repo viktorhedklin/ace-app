@@ -17,6 +17,7 @@ const MissingDeposit = lazy(() => import('./MissingDeposit.jsx'));
 const AccountMatters = lazy(() => import('./AccountMatters.jsx'));
 const P2PAdvertiser  = lazy(() => import('./P2PAdvertiser.jsx'));
 const P2PDispute     = lazy(() => import('./P2PDispute.jsx'));
+const P2PRestriction = lazy(() => import('./P2PRestriction.jsx'));
 const FiatWithdrawal = lazy(() => import('./FiatWithdrawal.jsx'));
 const ReferralProgram = lazy(() => import('./ReferralProgram.jsx'));
 const CardDecline    = lazy(() => import('./CardDecline.jsx'));
@@ -168,6 +169,7 @@ function AnimatedRoutes() {
             <Route path="/account-matters" element={<AccountMatters />} />
             <Route path="/p2p-advertiser" element={<P2PAdvertiser />} />
             <Route path="/p2p-dispute" element={<P2PDispute />} />
+            <Route path="/p2p-restriction" element={<P2PRestriction />} />
             <Route path="/fiat-withdrawal" element={<FiatWithdrawal />} />
             <Route path="/referral-program" element={<ReferralProgram />} />
             <Route path="/card-decline" element={<CardDecline />} />
