@@ -3,7 +3,7 @@ import { Send, Loader2, ChevronDown, ChevronUp, MessageSquare } from 'lucide-rea
 import { InvokeChatWithHistory, hasAnyApiKey } from '@/api/claude';
 import { cn } from '@/lib/utils';
 
-export default function WorkflowChat({ title = 'Ask ACE', systemContext, suggestions = [] }) {
+export default function WorkflowChat({ title = 'Ask ACE', systemContext, suggestions = [], kbDomains, kbTags, kbCaseType }) {
   const [open, setOpen] = useState(false);
   const [msgs, setMsgs] = useState([]);
   const [input, setInput] = useState('');
@@ -23,7 +23,7 @@ export default function WorkflowChat({ title = 'Ask ACE', systemContext, suggest
     setLoading(true);
     try {
       const sys = typeof systemContext === 'function' ? systemContext() : systemContext;
-      const result = await InvokeChatWithHistory({ messages: newMsgs, system_prompt: sys });
+      const result = await InvokeChatWithHistory({ messages: newMsgs, system_prompt: sys, kbDomains, kbTags, kbCaseType });
       setMsgs(prev => [...prev, { role: 'assistant', content: result }]);
     } catch (err) {
       setMsgs(prev => [...prev, { role: 'assistant', content: `Error: ${err.message}` }]);

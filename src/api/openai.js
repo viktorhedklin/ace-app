@@ -25,6 +25,13 @@ function openaiHeaders(apiKey) {
   };
 }
 
+// Newer OpenAI models (o1, o3, gpt-5 family) require max_completion_tokens
+// instead of max_tokens. Route based on model id.
+function tokenLimitField(model, maxTokens) {
+  const needsNewField = /^(o1|o3|o4|gpt-5|gpt-4\.1|gpt-4o-mini-realtime|gpt-4o-realtime)/i.test(model);
+  return needsNewField ? { max_completion_tokens: maxTokens } : { max_tokens: maxTokens };
+}
+
 // Scrub message content — handles both string and content-array formats
 function scrubContent(content) {
   if (typeof content === 'string') return scrubPII(content);
@@ -66,7 +73,7 @@ export async function openaiChat(apiKey, messages, systemPrompt, maxTokens = 204
   const res = await fetch(OPENAI_API_URL, {
     method: 'POST',
     headers: openaiHeaders(apiKey),
-    body: JSON.stringify({ model, max_tokens: maxTokens, messages: allMessages }),
+    body: JSON.stringify({ model, ...tokenLimitField(model, maxTokens), messages: allMessages }),
   });
 
   if (!res.ok) {
@@ -99,7 +106,7 @@ export async function openaiChatStream(apiKey, messages, systemPrompt, maxTokens
   const res = await fetch(OPENAI_API_URL, {
     method: 'POST',
     headers: openaiHeaders(apiKey),
-    body: JSON.stringify({ model, max_tokens: maxTokens, messages: allMessages, stream: true, stream_options: { include_usage: true } }),
+    body: JSON.stringify({ model, ...tokenLimitField(model, maxTokens), messages: allMessages, stream: true, stream_options: { include_usage: true } }),
   });
 
   if (!res.ok) {

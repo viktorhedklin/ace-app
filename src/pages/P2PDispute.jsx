@@ -1692,6 +1692,7 @@ INSTRUCTIONS: Answer concisely. Draft ready-to-send messages when asked. Format 
           title="Ask ACE about this dispute"
           systemContext={chatContext}
           suggestions={suggestions}
+          kbDomains={['P2P']}
         />
       )}
 

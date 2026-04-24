@@ -1611,6 +1611,7 @@ When the agent asks for a reply draft, write concise, empathetic Bybit-style cha
           title="ACE — P2P Restriction Assistant"
           systemContext={workflowContext}
           suggestions={suggestions}
+          kbDomains={['P2P']}
         />
       )}
 

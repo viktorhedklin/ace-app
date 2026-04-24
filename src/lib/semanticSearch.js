@@ -1,11 +1,12 @@
 // ─── Local Semantic Search ────────────────────────────────────────────────────
-// TF-IDF cosine similarity with intent-phrase expansion.
+// TF-IDF cosine similarity with intent-phrase expansion + hybrid retrieval.
 // 100% client-side. No embeddings API needed.
-// "User intent" language → Bybit KB article matches.
+// Retrieval pipeline: domain hard-filter → tag/caseType refinement → TF-IDF rank.
 
 import { BYBIT_KB } from '@/data/bybitKB';
 
-// Intent phrases map colloquial support language to Bybit domain terms
+// Intent phrases map colloquial support language to Bybit domain terms.
+// Used for query expansion during semantic ranking.
 const INTENT_EXPANSIONS = [
   { triggers: ['cant log', 'locked out', 'cant access', 'not logging in', 'sign in fail'], expand: 'login account access blocked suspended' },
   { triggers: ['verify', 'id check', 'kyc', 'documents', 'identity', 'passport', 'selfie'], expand: 'KYC verification identity documents' },
@@ -21,6 +22,18 @@ const INTENT_EXPANSIONS = [
   { triggers: ['reset 2fa', 'lost authenticator', 'google auth', 'two factor', '2fa'], expand: '2FA Google Authenticator reset security account' },
   { triggers: ['promo', 'campaign', 'bonus', 'reward', 'cashback'], expand: 'campaign promotion bonus reward trading' },
 ];
+
+// Maps query keywords to domain names. Used when caller doesn't specify a domain
+// (Tier 2 — infer domain from the question itself).
+const DOMAIN_HINTS = {
+  KYC: ['kyc', 'verification', 'verify', 'identity', 'passport', 'selfie', 'edd', 'id check'],
+  P2P: ['p2p', 'peer-to-peer', 'dispute', 'appeal', 'buyer', 'seller', 'escrow', 'advertiser', 'merchant'],
+  Security: ['hack', 'hacked', 'unauthorized', 'compromised', 'fraud', '2fa', 'phishing', 'reset', 'suspicious login'],
+  Crypto: ['blockchain', 'network', 'chain', 'txid', 'tx hash', 'deposit', 'withdraw', 'erc20', 'trc20', 'bep20', 'wrong network'],
+  Fiat: ['sepa', 'bank', 'eur', 'fiat', 'iban', 'swift', 'payment provider'],
+  Card: ['card', 'decline', 'bybit card', 'apple pay', 'google pay', 'visa', 'mastercard'],
+  Account: ['login', 'access', 'suspended', 'limits', 'email change', 'phone change', 'close account'],
+};
 
 // Tokenize and normalize text
 function tokenize(text) {
@@ -60,12 +73,15 @@ function expandQuery(query) {
   return query + (expansions.length ? ' ' + expansions.join(' ') : '');
 }
 
-// Build article doc vector (title + subtitle + domain + keyPoints + agentTips)
+// Build article doc vector (title + subtitle + domain + tags + keyPoints + agentTips)
 function buildDocVector(article) {
   const text = [
     article.title,
     article.subtitle || '',
     article.domain,
+    ...(article.domains || []),
+    ...(article.tags || []),
+    article.caseType || '',
     ...(article.keyPoints || []),
     ...(article.agentTips || []),
   ].join(' ');
@@ -81,15 +97,105 @@ function getDocVectors() {
   return _docVectors;
 }
 
-// Main export — search by user intent, returns ranked KB articles
-export function semanticSearch(query, limit = 5) {
+// Infer candidate domains from a free-text query (Tier 2 fallback)
+export function inferDomains(query) {
   if (!query?.trim()) return [];
+  const lower = query.toLowerCase();
+  const hits = [];
+  for (const [domain, keywords] of Object.entries(DOMAIN_HINTS)) {
+    if (keywords.some(k => lower.includes(k))) hits.push(domain);
+  }
+  return hits;
+}
+
+// Does an article belong to any of the provided domains?
+// Checks both `domain` (singular, legacy) and `domains` (array, new).
+function articleMatchesDomain(article, domainList) {
+  if (!domainList?.length) return true;
+  if (domainList.includes(article.domain)) return true;
+  if (article.domains?.some(d => domainList.includes(d))) return true;
+  return false;
+}
+
+// Does an article match any of the provided tags?
+function articleMatchesTags(article, tagList) {
+  if (!tagList?.length) return true;
+  if (!article.tags?.length) return false;
+  return article.tags.some(t => tagList.includes(t));
+}
+
+// ═══ MAIN RETRIEVAL API ═════════════════════════════════════════════════════════
+//
+// Hybrid retrieval pipeline — use this for ACE prompt injection.
+//
+// Tier 1: Domain hard-filter (if `domains` passed, only those articles qualify).
+// Tier 2: If no domain passed, infer from query; if nothing infers, search everything.
+// Tier 3: Optional tag filter within the domain subset.
+// Tier 4: TF-IDF cosine rank + intent expansion → top `limit` articles.
+//
+// Fallback: if a filter yields fewer than 3 candidates, widen the net rather
+// than starve the model of context.
+//
+// Params:
+//   query   — the user's message (string)
+//   options — { domains?, tags?, caseType?, limit?, minCandidates? }
+//
+// Returns: ranked array of KB articles (length ≤ limit).
+
+export function retrieveArticles(query, options = {}) {
+  const {
+    domains,
+    tags,
+    caseType,
+    limit = 5,
+    minCandidates = 3,
+  } = options;
+
+  if (!query?.trim()) return [];
+
+  const allDocs = getDocVectors();
+
+  // Tier 1: domain hard-filter (if caller provided domains)
+  let candidates = allDocs;
+  let effectiveDomains = domains;
+
+  // Tier 2: if no domains passed, try inferring from the query
+  if (!effectiveDomains?.length) {
+    const inferred = inferDomains(query);
+    if (inferred.length) effectiveDomains = inferred;
+  }
+
+  if (effectiveDomains?.length) {
+    const filtered = allDocs.filter(d => articleMatchesDomain(d.article, effectiveDomains));
+    // Fallback: if domain filter is too aggressive, go back to all docs
+    if (filtered.length >= minCandidates) candidates = filtered;
+  }
+
+  // Tier 3: tag filter (soft — only applies if any articles in the candidate set have tags)
+  if (tags?.length) {
+    const tagFiltered = candidates.filter(d => articleMatchesTags(d.article, tags));
+    if (tagFiltered.length >= minCandidates) candidates = tagFiltered;
+  }
+
+  // Tier 3b: case type filter (exact match on SOP code)
+  if (caseType) {
+    const ctFiltered = candidates.filter(d => d.article.caseType === caseType);
+    if (ctFiltered.length >= 1) candidates = ctFiltered;
+  }
+
+  // Tier 4: semantic rank with intent expansion
   const expanded = expandQuery(query);
   const qv = termFreq(tokenize(expanded));
-  return getDocVectors()
+
+  return candidates
     .map(({ article, vector }) => ({ article, score: cosineSim(qv, vector) }))
     .filter(r => r.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)
     .map(r => r.article);
+}
+
+// Legacy export — unchanged signature for existing callers (semanticSearch(query, limit))
+export function semanticSearch(query, limit = 5) {
+  return retrieveArticles(query, { limit });
 }

@@ -1,5 +1,6 @@
 import { scrubPII } from '@/lib/SecurityModule';
 import { getOpenAIKey, openaiChat, openaiChatStream } from '@/api/openai';
+import { retrieveArticles } from '@/lib/semanticSearch';
 
 export function getApiKey() {
   return localStorage.getItem('claude_api_key') || localStorage.getItem('openai_api_key') || '';
@@ -118,11 +119,35 @@ export function getLastSyncTime() {
   return localStorage.getItem('ace_kb_last_sync') || null;
 }
 
-function buildKnowledgeBlock() {
+// User-added KB entries (from KnowledgeManager UI). Small, hand-curated,
+// always included — these are the agent's own overrides.
+function buildUserKnowledgeBlock() {
   const entries = getKnowledge().filter(e => e.active !== false);
   if (!entries.length) return '';
   const lines = entries.map(e => `[${e.title}]: ${e.content}`).join('\n\n');
-  return `\n\n---\nACE KNOWLEDGE BASE (always apply this context):\n${lines}\n---`;
+  return `\n\n---\nAGENT'S PERSONAL NOTES (always apply):\n${lines}\n---`;
+}
+
+// Format a retrieved KB article as first-person domain knowledge.
+// Option B framing: presents the article as Ace's own expertise, not as a document.
+function formatArticleForPrompt(article) {
+  const keyPoints = (article.keyPoints || []).map(p => `  • ${p}`).join('\n');
+  const agentTips = (article.agentTips || []).length
+    ? '\n  Pro tips:\n' + article.agentTips.map(p => `    - ${p}`).join('\n')
+    : '';
+  const escalate = article.escalatePath ? `\n  Escalation: ${article.escalatePath}` : '';
+  return `[${article.domain} — ${article.title}]\n${keyPoints}${agentTips}${escalate}`;
+}
+
+// Official BYBIT_KB retrieval — hybrid filter + semantic search.
+// Caller passes the user's latest message and optional domain/tag filters.
+// Returns a formatted block of the top N articles, framed as Ace's own knowledge.
+function buildRetrievedKnowledgeBlock(query, options = {}) {
+  if (!query?.trim()) return '';
+  const articles = retrieveArticles(query, { limit: 5, ...options });
+  if (!articles.length) return '';
+  const body = articles.map(formatArticleForPrompt).join('\n\n');
+  return `\n\n---\nYOUR KNOWLEDGE ON THIS TOPIC (you know these Bybit policies deeply):\n\n${body}\n---`;
 }
 
 // --- ACE Base Personality ---
@@ -489,13 +514,21 @@ async function claudeChat(apiKey, messages, systemPrompt, maxTokens = 2048, mode
 
 // --- InvokeLLM ---
 
-export async function InvokeLLM({ prompt, system_prompt = '', useKB = false }) {
+export async function InvokeLLM({ prompt, system_prompt = '', useKB = false, kbDomains, kbTags, kbCaseType }) {
   const model = resolveModel('utility');
   const provider = getModelProvider(model);
 
-  const knowledgeBlock = useKB ? buildKnowledgeBlock() : '';
-  const stableText = [ACE_PERSONALITY, knowledgeBlock].filter(Boolean).join('\n\n');
-  const systemBlocks = buildCachedSystem(stableText, system_prompt);
+  // Stable (cacheable): personality + user-curated notes. Same across all requests.
+  const userKB = useKB ? buildUserKnowledgeBlock() : '';
+  const stableText = [ACE_PERSONALITY, userKB].filter(Boolean).join('\n\n');
+
+  // Dynamic (query-specific): retrieved KB articles — varies per message, NOT cached.
+  const retrieved = useKB
+    ? buildRetrievedKnowledgeBlock(prompt, { domains: kbDomains, tags: kbTags, caseType: kbCaseType })
+    : '';
+  const dynamicText = [retrieved, system_prompt].filter(Boolean).join('\n\n');
+
+  const systemBlocks = buildCachedSystem(stableText, dynamicText);
 
   if (provider === 'openai') {
     const oaiKey = getOpenAIKey();
@@ -634,14 +667,24 @@ export function parseAndExtractMemory(text) {
 // --- Chat with history (for Chat.jsx) ---
 
 // onToken: optional (token, accumulated) => void — enables streaming
-export async function InvokeChatWithHistory({ messages, system_prompt = '', autoMemory = false, onToken = null }) {
+export async function InvokeChatWithHistory({ messages, system_prompt = '', autoMemory = false, onToken = null, kbDomains, kbTags, kbCaseType }) {
   const model = resolveModel('chat');
   const provider = getModelProvider(model);
 
-  const knowledgeBlock = buildKnowledgeBlock();
+  // Stable (cacheable): personality + user-curated notes. Same across all requests.
+  const userKB = buildUserKnowledgeBlock();
+  const stableText = [ACE_PERSONALITY, userKB].filter(Boolean).join('\n\n');
+
+  // Dynamic (query-specific): retrieved KB articles based on the latest user message.
+  // Varies per message, so NOT cached — but it's ~3K tokens vs ~25K for stuff-all.
+  const latestUserMsg = [...messages].reverse().find(m => m.role === 'user');
+  const query = typeof latestUserMsg?.content === 'string'
+    ? latestUserMsg.content
+    : latestUserMsg?.content?.find?.(b => b.type === 'text')?.text || '';
+  const retrieved = buildRetrievedKnowledgeBlock(query, { domains: kbDomains, tags: kbTags, caseType: kbCaseType });
+
   const memInstruction = autoMemory ? AUTO_MEMORY_INSTRUCTION : '';
-  const stableText = [ACE_PERSONALITY, knowledgeBlock].filter(Boolean).join('\n\n');
-  const dynamicText = [system_prompt, memInstruction].filter(Boolean).join('\n\n');
+  const dynamicText = [retrieved, system_prompt, memInstruction].filter(Boolean).join('\n\n');
   const systemBlocks = buildCachedSystem(stableText, dynamicText);
 
   const filteredMessages = messages.filter(m => m.role === 'user' || m.role === 'assistant');

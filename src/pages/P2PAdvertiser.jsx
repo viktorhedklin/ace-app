@@ -835,6 +835,7 @@ INSTRUCTIONS: Answer concisely (2-4 sentences). If the agent asks for a draft re
           title="Ask ACE about this P2P case"
           systemContext={chatContext}
           suggestions={suggestions}
+          kbDomains={['P2P']}
         />
       )}
 
