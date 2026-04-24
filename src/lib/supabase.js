@@ -21,6 +21,12 @@ export const supabase = isConfigured
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
+        // Implicit flow: the email link contains the tokens directly (in the
+        // URL fragment), so any device can complete sign-in. PKCE (the SDK
+        // default) pins sign-in to the browser that REQUESTED the link,
+        // which breaks cross-device magic links — exactly the case we want
+        // to support (request on phone, click from laptop email, etc.).
+        flowType: 'implicit',
         // Explicit storage ref — Supabase uses localStorage by default in the browser
         storage: typeof window !== 'undefined' ? window.localStorage : undefined,
       },
