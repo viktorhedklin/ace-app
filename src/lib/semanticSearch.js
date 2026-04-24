@@ -4,6 +4,7 @@
 // Retrieval pipeline: domain hard-filter → tag/caseType refinement → TF-IDF rank.
 
 import { BYBIT_KB } from '@/data/bybitKB';
+import { list as storageList, NAMESPACES } from '@/lib/storage';
 
 // Intent phrases map colloquial support language to Bybit domain terms.
 // Used for query expansion during semantic ranking.
@@ -73,28 +74,59 @@ function expandQuery(query) {
   return query + (expansions.length ? ' ' + expansions.join(' ') : '');
 }
 
-// Build article doc vector (title + subtitle + domain + tags + keyPoints + agentTips)
+// Build article doc vector. Accepts both the bundled BYBIT_KB shape
+// (keyPoints/agentTips) and the flatter cloud/Sentinel shape (content).
+// Missing fields are silently skipped — tokenize handles empty strings.
 function buildDocVector(article) {
   const text = [
     article.title,
     article.subtitle || '',
-    article.domain,
+    article.domain || article.category || '',
     ...(article.domains || []),
     ...(article.tags || []),
     article.caseType || '',
     ...(article.keyPoints || []),
     ...(article.agentTips || []),
+    article.content || '',
   ].join(' ');
   return termFreq(tokenize(text));
 }
 
-// Lazily built — computed once per session
-let _docVectors = null;
-function getDocVectors() {
-  if (!_docVectors) {
-    _docVectors = BYBIT_KB.map(article => ({ article, vector: buildDocVector(article) }));
+// Bundled KB vectors — computed once, never change per session.
+let _bundledVectors = null;
+function getBundledVectors() {
+  if (!_bundledVectors) {
+    _bundledVectors = BYBIT_KB.map(article => ({ article, vector: buildDocVector(article) }));
   }
-  return _docVectors;
+  return _bundledVectors;
+}
+
+// Cloud article vectors — rebuilt when the underlying row set changes.
+// Keyed by the article-row count + a rough content hash so Sentinel autosync
+// invalidates the cache without a manual reload.
+let _cloudVectors = null;
+let _cloudCacheKey = '';
+
+function getCloudVectors() {
+  const rows = storageList(NAMESPACES.KB).filter(r => r.key.startsWith('article_'));
+  const active = rows
+    .map(r => r.value)
+    .filter(a => a && a.active !== false);
+  // Cheap cache key — count + first/last ids. Good enough: if Sentinel upserts
+  // a new row or updates an existing one, the key will differ.
+  const key = `${active.length}:${active[0]?.id || ''}:${active[active.length - 1]?.id || ''}`;
+  if (_cloudVectors && _cloudCacheKey === key) return _cloudVectors;
+  _cloudCacheKey = key;
+  _cloudVectors = active.map(article => ({
+    article: { ...article, source: article.source || 'cloud' },
+    vector: buildDocVector(article),
+  }));
+  return _cloudVectors;
+}
+
+// Combined doc set — bundled + cloud. Used for every retrieval call.
+function getDocVectors() {
+  return [...getBundledVectors(), ...getCloudVectors()];
 }
 
 // Infer candidate domains from a free-text query (Tier 2 fallback)
