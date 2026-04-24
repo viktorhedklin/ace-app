@@ -82,27 +82,27 @@ function FlowCard({ flow }) {
   }
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-      <div className="px-5 py-4 border-b border-slate-800">
-        <h2 className="font-semibold text-slate-100 flex items-center gap-2">
+    <div className="bg-bg-1 border border-border-0 rounded-xl overflow-hidden">
+      <div className="px-5 py-4 border-b border-border-0">
+        <h2 className="font-semibold text-fg-0 flex items-center gap-2">
           <span>{flow.icon}</span> {flow.title}
         </h2>
       </div>
       <div className="p-4 space-y-2">
         {flow.steps.map((s, i) => (
-          <div key={i} className="border border-slate-800 rounded-lg overflow-hidden">
+          <div key={i} className="border border-border-0 rounded-lg overflow-hidden">
             <button
               onClick={() => setOpenStep(openStep === i ? null : i)}
-              className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-slate-300 hover:bg-slate-800 transition-colors text-left"
+              className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-fg-1 hover:bg-bg-2 transition-colors text-left"
             >
-              <span><span className="text-yellow-400 mr-2">{i + 1}.</span>{s.step}</span>
-              {openStep === i ? <ChevronUp size={14} className="text-slate-500" /> : <ChevronDown size={14} className="text-slate-500" />}
+              <span><span className="text-hero mr-2">{i + 1}.</span>{s.step}</span>
+              {openStep === i ? <ChevronUp size={14} className="text-fg-2" /> : <ChevronDown size={14} className="text-fg-2" />}
             </button>
             {openStep === i && (
-              <div className="px-4 pb-3 space-y-1.5 bg-slate-800/30">
+              <div className="px-4 pb-3 space-y-1.5 bg-bg-2/30">
                 {s.items.map((item, j) => (
-                  <p key={j} className="text-xs text-slate-400 flex items-start gap-2">
-                    <span className="text-yellow-400 shrink-0 mt-0.5">→</span> {item}
+                  <p key={j} className="text-xs text-fg-1 flex items-start gap-2">
+                    <span className="text-hero shrink-0 mt-0.5">→</span> {item}
                   </p>
                 ))}
               </div>
@@ -111,14 +111,14 @@ function FlowCard({ flow }) {
         ))}
       </div>
       <div className="px-4 pb-4">
-        <div className="bg-slate-800/50 rounded-lg p-3 relative">
+        <div className="bg-bg-2/50 rounded-lg p-3 relative">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-slate-500">📋 Customer message template</span>
-            <button onClick={copy} className="text-slate-500 hover:text-yellow-400 transition-colors">
+            <span className="text-xs text-fg-2">📋 Customer message template</span>
+            <button onClick={copy} className="text-fg-2 hover:text-hero transition-colors">
               {copied ? <Check size={13} /> : <Copy size={13} />}
             </button>
           </div>
-          <p className="text-xs text-slate-400 whitespace-pre-wrap leading-relaxed">{flow.template}</p>
+          <p className="text-xs text-fg-1 whitespace-pre-wrap leading-relaxed">{flow.template}</p>
         </div>
       </div>
     </div>
@@ -131,8 +131,8 @@ export default function AccountMatters() {
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-slate-100">👤 Account Matters</h1>
-        <p className="text-sm text-slate-500">E01 workflows for email, phone and Google Authenticator</p>
+        <h1 className="text-xl font-bold text-fg-0">👤 Account Matters</h1>
+        <p className="text-sm text-fg-2">E01 workflows for email, phone and Google Authenticator</p>
       </div>
 
       <div className="flex gap-2">
@@ -143,8 +143,8 @@ export default function AccountMatters() {
             className={cn(
               'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
               active === key
-                ? 'bg-yellow-400/20 text-yellow-400 border border-yellow-400/30'
-                : 'bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700'
+                ? 'bg-hero/20 text-hero border border-hero/30'
+                : 'bg-bg-2 text-fg-1 hover:text-fg-0 border border-border-0'
             )}
           >
             {flow.icon} {key === 'ga' ? 'Google Auth' : key.charAt(0).toUpperCase() + key.slice(1)}

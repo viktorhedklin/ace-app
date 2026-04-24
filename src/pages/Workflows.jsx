@@ -17,8 +17,8 @@ const CATEGORIES = [
   },
   {
     label: 'P2P Trading',
-    color: 'from-blue-500/10 to-blue-500/5 border-blue-500/20',
-    accent: 'text-blue-400',
+    color: 'from-blue-500/10 to-blue-500/5 border-info/20',
+    accent: 'text-info',
     items: [
       { name: 'P2P Trading & Advertise', icon: '🤝', path: '/p2p-advertiser', desc: 'Payment methods, nicknames, reviews, advertiser status' },
       { name: 'P2P Dispute', icon: '⚖️', path: '/p2p-dispute', desc: 'Order disputes, appeals, and resolution' },
@@ -27,8 +27,8 @@ const CATEGORIES = [
   },
   {
     label: 'Security & Compliance',
-    color: 'from-red-500/10 to-red-500/5 border-red-500/20',
-    accent: 'text-red-400',
+    color: 'from-red-500/10 to-red-500/5 border-crit/20',
+    accent: 'text-crit',
     items: [
       { name: 'Hack Case', icon: '🔴', path: '/hack-case', desc: 'Account compromise investigation workflow' },
       { name: 'Account Matters', icon: '👤', path: '/account-matters', desc: 'KYC, restrictions, and account issues' },
@@ -47,8 +47,8 @@ const CATEGORIES = [
   },
   {
     label: 'Quality & Tracking',
-    color: 'from-yellow-500/10 to-yellow-500/5 border-yellow-500/20',
-    accent: 'text-yellow-400',
+    color: 'from-hero-soft/10 to-hero-soft/5 border-hero/20',
+    accent: 'text-hero',
     items: [
       { name: 'Quality Check', icon: '🎯', path: '/quality-check', desc: 'QA scoring and review analysis' },
       { name: 'Closed Cases', icon: '📋', path: '/closed-cases', desc: 'Case history and resolution tracking' },
@@ -68,8 +68,8 @@ export default function Workflows() {
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-8">
       <div>
-        <h1 className="text-xl font-bold text-slate-100">Workflow Hub</h1>
-        <p className="text-sm text-slate-500 mt-1">SOP-driven workflows with integrated ACE assistance. Pick a workflow to start.</p>
+        <h1 className="text-xl font-bold text-fg-0">Workflow Hub</h1>
+        <p className="text-sm text-fg-2 mt-1">SOP-driven workflows with integrated ACE assistance. Pick a workflow to start.</p>
       </div>
 
       {CATEGORIES.map((cat, ci) => (
@@ -88,16 +88,16 @@ export default function Workflows() {
                 onClick={() => navigate(item.path)}
                 className={cn(
                   'group text-left bg-gradient-to-br border rounded-xl p-4 transition-all duration-200',
-                  'hover:scale-[1.02] hover:shadow-lg hover:shadow-slate-900/50 cursor-pointer',
+                  'hover:scale-[1.02] hover:shadow-lg hover:shadow-bg-0/50 cursor-pointer',
                   cat.color
                 )}
               >
                 <div className="flex items-start justify-between">
                   <span className="text-2xl">{item.icon}</span>
-                  <ArrowRight size={14} className="text-slate-600 group-hover:text-slate-400 group-hover:translate-x-0.5 transition-all mt-1" />
+                  <ArrowRight size={14} className="text-fg-2 group-hover:text-fg-1 group-hover:translate-x-0.5 transition-all mt-1" />
                 </div>
-                <h3 className="text-sm font-semibold text-slate-100 mt-2">{item.name}</h3>
-                <p className="text-xs text-slate-500 mt-1 leading-relaxed">{item.desc}</p>
+                <h3 className="text-sm font-semibold text-fg-0 mt-2">{item.name}</h3>
+                <p className="text-xs text-fg-2 mt-1 leading-relaxed">{item.desc}</p>
               </motion.button>
             ))}
           </div>

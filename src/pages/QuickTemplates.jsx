@@ -112,33 +112,33 @@ const CATEGORIES = ['All', ...new Set(BUILT_IN.map(t => t.cat))];
 function TemplateCard({ tpl, onCopy, copied, onPin, pinned, onDelete, isCustom }) {
   return (
     <div className={cn(
-      'bg-slate-900 border rounded-xl p-4 group transition-all',
-      pinned ? 'border-yellow-400/30' : 'border-slate-800 hover:border-slate-700'
+      'bg-bg-1 border rounded-xl p-4 group transition-all',
+      pinned ? 'border-hero/30' : 'border-border-0 hover:border-border-0'
     )}>
       <div className="flex items-start justify-between gap-2 mb-2">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-xs bg-slate-800 text-slate-400 px-2 py-0.5 rounded shrink-0">{tpl.cat}</span>
-          <span className="font-medium text-slate-100 text-sm truncate">{tpl.title}</span>
-          {pinned && <Star size={11} className="text-yellow-400 shrink-0 fill-yellow-400" />}
+          <span className="text-xs bg-bg-2 text-fg-1 px-2 py-0.5 rounded shrink-0">{tpl.cat}</span>
+          <span className="font-medium text-fg-0 text-sm truncate">{tpl.title}</span>
+          {pinned && <Star size={11} className="text-hero shrink-0 fill-hero" />}
         </div>
         <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button onClick={() => onPin(tpl.id)} className={cn('transition-colors', pinned ? 'text-yellow-400' : 'text-slate-600 hover:text-yellow-400')} title={pinned ? 'Unpin' : 'Pin'}>
-            <Star size={13} className={pinned ? 'fill-yellow-400' : ''} />
+          <button onClick={() => onPin(tpl.id)} className={cn('transition-colors', pinned ? 'text-hero' : 'text-fg-2 hover:text-hero')} title={pinned ? 'Unpin' : 'Pin'}>
+            <Star size={13} className={pinned ? 'fill-hero' : ''} />
           </button>
-          <button onClick={() => onCopy(tpl.id, tpl.text)} className="text-slate-600 hover:text-yellow-400 transition-colors">
-            {copied === tpl.id ? <Check size={13} className="text-green-400" /> : <Copy size={13} />}
+          <button onClick={() => onCopy(tpl.id, tpl.text)} className="text-fg-2 hover:text-hero transition-colors">
+            {copied === tpl.id ? <Check size={13} className="text-ok" /> : <Copy size={13} />}
           </button>
           {isCustom && (
-            <button onClick={() => onDelete(tpl.id)} className="text-slate-600 hover:text-red-400 transition-colors">
+            <button onClick={() => onDelete(tpl.id)} className="text-fg-2 hover:text-crit transition-colors">
               <Trash2 size={13} />
             </button>
           )}
         </div>
       </div>
-      <p className="text-xs text-slate-400 leading-relaxed whitespace-pre-wrap line-clamp-3">{tpl.text}</p>
+      <p className="text-xs text-fg-1 leading-relaxed whitespace-pre-wrap line-clamp-3">{tpl.text}</p>
       <button
         onClick={() => onCopy(tpl.id, tpl.text)}
-        className="mt-2 text-xs text-slate-600 hover:text-yellow-400 transition-colors"
+        className="mt-2 text-xs text-fg-2 hover:text-hero transition-colors"
       >
         {copied === tpl.id ? '✓ Copied!' : 'Copy'}
       </button>
@@ -205,35 +205,35 @@ export default function QuickTemplates() {
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-100">💬 Quick Templates</h1>
-          <p className="text-sm text-slate-500">Ready-to-send responses — copy and go</p>
+          <h1 className="text-xl font-bold text-fg-0">💬 Quick Templates</h1>
+          <p className="text-sm text-fg-2">Ready-to-send responses — copy and go</p>
         </div>
-        <button onClick={() => setShowAdd(!showAdd)} className="flex items-center gap-2 bg-yellow-400/20 hover:bg-yellow-400/30 text-yellow-400 text-sm px-4 py-2 rounded-lg transition-colors">
+        <button onClick={() => setShowAdd(!showAdd)} className="flex items-center gap-2 bg-hero/20 hover:bg-hero/30 text-hero text-sm px-4 py-2 rounded-lg transition-colors">
           <Plus size={14} /> Add template
         </button>
       </div>
 
       {/* Add custom template */}
       {showAdd && (
-        <div className="bg-slate-900 border border-yellow-400/20 rounded-xl p-5 space-y-3">
-          <p className="text-sm font-medium text-slate-300">New template</p>
+        <div className="bg-bg-1 border border-hero/20 rounded-xl p-5 space-y-3">
+          <p className="text-sm font-medium text-fg-1">New template</p>
           <div className="grid grid-cols-2 gap-3">
-            <input value={newForm.title} onChange={e => setNewForm(p => ({ ...p, title: e.target.value }))} placeholder="Template title" className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 outline-none focus:border-yellow-400/50" />
-            <input value={newForm.cat} onChange={e => setNewForm(p => ({ ...p, cat: e.target.value }))} placeholder="Category (e.g. Greeting, P2P...)" className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 outline-none focus:border-yellow-400/50" />
+            <input value={newForm.title} onChange={e => setNewForm(p => ({ ...p, title: e.target.value }))} placeholder="Template title" className="bg-bg-2 border border-border-0 rounded-lg px-3 py-2 text-sm text-fg-0 outline-none focus:border-hero/50" />
+            <input value={newForm.cat} onChange={e => setNewForm(p => ({ ...p, cat: e.target.value }))} placeholder="Category (e.g. Greeting, P2P...)" className="bg-bg-2 border border-border-0 rounded-lg px-3 py-2 text-sm text-fg-0 outline-none focus:border-hero/50" />
           </div>
-          <textarea value={newForm.text} onChange={e => setNewForm(p => ({ ...p, text: e.target.value }))} placeholder="Template text — use [PLACEHOLDERS] for things to fill in..." rows={4} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 outline-none resize-none focus:border-yellow-400/50" />
+          <textarea value={newForm.text} onChange={e => setNewForm(p => ({ ...p, text: e.target.value }))} placeholder="Template text — use [PLACEHOLDERS] for things to fill in..." rows={4} className="w-full bg-bg-2 border border-border-0 rounded-lg px-3 py-2 text-sm text-fg-0 outline-none resize-none focus:border-hero/50" />
           <div className="flex gap-2">
-            <button onClick={addCustom} disabled={!newForm.title || !newForm.text} className="bg-yellow-400 disabled:bg-slate-700 disabled:text-slate-500 text-slate-900 font-medium text-sm px-5 py-2 rounded-lg hover:bg-yellow-300 transition-colors">Save</button>
-            <button onClick={() => setShowAdd(false)} className="text-slate-500 text-sm px-4 py-2">Cancel</button>
+            <button onClick={addCustom} disabled={!newForm.title || !newForm.text} className="bg-hero disabled:bg-bg-3 disabled:text-fg-2 text-[#021418] font-medium text-sm px-5 py-2 rounded-lg hover:bg-hero transition-colors">Save</button>
+            <button onClick={() => setShowAdd(false)} className="text-fg-2 text-sm px-4 py-2">Cancel</button>
           </div>
         </div>
       )}
 
       {/* Search + filter */}
       <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex-1 flex items-center gap-2 bg-slate-900 border border-slate-700 focus-within:border-yellow-400/50 rounded-xl px-4 py-3">
-          <Search size={15} className="text-slate-500 shrink-0" />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search templates..." className="flex-1 bg-transparent text-sm text-slate-100 placeholder-slate-500 outline-none" />
+        <div className="flex-1 flex items-center gap-2 bg-bg-1 border border-border-0 focus-within:border-hero/50 rounded-xl px-4 py-3">
+          <Search size={15} className="text-fg-2 shrink-0" />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search templates..." className="flex-1 bg-transparent text-sm text-fg-0 placeholder-fg-2 outline-none" />
         </div>
       </div>
 
@@ -242,7 +242,7 @@ export default function QuickTemplates() {
         {allCats.map(c => (
           <button key={c} onClick={() => setCat(c)} className={cn(
             'text-xs px-3 py-1.5 rounded-lg border transition-all font-medium',
-            cat === c ? 'bg-yellow-400/20 border-yellow-400/40 text-yellow-400' : 'bg-slate-900 border-slate-700 text-slate-400 hover:text-slate-200'
+            cat === c ? 'bg-hero/20 border-hero/40 text-hero' : 'bg-bg-1 border-border-0 text-fg-1 hover:text-fg-0'
           )}>{c}</button>
         ))}
       </div>
@@ -250,7 +250,7 @@ export default function QuickTemplates() {
       {/* Pinned */}
       {pinnedTemplates.length > 0 && (
         <div>
-          <p className="text-xs text-slate-600 uppercase tracking-wider mb-3 flex items-center gap-2"><Star size={11} className="fill-yellow-400 text-yellow-400" /> Pinned</p>
+          <p className="text-xs text-fg-2 uppercase tracking-wider mb-3 flex items-center gap-2"><Star size={11} className="fill-hero text-hero" /> Pinned</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {pinnedTemplates.map(t => (
               <TemplateCard key={t.id} tpl={t} onCopy={copy} copied={copied} onPin={pin} pinned={true} onDelete={deleteCustom} isCustom={t.id.startsWith('c_')} />
@@ -267,7 +267,7 @@ export default function QuickTemplates() {
           ))}
         </div>
       ) : filtered.length === 0 && (
-        <p className="text-center text-slate-600 py-12">No templates match your search</p>
+        <p className="text-center text-fg-2 py-12">No templates match your search</p>
       )}
     </div>
   );

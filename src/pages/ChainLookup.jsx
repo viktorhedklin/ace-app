@@ -32,23 +32,23 @@ export default function ChainLookup() {
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-slate-100">🔗 Chain Lookup</h1>
-        <p className="text-sm text-slate-500">Network info, confirmations, minimums and key notes</p>
+        <h1 className="text-xl font-bold text-fg-0">🔗 Chain Lookup</h1>
+        <p className="text-sm text-fg-2">Network info, confirmations, minimums and key notes</p>
       </div>
 
       <div className="flex gap-3">
-        <div className="flex-1 flex items-center gap-2 bg-slate-900 border border-slate-700 focus-within:border-yellow-400/50 rounded-xl px-4 py-3">
-          <Search size={15} className="text-slate-500 shrink-0" />
+        <div className="flex-1 flex items-center gap-2 bg-bg-1 border border-border-0 focus-within:border-hero/50 rounded-xl px-4 py-3">
+          <Search size={15} className="text-fg-2 shrink-0" />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search by name, symbol or network..."
-            className="flex-1 bg-transparent text-sm text-slate-100 placeholder-slate-500 outline-none"
+            className="flex-1 bg-transparent text-sm text-fg-0 placeholder-fg-2 outline-none"
           />
         </div>
         <button
           onClick={() => setMemoOnly(!memoOnly)}
-          className={`px-4 rounded-xl text-sm font-medium transition-all border ${memoOnly ? 'bg-red-500/20 border-red-500/40 text-red-400' : 'bg-slate-900 border-slate-700 text-slate-400'}`}
+          className={`px-4 rounded-xl text-sm font-medium transition-all border ${memoOnly ? 'bg-crit/20 border-crit/40 text-crit' : 'bg-bg-1 border-border-0 text-fg-1'}`}
         >
           ⚠️ Memo required
         </button>
@@ -56,7 +56,7 @@ export default function ChainLookup() {
 
       {/* Memo warning banner */}
       {memoOnly && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 text-sm text-red-300">
+        <div className="bg-crit/10 border border-crit/30 rounded-xl px-4 py-3 text-sm text-crit">
           ⚠️ These networks require a MEMO/Tag. Missing memo = funds likely unrecoverable. Always verify before processing.
         </div>
       )}
@@ -64,43 +64,43 @@ export default function ChainLookup() {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-800">
+            <tr className="border-b border-border-0">
               {['Network', 'Symbol', 'Confirmations', 'Min Deposit', 'Min Withdraw', 'Fee', 'Memo', 'Speed', 'Notes'].map(h => (
-                <th key={h} className="text-left pb-3 pr-4 text-xs text-slate-500 font-medium whitespace-nowrap">{h}</th>
+                <th key={h} className="text-left pb-3 pr-4 text-xs text-fg-2 font-medium whitespace-nowrap">{h}</th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/50">
+          <tbody className="divide-y divide-border-0/50">
             {filtered.map(chain => (
-              <tr key={chain.symbol} className="hover:bg-slate-900/50 transition-colors">
+              <tr key={chain.symbol} className="hover:bg-bg-1/50 transition-colors">
                 <td className="py-3 pr-4">
                   <div className="flex items-center gap-2">
                     <span className="text-lg">{chain.icon}</span>
                     <div>
-                      <p className="font-medium text-slate-100 whitespace-nowrap">{chain.name}</p>
-                      <p className="text-xs text-slate-500">{chain.network}</p>
+                      <p className="font-medium text-fg-0 whitespace-nowrap">{chain.name}</p>
+                      <p className="text-xs text-fg-2">{chain.network}</p>
                     </div>
                   </div>
                 </td>
-                <td className="py-3 pr-4 font-mono text-yellow-400 font-medium">{chain.symbol}</td>
-                <td className="py-3 pr-4 text-slate-300">{chain.confirmations}</td>
-                <td className="py-3 pr-4 text-slate-300">{chain.minDeposit}</td>
-                <td className="py-3 pr-4 text-slate-300">{chain.minWithdrawal}</td>
-                <td className="py-3 pr-4 text-slate-300">{chain.withdrawalFee}</td>
+                <td className="py-3 pr-4 font-mono text-hero font-medium">{chain.symbol}</td>
+                <td className="py-3 pr-4 text-fg-1">{chain.confirmations}</td>
+                <td className="py-3 pr-4 text-fg-1">{chain.minDeposit}</td>
+                <td className="py-3 pr-4 text-fg-1">{chain.minWithdrawal}</td>
+                <td className="py-3 pr-4 text-fg-1">{chain.withdrawalFee}</td>
                 <td className="py-3 pr-4">
                   {chain.memo
-                    ? <span className="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded font-medium">YES ⚠️</span>
-                    : <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded">No</span>
+                    ? <span className="text-xs bg-crit/20 text-crit px-2 py-0.5 rounded font-medium">YES ⚠️</span>
+                    : <span className="text-xs bg-ok/20 text-ok px-2 py-0.5 rounded">No</span>
                   }
                 </td>
-                <td className="py-3 pr-4 text-slate-400 whitespace-nowrap text-xs">{chain.speed}</td>
-                <td className="py-3 text-xs text-slate-500 max-w-xs">{chain.notes}</td>
+                <td className="py-3 pr-4 text-fg-1 whitespace-nowrap text-xs">{chain.speed}</td>
+                <td className="py-3 text-xs text-fg-2 max-w-xs">{chain.notes}</td>
               </tr>
             ))}
           </tbody>
         </table>
         {filtered.length === 0 && (
-          <p className="text-center text-slate-600 py-8">No chains match your search</p>
+          <p className="text-center text-fg-2 py-8">No chains match your search</p>
         )}
       </div>
     </div>

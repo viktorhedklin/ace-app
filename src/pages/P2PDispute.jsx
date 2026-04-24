@@ -149,7 +149,7 @@ function CopyBtn({ text }) {
   const [ok, setOk] = useState(false);
   return (
     <button onClick={() => { navigator.clipboard.writeText(text); setOk(true); setTimeout(() => setOk(false), 2000); }}
-      className="text-slate-500 hover:text-yellow-400 transition-colors cursor-pointer" aria-label="Copy">
+      className="text-fg-2 hover:text-hero transition-colors cursor-pointer" aria-label="Copy">
       {ok ? <Check size={13} /> : <Copy size={13} />}
     </button>
   );
@@ -158,16 +158,16 @@ function CopyBtn({ text }) {
 function QTCard({ qt }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="bg-yellow-400/10 border border-yellow-400/20 rounded-lg overflow-hidden">
+    <div className="bg-hero/10 border border-hero/20 rounded-lg overflow-hidden">
       <button onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-yellow-400/5 transition-colors cursor-pointer">
-        <span className="text-xs font-medium text-yellow-300"><span className="text-yellow-400/80 mr-1.5">{qt.code}</span>{qt.title}</span>
+        className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-hero/5 transition-colors cursor-pointer">
+        <span className="text-xs font-medium text-hero"><span className="text-hero/80 mr-1.5">{qt.code}</span>{qt.title}</span>
         <div className="flex items-center gap-2">
           <CopyBtn text={qt.text} />
-          {open ? <ChevronUp size={12} className="text-yellow-400/50" /> : <ChevronDown size={12} className="text-yellow-400/50" />}
+          {open ? <ChevronUp size={12} className="text-hero/50" /> : <ChevronDown size={12} className="text-hero/50" />}
         </div>
       </button>
-      {open && <pre className="px-3 pb-3 text-xs text-slate-400 whitespace-pre-wrap leading-relaxed border-t border-yellow-400/10 pt-2">{qt.text}</pre>}
+      {open && <pre className="px-3 pb-3 text-xs text-fg-1 whitespace-pre-wrap leading-relaxed border-t border-hero/10 pt-2">{qt.text}</pre>}
     </div>
   );
 }
@@ -175,41 +175,41 @@ function QTCard({ qt }) {
 function TemplateCard({ et }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="bg-slate-800/50 rounded-lg overflow-hidden">
+    <div className="bg-bg-2/50 rounded-lg overflow-hidden">
       <button onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-slate-800 transition-colors cursor-pointer">
-        <span className="text-xs font-medium text-slate-300"><span className="text-yellow-400/80 mr-1.5">{et.code}</span>{et.title}</span>
+        className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-bg-2 transition-colors cursor-pointer">
+        <span className="text-xs font-medium text-fg-1"><span className="text-hero/80 mr-1.5">{et.code}</span>{et.title}</span>
         <div className="flex items-center gap-2">
           <CopyBtn text={et.body} />
-          {open ? <ChevronUp size={12} className="text-slate-600" /> : <ChevronDown size={12} className="text-slate-600" />}
+          {open ? <ChevronUp size={12} className="text-fg-2" /> : <ChevronDown size={12} className="text-fg-2" />}
         </div>
       </button>
-      {open && <pre className="px-3 pb-3 text-xs text-slate-400 whitespace-pre-wrap leading-relaxed border-t border-slate-700/50 pt-2">{et.body}</pre>}
+      {open && <pre className="px-3 pb-3 text-xs text-fg-1 whitespace-pre-wrap leading-relaxed border-t border-border-0/50 pt-2">{et.body}</pre>}
     </div>
   );
 }
 
 function StepCard({ title, steps, caseType, escalation, template, children }) {
   return (
-    <div className="bg-slate-800/40 border border-slate-700/50 rounded-xl p-4 space-y-3">
-      {title && <h4 className="text-sm font-semibold text-slate-100">{title}</h4>}
+    <div className="bg-bg-2/40 border border-border-0/50 rounded-xl p-4 space-y-3">
+      {title && <h4 className="text-sm font-semibold text-fg-0">{title}</h4>}
       {steps && (
-        <ol className="space-y-1.5 text-xs text-slate-300 leading-relaxed">
-          {steps.map((s, i) => <li key={i} className="flex gap-2"><span className="text-yellow-400/70 shrink-0">{i + 1}.</span><span>{s}</span></li>)}
+        <ol className="space-y-1.5 text-xs text-fg-1 leading-relaxed">
+          {steps.map((s, i) => <li key={i} className="flex gap-2"><span className="text-hero/70 shrink-0">{i + 1}.</span><span>{s}</span></li>)}
         </ol>
       )}
       {caseType && (
         <div className="flex items-center gap-2 text-xs">
-          <ClipboardList size={12} className="text-blue-400 shrink-0" />
-          <span className="text-slate-500">Case type:</span>
-          <span className="text-blue-300 font-mono text-xs">{caseType}</span>
+          <ClipboardList size={12} className="text-info shrink-0" />
+          <span className="text-fg-2">Case type:</span>
+          <span className="text-info font-mono text-xs">{caseType}</span>
           <CopyBtn text={caseType} />
         </div>
       )}
       {escalation && (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 space-y-2">
-          <p className="text-xs font-medium text-red-400">Escalation Required</p>
-          <pre className="text-xs text-slate-400 whitespace-pre-wrap">{escalation}</pre>
+        <div className="bg-crit/10 border border-crit/20 rounded-lg p-3 space-y-2">
+          <p className="text-xs font-medium text-crit">Escalation Required</p>
+          <pre className="text-xs text-fg-1 whitespace-pre-wrap">{escalation}</pre>
           <CopyBtn text={escalation} />
         </div>
       )}
@@ -221,7 +221,7 @@ function StepCard({ title, steps, caseType, escalation, template, children }) {
 
 function BackBtn({ onClick }) {
   return (
-    <button onClick={onClick} className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-yellow-400 transition-colors mb-4 cursor-pointer">
+    <button onClick={onClick} className="flex items-center gap-1.5 text-xs text-fg-2 hover:text-hero transition-colors mb-4 cursor-pointer">
       <ArrowLeft size={13} /> Back to scenarios
     </button>
   );
@@ -233,27 +233,27 @@ function BackBtn({ onClick }) {
 
 function CaseInfo({ data, setData }) {
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-      <h3 className="text-xs font-semibold text-slate-400 mb-3">Case Details (auto-fills escalation notes)</h3>
+    <div className="bg-bg-1 border border-border-0 rounded-xl p-4">
+      <h3 className="text-xs font-semibold text-fg-1 mb-3">Case Details (auto-fills escalation notes)</h3>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <input
           placeholder="UID"
           value={data.uid}
           onChange={e => setData(p => ({ ...p, uid: e.target.value }))}
-          className="bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-1.5 text-xs text-slate-100 outline-none transition-colors"
+          className="bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-1.5 text-xs text-fg-0 outline-none transition-colors"
           aria-label="UID"
         />
         <input
           placeholder="Order ID"
           value={data.oid}
           onChange={e => setData(p => ({ ...p, oid: e.target.value }))}
-          className="bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-1.5 text-xs text-slate-100 outline-none transition-colors"
+          className="bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-1.5 text-xs text-fg-0 outline-none transition-colors"
           aria-label="Order ID"
         />
         <select
           value={data.role}
           onChange={e => setData(p => ({ ...p, role: e.target.value }))}
-          className="bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-1.5 text-xs text-slate-100 outline-none transition-colors cursor-pointer"
+          className="bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-1.5 text-xs text-fg-0 outline-none transition-colors cursor-pointer"
           aria-label="User role"
         >
           <option value="">Role...</option>
@@ -263,7 +263,7 @@ function CaseInfo({ data, setData }) {
         <select
           value={data.status}
           onChange={e => setData(p => ({ ...p, status: e.target.value }))}
-          className="bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-1.5 text-xs text-slate-100 outline-none transition-colors cursor-pointer"
+          className="bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-1.5 text-xs text-fg-0 outline-none transition-colors cursor-pointer"
           aria-label="Order status"
         >
           <option value="">Order status...</option>
@@ -284,17 +284,17 @@ function YellowAlertFlow({ onBack, caseData }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
-      <h3 className="text-sm font-bold text-slate-100">🚨 Yellow Alert — Urgent Escalation</h3>
+      <h3 className="text-sm font-bold text-fg-0">🚨 Yellow Alert — Urgent Escalation</h3>
 
       {/* Trigger conditions */}
-      <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 space-y-2">
-        <h4 className="text-xs font-semibold text-red-400 flex items-center gap-1.5">
+      <div className="bg-crit/10 border border-crit/20 rounded-xl p-4 space-y-2">
+        <h4 className="text-xs font-semibold text-crit flex items-center gap-1.5">
           <AlertTriangle size={13} /> Trigger Conditions
         </h4>
-        <ul className="text-xs text-slate-400 space-y-1.5 leading-relaxed">
-          <li className="flex gap-2"><span className="text-red-400 shrink-0">Issue = Scam:</span><span>Amount &gt; $100 USD, Bybit employee impersonation</span></li>
-          <li className="flex gap-2"><span className="text-red-400 shrink-0">Attitude = Threaten/Blackmail:</span><span>"I will post to social media", "I'm going to sue Bybit"</span></li>
-          <li className="flex gap-2"><span className="text-red-400 shrink-0">Behavior = Spam:</span><span>Same inquiry &gt; 3 times within 1 week</span></li>
+        <ul className="text-xs text-fg-1 space-y-1.5 leading-relaxed">
+          <li className="flex gap-2"><span className="text-crit shrink-0">Issue = Scam:</span><span>Amount &gt; $100 USD, Bybit employee impersonation</span></li>
+          <li className="flex gap-2"><span className="text-crit shrink-0">Attitude = Threaten/Blackmail:</span><span>"I will post to social media", "I'm going to sue Bybit"</span></li>
+          <li className="flex gap-2"><span className="text-crit shrink-0">Behavior = Spam:</span><span>Same inquiry &gt; 3 times within 1 week</span></li>
         </ul>
       </div>
 
@@ -317,16 +317,16 @@ function YellowAlertFlow({ onBack, caseData }) {
       />
 
       {/* Time expectation */}
-      <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
-        <p className="text-xs font-medium text-blue-400 mb-1">Time Expectation (tell the user):</p>
-        <p className="text-xs text-slate-400">"You will receive the updates at earliest opportunity, our team is already looking into your case"</p>
+      <div className="bg-info/10 border border-info/20 rounded-lg p-3">
+        <p className="text-xs font-medium text-info mb-1">Time Expectation (tell the user):</p>
+        <p className="text-xs text-fg-1">"You will receive the updates at earliest opportunity, our team is already looking into your case"</p>
         <div className="mt-1.5"><CopyBtn text="You will receive the updates at earliest opportunity, our team is already looking into your case" /></div>
       </div>
 
       {/* Important notes */}
-      <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-4 space-y-2">
-        <h4 className="text-xs font-semibold text-orange-400">Important Notes</h4>
-        <ul className="text-xs text-slate-400 space-y-1">
+      <div className="bg-warn/10 border border-warn/20 rounded-xl p-4 space-y-2">
+        <h4 className="text-xs font-semibold text-warn">Important Notes</h4>
+        <ul className="text-xs text-fg-1 space-y-1">
           <li>If no reply in 3 min, PM P2P shift leader</li>
           <li>Must document PM proof</li>
           <li>Engage with P2P Division agent in thread</li>
@@ -352,11 +352,11 @@ function ResetAppealFlow({ onBack, caseData }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
-      <h3 className="text-sm font-bold text-slate-100">🔄 Reset Appeal Limit</h3>
+      <h3 className="text-sm font-bold text-fg-0">🔄 Reset Appeal Limit</h3>
 
       {/* Info */}
-      <div className="bg-slate-800/40 border border-slate-700/50 rounded-lg p-3">
-        <p className="text-xs text-slate-400 leading-relaxed">Users have 2 appeal chances per order. Once exhausted, they cannot submit further appeals without agent intervention. Follow the steps below to reset.</p>
+      <div className="bg-bg-2/40 border border-border-0/50 rounded-lg p-3">
+        <p className="text-xs text-fg-1 leading-relaxed">Users have 2 appeal chances per order. Once exhausted, they cannot submit further appeals without agent intervention. Follow the steps below to reset.</p>
       </div>
 
       {/* Steps */}
@@ -374,14 +374,14 @@ function ResetAppealFlow({ onBack, caseData }) {
       />
 
       {/* Decision fork */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
-        <h4 className="text-xs font-semibold text-slate-400">Does the user have OID + screenshot?</h4>
+      <div className="bg-bg-1 border border-border-0 rounded-xl p-4 space-y-3">
+        <h4 className="text-xs font-semibold text-fg-1">Does the user have OID + screenshot?</h4>
         <div className="flex gap-2">
           <button
             onClick={() => setHasInfo(true)}
             className={cn(
               'px-4 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer',
-              hasInfo === true ? 'bg-green-500/20 border border-green-500/40 text-green-300' : 'bg-slate-800 border border-slate-700 text-slate-400 hover:border-green-500/30'
+              hasInfo === true ? 'bg-ok/20 border border-ok/40 text-ok' : 'bg-bg-2 border border-border-0 text-fg-1 hover:border-ok/30'
             )}
           >
             Yes — Escalate
@@ -390,7 +390,7 @@ function ResetAppealFlow({ onBack, caseData }) {
             onClick={() => setHasInfo(false)}
             className={cn(
               'px-4 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer',
-              hasInfo === false ? 'bg-red-500/20 border border-red-500/40 text-red-300' : 'bg-slate-800 border border-slate-700 text-slate-400 hover:border-red-500/30'
+              hasInfo === false ? 'bg-crit/20 border border-crit/40 text-crit' : 'bg-bg-2 border border-border-0 text-fg-1 hover:border-crit/30'
             )}
           >
             No — Request info
@@ -399,9 +399,9 @@ function ResetAppealFlow({ onBack, caseData }) {
 
         {hasInfo === true && (
           <div className="space-y-3 pt-2">
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 space-y-2">
-              <p className="text-xs font-medium text-red-400">Escalation Required</p>
-              <pre className="text-xs text-slate-400 whitespace-pre-wrap">{ESCALATION_NOTE(caseData.uid, caseData.oid, 'Appeal limit exhausted (2/2) — requesting reset', '[Screenshot of appeal limit attached]')}</pre>
+            <div className="bg-crit/10 border border-crit/20 rounded-lg p-3 space-y-2">
+              <p className="text-xs font-medium text-crit">Escalation Required</p>
+              <pre className="text-xs text-fg-1 whitespace-pre-wrap">{ESCALATION_NOTE(caseData.uid, caseData.oid, 'Appeal limit exhausted (2/2) — requesting reset', '[Screenshot of appeal limit attached]')}</pre>
               <CopyBtn text={ESCALATION_NOTE(caseData.uid, caseData.oid, 'Appeal limit exhausted (2/2) — requesting reset', '[Screenshot of appeal limit attached]')} />
             </div>
             <QTCard qt={QT.followup} />
@@ -443,25 +443,25 @@ function PendingBeforeFlow({ onBack, caseData }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
-      <h3 className="text-sm font-bold text-slate-100">⏳ Pending Coin Release — Before Appeal</h3>
+      <h3 className="text-sm font-bold text-fg-0">⏳ Pending Coin Release — Before Appeal</h3>
 
       {/* Appeal limit note */}
-      <div className="bg-yellow-400/10 border border-yellow-400/20 rounded-lg p-3">
-        <p className="text-xs text-yellow-300 leading-relaxed">If user can't submit appeal due to limit issues → use QT a06 follow-up → escalate to P2</p>
+      <div className="bg-hero/10 border border-hero/20 rounded-lg p-3">
+        <p className="text-xs text-hero leading-relaxed">If user can't submit appeal due to limit issues → use QT a06 follow-up → escalate to P2</p>
       </div>
 
       {/* Role selector */}
       {!role && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button onClick={() => { setRole('buyer'); setSub(null); }}
-            className="text-left bg-slate-800/50 border border-slate-700/50 hover:border-yellow-400/30 rounded-xl p-4 transition-all cursor-pointer">
-            <h4 className="text-sm font-semibold text-slate-100">Buyer Issues</h4>
-            <p className="text-xs text-slate-500 mt-1">User is the buyer in the P2P order</p>
+            className="text-left bg-bg-2/50 border border-border-0/50 hover:border-hero/30 rounded-xl p-4 transition-all cursor-pointer">
+            <h4 className="text-sm font-semibold text-fg-0">Buyer Issues</h4>
+            <p className="text-xs text-fg-2 mt-1">User is the buyer in the P2P order</p>
           </button>
           <button onClick={() => { setRole('seller'); setSub(null); }}
-            className="text-left bg-slate-800/50 border border-slate-700/50 hover:border-yellow-400/30 rounded-xl p-4 transition-all cursor-pointer">
-            <h4 className="text-sm font-semibold text-slate-100">Seller Issues</h4>
-            <p className="text-xs text-slate-500 mt-1">User is the seller in the P2P order</p>
+            className="text-left bg-bg-2/50 border border-border-0/50 hover:border-hero/30 rounded-xl p-4 transition-all cursor-pointer">
+            <h4 className="text-sm font-semibold text-fg-0">Seller Issues</h4>
+            <p className="text-xs text-fg-2 mt-1">User is the seller in the P2P order</p>
           </button>
         </div>
       )}
@@ -469,13 +469,13 @@ function PendingBeforeFlow({ onBack, caseData }) {
       {/* Sub-scenario selector */}
       {role && !sub && (
         <div>
-          <button onClick={() => setRole(null)} className="text-xs text-slate-600 hover:text-slate-400 transition-colors mb-3 cursor-pointer">
+          <button onClick={() => setRole(null)} className="text-xs text-fg-2 hover:text-fg-1 transition-colors mb-3 cursor-pointer">
             ← Back to role selection
           </button>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {(role === 'buyer' ? buyerSubs : sellerSubs).map(s => (
               <button key={s.id} onClick={() => setSub(s.id)}
-                className="text-left bg-slate-800/50 border border-slate-700/50 hover:border-yellow-400/30 rounded-lg px-3 py-2.5 text-xs text-slate-300 hover:text-slate-100 transition-all cursor-pointer">
+                className="text-left bg-bg-2/50 border border-border-0/50 hover:border-hero/30 rounded-lg px-3 py-2.5 text-xs text-fg-1 hover:text-fg-0 transition-all cursor-pointer">
                 {s.label}
               </button>
             ))}
@@ -486,7 +486,7 @@ function PendingBeforeFlow({ onBack, caseData }) {
       {/* Buyer sub-scenarios */}
       {role === 'buyer' && sub && (
         <div>
-          <button onClick={() => setSub(null)} className="text-xs text-slate-600 hover:text-slate-400 transition-colors mb-3 cursor-pointer">
+          <button onClick={() => setSub(null)} className="text-xs text-fg-2 hover:text-fg-1 transition-colors mb-3 cursor-pointer">
             ← Back to buyer issues
           </button>
 
@@ -503,7 +503,7 @@ function PendingBeforeFlow({ onBack, caseData }) {
                 caseType={CASE_TYPES.guide}
               />
               <QTCard qt={QT.buyer_a} />
-              <p className="text-xs text-slate-500">If counterparty uncooperative: advise to submit appeal</p>
+              <p className="text-xs text-fg-2">If counterparty uncooperative: advise to submit appeal</p>
             </div>
           )}
 
@@ -519,7 +519,7 @@ function PendingBeforeFlow({ onBack, caseData }) {
                 caseType={CASE_TYPES.guide}
               />
               <QTCard qt={QT.buyer_b} />
-              <p className="text-xs text-slate-500">If counterparty uncooperative: advise to submit appeal</p>
+              <p className="text-xs text-fg-2">If counterparty uncooperative: advise to submit appeal</p>
             </div>
           )}
 
@@ -537,7 +537,7 @@ function PendingBeforeFlow({ onBack, caseData }) {
                 caseType={CASE_TYPES.guide}
               />
               <QTCard qt={QT.buyer_c} />
-              <p className="text-xs text-slate-500">If counterparty uncooperative: advise to submit appeal</p>
+              <p className="text-xs text-fg-2">If counterparty uncooperative: advise to submit appeal</p>
             </div>
           )}
         </div>
@@ -546,7 +546,7 @@ function PendingBeforeFlow({ onBack, caseData }) {
       {/* Seller sub-scenarios */}
       {role === 'seller' && sub && (
         <div>
-          <button onClick={() => setSub(null)} className="text-xs text-slate-600 hover:text-slate-400 transition-colors mb-3 cursor-pointer">
+          <button onClick={() => setSub(null)} className="text-xs text-fg-2 hover:text-fg-1 transition-colors mb-3 cursor-pointer">
             ← Back to seller issues
           </button>
 
@@ -563,7 +563,7 @@ function PendingBeforeFlow({ onBack, caseData }) {
                 caseType={CASE_TYPES.guide}
               />
               <QTCard qt={QT.seller_a} />
-              <p className="text-xs text-slate-500">If counterparty uncooperative: advise to submit appeal</p>
+              <p className="text-xs text-fg-2">If counterparty uncooperative: advise to submit appeal</p>
             </div>
           )}
 
@@ -580,7 +580,7 @@ function PendingBeforeFlow({ onBack, caseData }) {
                 caseType={CASE_TYPES.guide}
               />
               <QTCard qt={QT.seller_b} />
-              <p className="text-xs text-slate-500">If counterparty uncooperative: advise to submit appeal</p>
+              <p className="text-xs text-fg-2">If counterparty uncooperative: advise to submit appeal</p>
             </div>
           )}
 
@@ -596,7 +596,7 @@ function PendingBeforeFlow({ onBack, caseData }) {
                 caseType={CASE_TYPES.guide}
               />
               <QTCard qt={QT.seller_c} />
-              <p className="text-xs text-slate-500">If counterparty uncooperative: advise to submit appeal</p>
+              <p className="text-xs text-fg-2">If counterparty uncooperative: advise to submit appeal</p>
             </div>
           )}
 
@@ -614,7 +614,7 @@ function PendingBeforeFlow({ onBack, caseData }) {
                 caseType={CASE_TYPES.guide}
               />
               <QTCard qt={QT.seller_d} />
-              <p className="text-xs text-slate-500">If counterparty uncooperative: advise to submit appeal</p>
+              <p className="text-xs text-fg-2">If counterparty uncooperative: advise to submit appeal</p>
             </div>
           )}
         </div>
@@ -642,7 +642,7 @@ function PendingAfterFlow({ onBack, caseData }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
-      <h3 className="text-sm font-bold text-slate-100">📋 Pending Coin Release — After Appeal</h3>
+      <h3 className="text-sm font-bold text-fg-0">📋 Pending Coin Release — After Appeal</h3>
 
       {/* Steps */}
       <StepCard
@@ -657,14 +657,14 @@ function PendingAfterFlow({ onBack, caseData }) {
       />
 
       {/* TPC Decision */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
-        <h4 className="text-xs font-semibold text-slate-400">Has the TPC Follow-up Date & Time passed?</h4>
+      <div className="bg-bg-1 border border-border-0 rounded-xl p-4 space-y-3">
+        <h4 className="text-xs font-semibold text-fg-1">Has the TPC Follow-up Date & Time passed?</h4>
         <div className="flex gap-2">
           <button
             onClick={() => setTpcPassed(true)}
             className={cn(
               'px-4 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer',
-              tpcPassed === true ? 'bg-green-500/20 border border-green-500/40 text-green-300' : 'bg-slate-800 border border-slate-700 text-slate-400 hover:border-green-500/30'
+              tpcPassed === true ? 'bg-ok/20 border border-ok/40 text-ok' : 'bg-bg-2 border border-border-0 text-fg-1 hover:border-ok/30'
             )}
           >
             Yes — TPC Passed
@@ -673,7 +673,7 @@ function PendingAfterFlow({ onBack, caseData }) {
             onClick={() => setTpcPassed(false)}
             className={cn(
               'px-4 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer',
-              tpcPassed === false ? 'bg-orange-500/20 border border-orange-500/40 text-orange-300' : 'bg-slate-800 border border-slate-700 text-slate-400 hover:border-orange-500/30'
+              tpcPassed === false ? 'bg-warn/20 border border-warn/40 text-warn' : 'bg-bg-2 border border-border-0 text-fg-1 hover:border-warn/30'
             )}
           >
             No — TPC Not Passed
@@ -682,15 +682,15 @@ function PendingAfterFlow({ onBack, caseData }) {
 
         {tpcPassed === true && (
           <div className="space-y-3 pt-2">
-            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
-              <p className="text-xs text-green-300 font-medium mb-1">Action: Raise Case Expedition + send QT</p>
-              <p className="text-xs text-slate-400">Escalate for immediate review. Use Case Expedition form in P2P Lark group.</p>
+            <div className="bg-ok/10 border border-ok/20 rounded-lg p-3">
+              <p className="text-xs text-ok font-medium mb-1">Action: Raise Case Expedition + send QT</p>
+              <p className="text-xs text-fg-1">Escalate for immediate review. Use Case Expedition form in P2P Lark group.</p>
             </div>
             <QTCard qt={QT.asap} />
             <TemplateCard et={ET['1111p_opt1']} />
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 space-y-2">
-              <p className="text-xs font-medium text-red-400">Escalation Required</p>
-              <pre className="text-xs text-slate-400 whitespace-pre-wrap">{ESCALATION_NOTE(caseData.uid, caseData.oid, 'Ongoing appeal — TPC passed, requesting expedited review')}</pre>
+            <div className="bg-crit/10 border border-crit/20 rounded-lg p-3 space-y-2">
+              <p className="text-xs font-medium text-crit">Escalation Required</p>
+              <pre className="text-xs text-fg-1 whitespace-pre-wrap">{ESCALATION_NOTE(caseData.uid, caseData.oid, 'Ongoing appeal — TPC passed, requesting expedited review')}</pre>
               <CopyBtn text={ESCALATION_NOTE(caseData.uid, caseData.oid, 'Ongoing appeal — TPC passed, requesting expedited review')} />
             </div>
           </div>
@@ -698,9 +698,9 @@ function PendingAfterFlow({ onBack, caseData }) {
 
         {tpcPassed === false && (
           <div className="space-y-3 pt-2">
-            <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
-              <p className="text-xs text-orange-300 font-medium mb-1">Action: Ask user to be patient</p>
-              <p className="text-xs text-slate-400">Include TPC date in your response. Appeal is still within processing window.</p>
+            <div className="bg-warn/10 border border-warn/20 rounded-lg p-3">
+              <p className="text-xs text-warn font-medium mb-1">Action: Ask user to be patient</p>
+              <p className="text-xs text-fg-1">Include TPC date in your response. Appeal is still within processing window.</p>
             </div>
             <QTCard qt={QT.be_patient} />
             <TemplateCard et={ET['1111p_opt2']} />
@@ -709,29 +709,29 @@ function PendingAfterFlow({ onBack, caseData }) {
       </div>
 
       {/* Collapsible: Appeal Statuses Reference */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+      <div className="bg-bg-1 border border-border-0 rounded-xl overflow-hidden">
         <button onClick={() => setShowStatuses(o => !o)}
-          className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-800/50 transition-colors cursor-pointer">
-          <span className="text-xs font-semibold text-slate-100">Appeal Status Reference ({APPEAL_STATUSES.length} statuses)</span>
-          {showStatuses ? <ChevronUp size={14} className="text-slate-500" /> : <ChevronDown size={14} className="text-slate-500" />}
+          className="w-full flex items-center justify-between px-4 py-3 hover:bg-bg-2/50 transition-colors cursor-pointer">
+          <span className="text-xs font-semibold text-fg-0">Appeal Status Reference ({APPEAL_STATUSES.length} statuses)</span>
+          {showStatuses ? <ChevronUp size={14} className="text-fg-2" /> : <ChevronDown size={14} className="text-fg-2" />}
         </button>
         {showStatuses && (
           <div className="px-4 pb-4">
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-slate-700">
-                    <th className="text-left py-2 pr-3 text-slate-500 font-medium">Appeal Status</th>
-                    <th className="text-left py-2 pr-3 text-slate-500 font-medium">SF Equivalent</th>
-                    <th className="text-left py-2 text-slate-500 font-medium">Description</th>
+                  <tr className="border-b border-border-0">
+                    <th className="text-left py-2 pr-3 text-fg-2 font-medium">Appeal Status</th>
+                    <th className="text-left py-2 pr-3 text-fg-2 font-medium">SF Equivalent</th>
+                    <th className="text-left py-2 text-fg-2 font-medium">Description</th>
                   </tr>
                 </thead>
                 <tbody>
                   {APPEAL_STATUSES.map((a, i) => (
-                    <tr key={i} className="border-b border-slate-800/50">
-                      <td className="py-2 pr-3 text-yellow-300 font-medium whitespace-nowrap">{a.status}</td>
-                      <td className="py-2 pr-3 text-blue-300 font-mono whitespace-nowrap">{a.sfEquiv}</td>
-                      <td className="py-2 text-slate-400 leading-relaxed">{a.desc}</td>
+                    <tr key={i} className="border-b border-border-0/50">
+                      <td className="py-2 pr-3 text-hero font-medium whitespace-nowrap">{a.status}</td>
+                      <td className="py-2 pr-3 text-info font-mono whitespace-nowrap">{a.sfEquiv}</td>
+                      <td className="py-2 text-fg-1 leading-relaxed">{a.desc}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -742,26 +742,26 @@ function PendingAfterFlow({ onBack, caseData }) {
       </div>
 
       {/* Collapsible: Handling Time Factors */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+      <div className="bg-bg-1 border border-border-0 rounded-xl overflow-hidden">
         <button onClick={() => setShowFactors(o => !o)}
-          className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-800/50 transition-colors cursor-pointer">
-          <span className="text-xs font-semibold text-slate-100">Handling Time Factors</span>
-          {showFactors ? <ChevronUp size={14} className="text-slate-500" /> : <ChevronDown size={14} className="text-slate-500" />}
+          className="w-full flex items-center justify-between px-4 py-3 hover:bg-bg-2/50 transition-colors cursor-pointer">
+          <span className="text-xs font-semibold text-fg-0">Handling Time Factors</span>
+          {showFactors ? <ChevronUp size={14} className="text-fg-2" /> : <ChevronDown size={14} className="text-fg-2" />}
         </button>
         {showFactors && (
           <div className="px-4 pb-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
-              <h5 className="text-xs font-semibold text-green-400 mb-2">Fast Resolution</h5>
-              <ul className="text-xs text-slate-400 space-y-1">
+            <div className="bg-ok/10 border border-ok/20 rounded-lg p-3">
+              <h5 className="text-xs font-semibold text-ok mb-2">Fast Resolution</h5>
+              <ul className="text-xs text-fg-1 space-y-1">
                 <li>Both parties cooperate</li>
                 <li>Clear evidence provided</li>
                 <li>Straightforward payment dispute</li>
                 <li>VA/VIP fast-track eligible</li>
               </ul>
             </div>
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-              <h5 className="text-xs font-semibold text-red-400 mb-2">Slow Resolution</h5>
-              <ul className="text-xs text-slate-400 space-y-1">
+            <div className="bg-crit/10 border border-crit/20 rounded-lg p-3">
+              <h5 className="text-xs font-semibold text-crit mb-2">Slow Resolution</h5>
+              <ul className="text-xs text-fg-1 space-y-1">
                 <li>Unresponsive counterparty</li>
                 <li>Insufficient or unclear evidence</li>
                 <li>Cross-department investigation needed</li>
@@ -798,16 +798,16 @@ function ClosedLossFlow({ onBack, caseData }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
-      <h3 className="text-sm font-bold text-slate-100">💰 Completed/Cancelled Order — Asset Loss</h3>
+      <h3 className="text-sm font-bold text-fg-0">💰 Completed/Cancelled Order — Asset Loss</h3>
 
       {/* Appeal limit note */}
-      <div className="bg-yellow-400/10 border border-yellow-400/20 rounded-lg p-3">
-        <p className="text-xs text-yellow-300 leading-relaxed">If user can't submit appeal due to limit → use QT a06 follow-up → escalate to P2</p>
+      <div className="bg-hero/10 border border-hero/20 rounded-lg p-3">
+        <p className="text-xs text-hero leading-relaxed">If user can't submit appeal due to limit → use QT a06 follow-up → escalate to P2</p>
       </div>
 
       {/* HC link */}
       <a href="https://www.bybit.com/en/help-center/article/P2P-Closed-Order-Appeal" target="_blank" rel="noopener noreferrer"
-        className="flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 transition-colors py-1">
+        className="flex items-center gap-2 text-xs text-info hover:text-info transition-colors py-1">
         <ExternalLink size={11} className="shrink-0" /> P2P Appeal Solutions for Canceled/Completed Orders
       </a>
 
@@ -815,14 +815,14 @@ function ClosedLossFlow({ onBack, caseData }) {
       {!role && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button onClick={() => { setRole('buyer'); setSub(null); }}
-            className="text-left bg-slate-800/50 border border-slate-700/50 hover:border-yellow-400/30 rounded-xl p-4 transition-all cursor-pointer">
-            <h4 className="text-sm font-semibold text-slate-100">Buyer</h4>
-            <p className="text-xs text-slate-500 mt-1">User is the buyer in the P2P order</p>
+            className="text-left bg-bg-2/50 border border-border-0/50 hover:border-hero/30 rounded-xl p-4 transition-all cursor-pointer">
+            <h4 className="text-sm font-semibold text-fg-0">Buyer</h4>
+            <p className="text-xs text-fg-2 mt-1">User is the buyer in the P2P order</p>
           </button>
           <button onClick={() => { setRole('seller'); setSub(null); }}
-            className="text-left bg-slate-800/50 border border-slate-700/50 hover:border-yellow-400/30 rounded-xl p-4 transition-all cursor-pointer">
-            <h4 className="text-sm font-semibold text-slate-100">Seller</h4>
-            <p className="text-xs text-slate-500 mt-1">User is the seller in the P2P order</p>
+            className="text-left bg-bg-2/50 border border-border-0/50 hover:border-hero/30 rounded-xl p-4 transition-all cursor-pointer">
+            <h4 className="text-sm font-semibold text-fg-0">Seller</h4>
+            <p className="text-xs text-fg-2 mt-1">User is the seller in the P2P order</p>
           </button>
         </div>
       )}
@@ -830,13 +830,13 @@ function ClosedLossFlow({ onBack, caseData }) {
       {/* Sub-scenario selector */}
       {role && !sub && (
         <div>
-          <button onClick={() => setRole(null)} className="text-xs text-slate-600 hover:text-slate-400 transition-colors mb-3 cursor-pointer">
+          <button onClick={() => setRole(null)} className="text-xs text-fg-2 hover:text-fg-1 transition-colors mb-3 cursor-pointer">
             ← Back to role selection
           </button>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {(role === 'buyer' ? buyerSubs : sellerSubs).map(s => (
               <button key={s.id} onClick={() => setSub(s.id)}
-                className="text-left bg-slate-800/50 border border-slate-700/50 hover:border-yellow-400/30 rounded-lg px-3 py-2.5 text-xs text-slate-300 hover:text-slate-100 transition-all cursor-pointer">
+                className="text-left bg-bg-2/50 border border-border-0/50 hover:border-hero/30 rounded-lg px-3 py-2.5 text-xs text-fg-1 hover:text-fg-0 transition-all cursor-pointer">
                 {s.label}
               </button>
             ))}
@@ -847,7 +847,7 @@ function ClosedLossFlow({ onBack, caseData }) {
       {/* Buyer sub-scenarios (5.1) */}
       {role === 'buyer' && sub && (
         <div>
-          <button onClick={() => setSub(null)} className="text-xs text-slate-600 hover:text-slate-400 transition-colors mb-3 cursor-pointer">
+          <button onClick={() => setSub(null)} className="text-xs text-fg-2 hover:text-fg-1 transition-colors mb-3 cursor-pointer">
             ← Back to buyer issues
           </button>
 
@@ -863,9 +863,9 @@ function ClosedLossFlow({ onBack, caseData }) {
                 ]}
                 caseType={CASE_TYPES.buyer}
               />
-              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 flex items-start gap-2">
-                <Info size={13} className="text-blue-400 shrink-0 mt-0.5" />
-                <p className="text-xs text-slate-400">If counterparty uncooperative → advise user to submit appeal</p>
+              <div className="bg-info/10 border border-info/20 rounded-lg p-3 flex items-start gap-2">
+                <Info size={13} className="text-info shrink-0 mt-0.5" />
+                <p className="text-xs text-fg-1">If counterparty uncooperative → advise user to submit appeal</p>
               </div>
               <QTCard qt={QT.closed_appeal} />
             </div>
@@ -882,9 +882,9 @@ function ClosedLossFlow({ onBack, caseData }) {
                 ]}
                 caseType={CASE_TYPES.buyer}
               />
-              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 flex items-start gap-2">
-                <Info size={13} className="text-blue-400 shrink-0 mt-0.5" />
-                <p className="text-xs text-slate-400">If counterparty uncooperative → advise user to submit appeal</p>
+              <div className="bg-info/10 border border-info/20 rounded-lg p-3 flex items-start gap-2">
+                <Info size={13} className="text-info shrink-0 mt-0.5" />
+                <p className="text-xs text-fg-1">If counterparty uncooperative → advise user to submit appeal</p>
               </div>
               <QTCard qt={QT.closed_appeal} />
             </div>
@@ -901,8 +901,8 @@ function ClosedLossFlow({ onBack, caseData }) {
                 caseType={CASE_TYPES.buyer}
               />
               <QTCard qt={QT.report_user} />
-              <div className="bg-yellow-400/10 border border-yellow-400/20 rounded-lg p-3">
-                <p className="text-xs text-yellow-300 leading-relaxed">If user wants to appeal fees/refund → treat as overpaid scenario above</p>
+              <div className="bg-hero/10 border border-hero/20 rounded-lg p-3">
+                <p className="text-xs text-hero leading-relaxed">If user wants to appeal fees/refund → treat as overpaid scenario above</p>
               </div>
             </div>
           )}
@@ -912,7 +912,7 @@ function ClosedLossFlow({ onBack, caseData }) {
       {/* Seller sub-scenarios (5.2) */}
       {role === 'seller' && sub && (
         <div>
-          <button onClick={() => setSub(null)} className="text-xs text-slate-600 hover:text-slate-400 transition-colors mb-3 cursor-pointer">
+          <button onClick={() => setSub(null)} className="text-xs text-fg-2 hover:text-fg-1 transition-colors mb-3 cursor-pointer">
             ← Back to seller issues
           </button>
 
@@ -927,9 +927,9 @@ function ClosedLossFlow({ onBack, caseData }) {
                 ]}
                 caseType={CASE_TYPES.seller}
               />
-              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 flex items-start gap-2">
-                <Info size={13} className="text-blue-400 shrink-0 mt-0.5" />
-                <p className="text-xs text-slate-400">If counterparty uncooperative → advise user to submit appeal</p>
+              <div className="bg-info/10 border border-info/20 rounded-lg p-3 flex items-start gap-2">
+                <Info size={13} className="text-info shrink-0 mt-0.5" />
+                <p className="text-xs text-fg-1">If counterparty uncooperative → advise user to submit appeal</p>
               </div>
               <QTCard qt={QT.closed_appeal} />
             </div>
@@ -946,9 +946,9 @@ function ClosedLossFlow({ onBack, caseData }) {
                 ]}
                 caseType={CASE_TYPES.seller}
               />
-              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 flex items-start gap-2">
-                <Info size={13} className="text-blue-400 shrink-0 mt-0.5" />
-                <p className="text-xs text-slate-400">If counterparty uncooperative → advise user to submit appeal</p>
+              <div className="bg-info/10 border border-info/20 rounded-lg p-3 flex items-start gap-2">
+                <Info size={13} className="text-info shrink-0 mt-0.5" />
+                <p className="text-xs text-fg-1">If counterparty uncooperative → advise user to submit appeal</p>
               </div>
               <QTCard qt={QT.closed_appeal} />
             </div>
@@ -966,9 +966,9 @@ function ClosedLossFlow({ onBack, caseData }) {
                 ]}
                 caseType={CASE_TYPES.seller}
               />
-              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 flex items-start gap-2">
-                <Info size={13} className="text-blue-400 shrink-0 mt-0.5" />
-                <p className="text-xs text-slate-400">If counterparty uncooperative → advise user to submit appeal</p>
+              <div className="bg-info/10 border border-info/20 rounded-lg p-3 flex items-start gap-2">
+                <Info size={13} className="text-info shrink-0 mt-0.5" />
+                <p className="text-xs text-fg-1">If counterparty uncooperative → advise user to submit appeal</p>
               </div>
               <QTCard qt={QT.closed_appeal} />
             </div>
@@ -1007,14 +1007,14 @@ function ClosedNoLossFlow({ onBack, caseData }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
-      <h3 className="text-sm font-bold text-slate-100">📝 Completed/Cancelled — No Asset Loss</h3>
+      <h3 className="text-sm font-bold text-fg-0">📝 Completed/Cancelled — No Asset Loss</h3>
 
       {/* Sub-scenario selector */}
       {!sub && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {subs.map(s => (
             <button key={s.id} onClick={() => { setSub(s.id); setCompletionPath(null); }}
-              className="text-left bg-slate-800/50 border border-slate-700/50 hover:border-yellow-400/30 rounded-lg px-3 py-2.5 text-xs text-slate-300 hover:text-slate-100 transition-all cursor-pointer">
+              className="text-left bg-bg-2/50 border border-border-0/50 hover:border-hero/30 rounded-lg px-3 py-2.5 text-xs text-fg-1 hover:text-fg-0 transition-all cursor-pointer">
               {s.label}
             </button>
           ))}
@@ -1023,7 +1023,7 @@ function ClosedNoLossFlow({ onBack, caseData }) {
 
       {sub && (
         <div>
-          <button onClick={() => { setSub(null); setCompletionPath(null); }} className="text-xs text-slate-600 hover:text-slate-400 transition-colors mb-3 cursor-pointer">
+          <button onClick={() => { setSub(null); setCompletionPath(null); }} className="text-xs text-fg-2 hover:text-fg-1 transition-colors mb-3 cursor-pointer">
             ← Back to sub-scenarios
           </button>
 
@@ -1117,9 +1117,9 @@ function ClosedNoLossFlow({ onBack, caseData }) {
                 ]}
                 caseType={CASE_TYPES.trading_guide}
               />
-              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-                <p className="text-xs font-medium text-red-400 mb-2">Common Unethical Behaviors</p>
-                <ul className="text-xs text-slate-400 space-y-1">
+              <div className="bg-crit/10 border border-crit/20 rounded-lg p-3">
+                <p className="text-xs font-medium text-crit mb-2">Common Unethical Behaviors</p>
+                <ul className="text-xs text-fg-1 space-y-1">
                   <li>• Attempting scam / fraud</li>
                   <li>• Using unauthorized trading platforms</li>
                   <li>• Invalid or expired payment methods</li>
@@ -1148,22 +1148,22 @@ function ClosedNoLossFlow({ onBack, caseData }) {
               {!completionPath && (
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <button onClick={() => setCompletionPath('not_cancelled')}
-                    className="text-left bg-slate-800/50 border border-slate-700/50 hover:border-yellow-400/30 rounded-lg px-3 py-2.5 text-xs text-slate-300 hover:text-slate-100 transition-all cursor-pointer">
+                    className="text-left bg-bg-2/50 border border-border-0/50 hover:border-hero/30 rounded-lg px-3 py-2.5 text-xs text-fg-1 hover:text-fg-0 transition-all cursor-pointer">
                     Not yet cancelled — select correct reason
                   </button>
                   <button onClick={() => setCompletionPath('seller_refuses')}
-                    className="text-left bg-slate-800/50 border border-slate-700/50 hover:border-yellow-400/30 rounded-lg px-3 py-2.5 text-xs text-slate-300 hover:text-slate-100 transition-all cursor-pointer">
+                    className="text-left bg-bg-2/50 border border-border-0/50 hover:border-hero/30 rounded-lg px-3 py-2.5 text-xs text-fg-1 hover:text-fg-0 transition-all cursor-pointer">
                     Seller refuses responsibility
                   </button>
                   <button onClick={() => setCompletionPath('wrong_reason')}
-                    className="text-left bg-slate-800/50 border border-slate-700/50 hover:border-yellow-400/30 rounded-lg px-3 py-2.5 text-xs text-slate-300 hover:text-slate-100 transition-all cursor-pointer">
+                    className="text-left bg-bg-2/50 border border-border-0/50 hover:border-hero/30 rounded-lg px-3 py-2.5 text-xs text-fg-1 hover:text-fg-0 transition-all cursor-pointer">
                     Already cancelled with wrong reason
                   </button>
                 </div>
               )}
 
               {completionPath && (
-                <button onClick={() => setCompletionPath(null)} className="text-xs text-slate-600 hover:text-slate-400 transition-colors cursor-pointer">
+                <button onClick={() => setCompletionPath(null)} className="text-xs text-fg-2 hover:text-fg-1 transition-colors cursor-pointer">
                   ← Back to completion rate paths
                 </button>
               )}
@@ -1237,14 +1237,14 @@ function ScamReportFlow({ onBack, caseData }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
-      <h3 className="text-sm font-bold text-slate-100">🕵️ Scam & Suspicion Reporting</h3>
+      <h3 className="text-sm font-bold text-fg-0">🕵️ Scam & Suspicion Reporting</h3>
 
       {/* Sub-scenario selector */}
       {!sub && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {subs.map(s => (
             <button key={s.id} onClick={() => setSub(s.id)}
-              className="text-left bg-slate-800/50 border border-slate-700/50 hover:border-yellow-400/30 rounded-lg px-3 py-2.5 text-xs text-slate-300 hover:text-slate-100 transition-all cursor-pointer">
+              className="text-left bg-bg-2/50 border border-border-0/50 hover:border-hero/30 rounded-lg px-3 py-2.5 text-xs text-fg-1 hover:text-fg-0 transition-all cursor-pointer">
               {s.label}
             </button>
           ))}
@@ -1253,7 +1253,7 @@ function ScamReportFlow({ onBack, caseData }) {
 
       {sub && (
         <div>
-          <button onClick={() => setSub(null)} className="text-xs text-slate-600 hover:text-slate-400 transition-colors mb-3 cursor-pointer">
+          <button onClick={() => setSub(null)} className="text-xs text-fg-2 hover:text-fg-1 transition-colors mb-3 cursor-pointer">
             ← Back to sub-scenarios
           </button>
 
@@ -1268,9 +1268,9 @@ function ScamReportFlow({ onBack, caseData }) {
                 ]}
                 caseType={CASE_TYPES.trading_guide}
               />
-              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-                <p className="text-xs font-medium text-red-400 mb-2">Common Unethical Behaviors</p>
-                <ul className="text-xs text-slate-400 space-y-1">
+              <div className="bg-crit/10 border border-crit/20 rounded-lg p-3">
+                <p className="text-xs font-medium text-crit mb-2">Common Unethical Behaviors</p>
+                <ul className="text-xs text-fg-1 space-y-1">
                   <li>• Attempting scam / fraud</li>
                   <li>• Using unauthorized trading platforms</li>
                   <li>• Invalid or expired payment methods</li>
@@ -1296,13 +1296,13 @@ function ScamReportFlow({ onBack, caseData }) {
                 ]}
                 caseType={CASE_TYPES.seller}
               />
-              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
-                <p className="text-xs font-medium text-blue-400 mb-1">Time Expectation:</p>
-                <p className="text-xs text-slate-400">"You will receive the updates at earliest opportunity"</p>
+              <div className="bg-info/10 border border-info/20 rounded-lg p-3">
+                <p className="text-xs font-medium text-info mb-1">Time Expectation:</p>
+                <p className="text-xs text-fg-1">"You will receive the updates at earliest opportunity"</p>
                 <div className="mt-1.5"><CopyBtn text="You will receive the updates at earliest opportunity" /></div>
               </div>
-              <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
-                <p className="text-xs text-green-300">No need to escalate to Pool 2 — P2P team handles Case Expedition directly.</p>
+              <div className="bg-ok/10 border border-ok/20 rounded-lg p-3">
+                <p className="text-xs text-ok">No need to escalate to Pool 2 — P2P team handles Case Expedition directly.</p>
               </div>
               <QTCard qt={QT.followup} />
             </div>
@@ -1322,12 +1322,12 @@ function ScamReportFlow({ onBack, caseData }) {
                 escalation={ESCALATION_NOTE(caseData.uid, caseData.oid, 'P2P scam with asset loss — YELLOW ALERT', '[Evidence attached] — Case Expedition with Yellow Alert')}
               />
               <a href="https://www.bybit.com/en/help-center/article/P2P-Avoid-Scams" target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 transition-colors py-1">
+                className="flex items-center gap-2 text-xs text-info hover:text-info transition-colors py-1">
                 <ExternalLink size={11} className="shrink-0" /> How to Avoid Crypto P2P Scams
               </a>
-              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-                <p className="text-xs font-medium text-red-400 mb-2">Common P2P Scams</p>
-                <ul className="text-xs text-slate-400 space-y-1">
+              <div className="bg-crit/10 border border-crit/20 rounded-lg p-3">
+                <p className="text-xs font-medium text-crit mb-2">Common P2P Scams</p>
+                <ul className="text-xs text-fg-1 space-y-1">
                   <li>• Fake payment proof / forged screenshots</li>
                   <li>• Social engineering to release coins early</li>
                   <li>• Impersonating Bybit support staff</li>
@@ -1367,14 +1367,14 @@ function RiskWarningFlow({ onBack, caseData }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
-      <h3 className="text-sm font-bold text-slate-100">⚠️ Risk Warning (Fraud Detection)</h3>
+      <h3 className="text-sm font-bold text-fg-0">⚠️ Risk Warning (Fraud Detection)</h3>
 
       {/* Explanation card */}
-      <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-4 space-y-2">
-        <h4 className="text-xs font-semibold text-orange-400 flex items-center gap-1.5">
+      <div className="bg-warn/10 border border-warn/20 rounded-xl p-4 space-y-2">
+        <h4 className="text-xs font-semibold text-warn flex items-center gap-1.5">
           <AlertTriangle size={13} /> What is a Risk Warning?
         </h4>
-        <p className="text-xs text-slate-400 leading-relaxed">When fraud is suspected, both parties see a "Risk Warning" popup. Payment details are hidden from both sides. Check the ban remark in CS-GO: UID → account status → look for <span className="text-yellow-300 font-mono">Fraud_P2P_InTransitOrderAnomalies</span>.</p>
+        <p className="text-xs text-fg-1 leading-relaxed">When fraud is suspected, both parties see a "Risk Warning" popup. Payment details are hidden from both sides. Check the ban remark in CS-GO: UID → account status → look for <span className="text-hero font-mono">Fraud_P2P_InTransitOrderAnomalies</span>.</p>
       </div>
 
       {/* General handling checklist */}
@@ -1389,20 +1389,20 @@ function RiskWarningFlow({ onBack, caseData }) {
       />
 
       {/* Decision tree — Step 1: Ban remark */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
-        <h4 className="text-xs font-semibold text-slate-400">Does the user have a ban remark?</h4>
+      <div className="bg-bg-1 border border-border-0 rounded-xl p-4 space-y-3">
+        <h4 className="text-xs font-semibold text-fg-1">Does the user have a ban remark?</h4>
         <div className="flex gap-2">
           <button onClick={() => { resetTree(); setHasBan(true); }}
             className={cn(
               'px-4 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer',
-              hasBan === true ? 'bg-red-500/20 border border-red-500/40 text-red-300' : 'bg-slate-800 border border-slate-700 text-slate-400 hover:border-red-500/30'
+              hasBan === true ? 'bg-crit/20 border border-crit/40 text-crit' : 'bg-bg-2 border border-border-0 text-fg-1 hover:border-crit/30'
             )}>
             Yes — Suspected Scammer
           </button>
           <button onClick={() => { resetTree(); setHasBan(false); }}
             className={cn(
               'px-4 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer',
-              hasBan === false ? 'bg-green-500/20 border border-green-500/40 text-green-300' : 'bg-slate-800 border border-slate-700 text-slate-400 hover:border-green-500/30'
+              hasBan === false ? 'bg-ok/20 border border-ok/40 text-ok' : 'bg-bg-2 border border-border-0 text-fg-1 hover:border-ok/30'
             )}>
             No — Victim
           </button>
@@ -1411,9 +1411,9 @@ function RiskWarningFlow({ onBack, caseData }) {
         {/* Branch: Suspected Scammer */}
         {hasBan === true && (
           <div className="space-y-3 pt-2">
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-              <p className="text-xs text-red-300 font-medium mb-1">Suspected Scammer — Under Investigation</p>
-              <p className="text-xs text-slate-400">User cannot trade. Advise full cooperation with P2P specialist during investigation.</p>
+            <div className="bg-crit/10 border border-crit/20 rounded-lg p-3">
+              <p className="text-xs text-crit font-medium mb-1">Suspected Scammer — Under Investigation</p>
+              <p className="text-xs text-fg-1">User cannot trade. Advise full cooperation with P2P specialist during investigation.</p>
             </div>
             <StepCard caseType={CASE_TYPES.risk_ban} />
             <QTCard qt={QT.risk_investigation} />
@@ -1423,19 +1423,19 @@ function RiskWarningFlow({ onBack, caseData }) {
         {/* Branch: Victim */}
         {hasBan === false && (
           <div className="space-y-3 pt-2">
-            <h4 className="text-xs font-semibold text-slate-400">Has an appeal been submitted?</h4>
+            <h4 className="text-xs font-semibold text-fg-1">Has an appeal been submitted?</h4>
             <div className="flex gap-2">
               <button onClick={() => { setHasAppeal(true); setVictimRole(null); setBuyerPaid(null); setCanAppealNow(null); }}
                 className={cn(
                   'px-4 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer',
-                  hasAppeal === true ? 'bg-blue-500/20 border border-blue-500/40 text-blue-300' : 'bg-slate-800 border border-slate-700 text-slate-400 hover:border-blue-500/30'
+                  hasAppeal === true ? 'bg-info/20 border border-info/40 text-info' : 'bg-bg-2 border border-border-0 text-fg-1 hover:border-info/30'
                 )}>
                 Yes — After Appeal
               </button>
               <button onClick={() => { setHasAppeal(false); setVictimRole(null); setBuyerPaid(null); setCanAppealNow(null); }}
                 className={cn(
                   'px-4 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer',
-                  hasAppeal === false ? 'bg-orange-500/20 border border-orange-500/40 text-orange-300' : 'bg-slate-800 border border-slate-700 text-slate-400 hover:border-orange-500/30'
+                  hasAppeal === false ? 'bg-warn/20 border border-warn/40 text-warn' : 'bg-bg-2 border border-border-0 text-fg-1 hover:border-warn/30'
                 )}>
                 No — Before Appeal
               </button>
@@ -1444,9 +1444,9 @@ function RiskWarningFlow({ onBack, caseData }) {
             {/* After Appeal */}
             {hasAppeal === true && (
               <div className="space-y-3 pt-2">
-                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
-                  <p className="text-xs text-blue-300 font-medium mb-1">Appeal Submitted — Advise Patience</p>
-                  <ul className="text-xs text-slate-400 space-y-1 mt-2">
+                <div className="bg-info/10 border border-info/20 rounded-lg p-3">
+                  <p className="text-xs text-info font-medium mb-1">Appeal Submitted — Advise Patience</p>
+                  <ul className="text-xs text-fg-1 space-y-1 mt-2">
                     <li>• Do NOT cancel the appeal</li>
                     <li>• Fully cooperate and provide all necessary proof</li>
                     <li>• Only follow instructions from the official support agent</li>
@@ -1461,19 +1461,19 @@ function RiskWarningFlow({ onBack, caseData }) {
             {/* Before Appeal */}
             {hasAppeal === false && (
               <div className="space-y-3 pt-2">
-                <h4 className="text-xs font-semibold text-slate-400">What is the user's role?</h4>
+                <h4 className="text-xs font-semibold text-fg-1">What is the user's role?</h4>
                 <div className="flex gap-2">
                   <button onClick={() => { setVictimRole('buyer'); setBuyerPaid(null); setCanAppealNow(null); }}
                     className={cn(
                       'px-4 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer',
-                      victimRole === 'buyer' ? 'bg-yellow-400/20 border border-yellow-400/40 text-yellow-300' : 'bg-slate-800 border border-slate-700 text-slate-400 hover:border-yellow-400/30'
+                      victimRole === 'buyer' ? 'bg-hero/20 border border-hero/40 text-hero' : 'bg-bg-2 border border-border-0 text-fg-1 hover:border-hero/30'
                     )}>
                     Buyer
                   </button>
                   <button onClick={() => { setVictimRole('seller'); setBuyerPaid(null); setCanAppealNow(null); }}
                     className={cn(
                       'px-4 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer',
-                      victimRole === 'seller' ? 'bg-yellow-400/20 border border-yellow-400/40 text-yellow-300' : 'bg-slate-800 border border-slate-700 text-slate-400 hover:border-yellow-400/30'
+                      victimRole === 'seller' ? 'bg-hero/20 border border-hero/40 text-hero' : 'bg-bg-2 border border-border-0 text-fg-1 hover:border-hero/30'
                     )}>
                     Seller
                   </button>
@@ -1482,19 +1482,19 @@ function RiskWarningFlow({ onBack, caseData }) {
                 {/* Buyer path */}
                 {victimRole === 'buyer' && (
                   <div className="space-y-3 pt-2">
-                    <h4 className="text-xs font-semibold text-slate-400">Has actual payment been made?</h4>
+                    <h4 className="text-xs font-semibold text-fg-1">Has actual payment been made?</h4>
                     <div className="flex gap-2">
                       <button onClick={() => { setBuyerPaid(true); setCanAppealNow(null); }}
                         className={cn(
                           'px-4 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer',
-                          buyerPaid === true ? 'bg-green-500/20 border border-green-500/40 text-green-300' : 'bg-slate-800 border border-slate-700 text-slate-400 hover:border-green-500/30'
+                          buyerPaid === true ? 'bg-ok/20 border border-ok/40 text-ok' : 'bg-bg-2 border border-border-0 text-fg-1 hover:border-ok/30'
                         )}>
                         Yes — Payment Made
                       </button>
                       <button onClick={() => { setBuyerPaid(false); setCanAppealNow(null); }}
                         className={cn(
                           'px-4 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer',
-                          buyerPaid === false ? 'bg-red-500/20 border border-red-500/40 text-red-300' : 'bg-slate-800 border border-slate-700 text-slate-400 hover:border-red-500/30'
+                          buyerPaid === false ? 'bg-crit/20 border border-crit/40 text-crit' : 'bg-bg-2 border border-border-0 text-fg-1 hover:border-crit/30'
                         )}>
                         No — No Payment
                       </button>
@@ -1503,19 +1503,19 @@ function RiskWarningFlow({ onBack, caseData }) {
                     {/* Buyer paid */}
                     {buyerPaid === true && (
                       <div className="space-y-3 pt-2">
-                        <h4 className="text-xs font-semibold text-slate-400">Can the buyer submit an appeal now?</h4>
+                        <h4 className="text-xs font-semibold text-fg-1">Can the buyer submit an appeal now?</h4>
                         <div className="flex gap-2">
                           <button onClick={() => setCanAppealNow(true)}
                             className={cn(
                               'px-4 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer',
-                              canAppealNow === true ? 'bg-green-500/20 border border-green-500/40 text-green-300' : 'bg-slate-800 border border-slate-700 text-slate-400 hover:border-green-500/30'
+                              canAppealNow === true ? 'bg-ok/20 border border-ok/40 text-ok' : 'bg-bg-2 border border-border-0 text-fg-1 hover:border-ok/30'
                             )}>
                             Yes — Can Appeal Now
                           </button>
                           <button onClick={() => setCanAppealNow(false)}
                             className={cn(
                               'px-4 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer',
-                              canAppealNow === false ? 'bg-orange-500/20 border border-orange-500/40 text-orange-300' : 'bg-slate-800 border border-slate-700 text-slate-400 hover:border-orange-500/30'
+                              canAppealNow === false ? 'bg-warn/20 border border-warn/40 text-warn' : 'bg-bg-2 border border-border-0 text-fg-1 hover:border-warn/30'
                             )}>
                             No — Must Wait for Auto-Cancel
                           </button>
@@ -1523,8 +1523,8 @@ function RiskWarningFlow({ onBack, caseData }) {
 
                         {canAppealNow === true && (
                           <div className="space-y-3 pt-2">
-                            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
-                              <p className="text-xs text-green-300 font-medium">Action: Submit appeal immediately — do NOT cancel the order</p>
+                            <div className="bg-ok/10 border border-ok/20 rounded-lg p-3">
+                              <p className="text-xs text-ok font-medium">Action: Submit appeal immediately — do NOT cancel the order</p>
                             </div>
                             <StepCard caseType={CASE_TYPES.buyer} />
                             <QTCard qt={QT.risk_buyer_b} />
@@ -1533,8 +1533,8 @@ function RiskWarningFlow({ onBack, caseData }) {
 
                         {canAppealNow === false && (
                           <div className="space-y-3 pt-2">
-                            <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
-                              <p className="text-xs text-orange-300 font-medium">Action: Wait 15-30 min for auto-cancel, then submit appeal when button appears</p>
+                            <div className="bg-warn/10 border border-warn/20 rounded-lg p-3">
+                              <p className="text-xs text-warn font-medium">Action: Wait 15-30 min for auto-cancel, then submit appeal when button appears</p>
                             </div>
                             <StepCard caseType={CASE_TYPES.buyer} />
                             <QTCard qt={QT.risk_buyer_a} />
@@ -1546,8 +1546,8 @@ function RiskWarningFlow({ onBack, caseData }) {
                     {/* Buyer not paid */}
                     {buyerPaid === false && (
                       <div className="space-y-3 pt-2">
-                        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
-                          <p className="text-xs text-green-300 font-medium">Action: Cancel the order directly — no payment was made</p>
+                        <div className="bg-ok/10 border border-ok/20 rounded-lg p-3">
+                          <p className="text-xs text-ok font-medium">Action: Cancel the order directly — no payment was made</p>
                         </div>
                         <StepCard caseType={CASE_TYPES.trading_guide} />
                         <QTCard qt={QT.risk_buyer_c} />
@@ -1559,9 +1559,9 @@ function RiskWarningFlow({ onBack, caseData }) {
                 {/* Seller path */}
                 {victimRole === 'seller' && (
                   <div className="space-y-3 pt-2">
-                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
-                      <p className="text-xs text-orange-300 font-medium">Action: Submit appeal immediately with video proof</p>
-                      <ul className="text-xs text-slate-400 space-y-1 mt-2">
+                    <div className="bg-warn/10 border border-warn/20 rounded-lg p-3">
+                      <p className="text-xs text-warn font-medium">Action: Submit appeal immediately with video proof</p>
+                      <ul className="text-xs text-fg-1 space-y-1 mt-2">
                         <li>• Account details page (account number and name visible)</li>
                         <li>• Transaction history page (refreshed)</li>
                         <li>• All transaction records from order date to today</li>
@@ -1633,28 +1633,28 @@ INSTRUCTIONS: Answer concisely. Draft ready-to-send messages when asked. Format 
     <div className="p-6 max-w-4xl mx-auto space-y-5">
       {/* NBA handoff banner */}
       {handoff && (
-        <div className="bg-yellow-400/10 border border-yellow-400/30 rounded-xl px-4 py-3 space-y-1">
-          <p className="text-xs font-semibold text-yellow-400 flex items-center gap-1.5">
+        <div className="bg-hero/10 border border-hero/30 rounded-xl px-4 py-3 space-y-1">
+          <p className="text-xs font-semibold text-hero flex items-center gap-1.5">
             <span>⚡</span> Routed from Live Chat
-            {handoff.vipLevel >= 3 && <span className="bg-yellow-400/20 border border-yellow-400/40 px-1.5 py-0.5 rounded text-yellow-300 font-bold ml-1">VIP {handoff.vipLevel}</span>}
+            {handoff.vipLevel >= 3 && <span className="bg-hero/20 border border-hero/40 px-1.5 py-0.5 rounded text-hero font-bold ml-1">VIP {handoff.vipLevel}</span>}
           </p>
-          {handoff.uid && <p className="text-xs text-slate-400">UID: <span className="text-slate-200 font-mono">{scrubPII(handoff.uid)}</span></p>}
-          {handoff.orderId && <p className="text-xs text-slate-400">Order: <span className="text-slate-200 font-mono">{scrubPII(handoff.orderId)}</span></p>}
+          {handoff.uid && <p className="text-xs text-fg-1">UID: <span className="text-fg-0 font-mono">{scrubPII(handoff.uid)}</span></p>}
+          {handoff.orderId && <p className="text-xs text-fg-1">Order: <span className="text-fg-0 font-mono">{scrubPII(handoff.orderId)}</span></p>}
         </div>
       )}
 
       <div>
-        <h1 className="text-xl font-bold text-slate-100">⚖️ P2P Dispute</h1>
-        <p className="text-sm text-slate-500 mt-0.5">SOP-driven dispute resolution · 8 scenarios · Integrated ACE chat</p>
+        <h1 className="text-xl font-bold text-fg-0">⚖️ P2P Dispute</h1>
+        <p className="text-sm text-fg-2 mt-0.5">SOP-driven dispute resolution · 8 scenarios · Integrated ACE chat</p>
       </div>
 
       {/* Case info */}
       <CaseInfo data={caseData} setData={setCaseData} />
 
       {/* Appeal rules banner */}
-      <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
-        <h4 className="text-xs font-semibold text-blue-400 mb-1.5">Appeal Submission Rules</h4>
-        <ul className="text-xs text-slate-400 space-y-1">
+      <div className="bg-info/10 border border-info/20 rounded-xl p-4">
+        <h4 className="text-xs font-semibold text-info mb-1.5">Appeal Submission Rules</h4>
+        <ul className="text-xs text-fg-1 space-y-1">
           {APPEAL_RULES.map((r, i) => <li key={i}>• {r}</li>)}
         </ul>
       </div>
@@ -1665,12 +1665,12 @@ INSTRUCTIONS: Answer concisely. Draft ready-to-send messages when asked. Format 
           {SCENARIOS.map(s => (
             <button key={s.id} onClick={() => setScenario(s.id)}
               className={cn(
-                "group text-left bg-slate-900 border rounded-xl p-3.5 transition-all cursor-pointer",
-                s.id === 'yellow' ? 'border-red-500/30 hover:border-red-500/60' : 'border-slate-800 hover:border-yellow-400/30'
+                "group text-left bg-bg-1 border rounded-xl p-3.5 transition-all cursor-pointer",
+                s.id === 'yellow' ? 'border-crit/30 hover:border-crit/60' : 'border-border-0 hover:border-hero/30'
               )}>
               <span className="text-xl">{s.icon}</span>
-              <h3 className={cn("text-sm font-semibold mt-2 transition-colors", s.id === 'yellow' ? 'text-red-400' : 'text-slate-100 group-hover:text-yellow-400')}>{s.name}</h3>
-              <p className="text-xs text-slate-500 mt-1 leading-relaxed">{s.desc}</p>
+              <h3 className={cn("text-sm font-semibold mt-2 transition-colors", s.id === 'yellow' ? 'text-crit' : 'text-fg-0 group-hover:text-hero')}>{s.name}</h3>
+              <p className="text-xs text-fg-2 mt-1 leading-relaxed">{s.desc}</p>
             </button>
           ))}
         </div>
@@ -1697,11 +1697,11 @@ INSTRUCTIONS: Answer concisely. Draft ready-to-send messages when asked. Format 
       )}
 
       {/* Collapsible: All Quicktexts */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+      <div className="bg-bg-1 border border-border-0 rounded-xl overflow-hidden">
         <button onClick={() => setShowQTs(o => !o)}
-          className="w-full flex items-center justify-between px-5 py-3 hover:bg-slate-800/50 transition-colors cursor-pointer">
-          <span className="text-sm font-semibold text-slate-100">💬 All Quicktexts ({Object.keys(QT).length})</span>
-          {showQTs ? <ChevronUp size={14} className="text-slate-500" /> : <ChevronDown size={14} className="text-slate-500" />}
+          className="w-full flex items-center justify-between px-5 py-3 hover:bg-bg-2/50 transition-colors cursor-pointer">
+          <span className="text-sm font-semibold text-fg-0">💬 All Quicktexts ({Object.keys(QT).length})</span>
+          {showQTs ? <ChevronUp size={14} className="text-fg-2" /> : <ChevronDown size={14} className="text-fg-2" />}
         </button>
         {showQTs && (
           <div className="px-4 pb-4 space-y-2">
@@ -1711,11 +1711,11 @@ INSTRUCTIONS: Answer concisely. Draft ready-to-send messages when asked. Format 
       </div>
 
       {/* Collapsible: Email Templates */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+      <div className="bg-bg-1 border border-border-0 rounded-xl overflow-hidden">
         <button onClick={() => setShowETs(o => !o)}
-          className="w-full flex items-center justify-between px-5 py-3 hover:bg-slate-800/50 transition-colors cursor-pointer">
-          <span className="text-sm font-semibold text-slate-100">📨 Email Templates ({Object.keys(ET).length})</span>
-          {showETs ? <ChevronUp size={14} className="text-slate-500" /> : <ChevronDown size={14} className="text-slate-500" />}
+          className="w-full flex items-center justify-between px-5 py-3 hover:bg-bg-2/50 transition-colors cursor-pointer">
+          <span className="text-sm font-semibold text-fg-0">📨 Email Templates ({Object.keys(ET).length})</span>
+          {showETs ? <ChevronUp size={14} className="text-fg-2" /> : <ChevronDown size={14} className="text-fg-2" />}
         </button>
         {showETs && (
           <div className="px-4 pb-4 space-y-2">
@@ -1725,17 +1725,17 @@ INSTRUCTIONS: Answer concisely. Draft ready-to-send messages when asked. Format 
       </div>
 
       {/* Collapsible: Help Center Links */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+      <div className="bg-bg-1 border border-border-0 rounded-xl overflow-hidden">
         <button onClick={() => setShowLinks(o => !o)}
-          className="w-full flex items-center justify-between px-5 py-3 hover:bg-slate-800/50 transition-colors cursor-pointer">
-          <span className="text-sm font-semibold text-slate-100">🔗 Help Center Articles ({HC_LINKS.length})</span>
-          {showLinks ? <ChevronUp size={14} className="text-slate-500" /> : <ChevronDown size={14} className="text-slate-500" />}
+          className="w-full flex items-center justify-between px-5 py-3 hover:bg-bg-2/50 transition-colors cursor-pointer">
+          <span className="text-sm font-semibold text-fg-0">🔗 Help Center Articles ({HC_LINKS.length})</span>
+          {showLinks ? <ChevronUp size={14} className="text-fg-2" /> : <ChevronDown size={14} className="text-fg-2" />}
         </button>
         {showLinks && (
           <div className="px-5 pb-4 space-y-1.5">
             {HC_LINKS.map((l, i) => (
               <a key={i} href={l.url} target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 transition-colors py-1">
+                className="flex items-center gap-2 text-xs text-info hover:text-info transition-colors py-1">
                 <ExternalLink size={11} className="shrink-0" /> {l.label}
               </a>
             ))}
@@ -1744,9 +1744,9 @@ INSTRUCTIONS: Answer concisely. Draft ready-to-send messages when asked. Format 
       </div>
 
       {/* Escalation protocol */}
-      <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-4">
-        <h4 className="text-xs font-semibold text-orange-400 mb-1.5">Escalation Protocol</h4>
-        <ul className="text-xs text-slate-400 space-y-1">
+      <div className="bg-warn/10 border border-warn/20 rounded-xl p-4">
+        <h4 className="text-xs font-semibold text-warn mb-1.5">Escalation Protocol</h4>
+        <ul className="text-xs text-fg-1 space-y-1">
           <li>• P2P escalations → designated P2P Lark group only</li>
           <li>• Yellow Alert → Case Expedition form with "Yellow Alert" option</li>
           <li>• If no reply in 3 min → PM P2P shift leader (document proof)</li>

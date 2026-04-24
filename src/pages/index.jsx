@@ -136,7 +136,7 @@ Be real with them. Talk like a close friend who also happens to be incredibly kn
 function PageLoader() {
   return (
     <div className="flex items-center justify-center h-full min-h-[200px]">
-      <div className="w-5 h-5 border-2 border-yellow-400/30 border-t-yellow-400 rounded-full animate-spin" />
+      <div className="w-5 h-5 border-2 border-hero/30 border-t-hero rounded-full animate-spin" />
     </div>
   );
 }

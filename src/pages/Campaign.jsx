@@ -20,7 +20,7 @@ function MarkdownText({ text }) {
     <span>
       {text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
         part.startsWith('**') && part.endsWith('**')
-          ? <strong key={i} className="text-slate-100 font-semibold">{part.slice(2, -2)}</strong>
+          ? <strong key={i} className="text-fg-0 font-semibold">{part.slice(2, -2)}</strong>
           : <span key={i}>{part}</span>
       )}
     </span>
@@ -34,7 +34,7 @@ function ResultBlock({ text }) {
       {lines.map((line, i) => {
         if (!line.trim()) return <div key={i} className="h-2" />;
         return (
-          <p key={i} className="text-sm text-slate-300 leading-relaxed">
+          <p key={i} className="text-sm text-fg-1 leading-relaxed">
             <MarkdownText text={line} />
           </p>
         );
@@ -147,43 +147,43 @@ Use plain text, no asterisk markdown. Be specific with actual numbers, dates and
     <div className="p-6 max-w-3xl mx-auto space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-100">🎁 Campaign</h1>
-          <p className="text-sm text-slate-500">Look up any Bybit promo with live web search</p>
+          <h1 className="text-xl font-bold text-fg-0">🎁 Campaign</h1>
+          <p className="text-sm text-fg-2">Look up any Bybit promo with live web search</p>
         </div>
         <div className="flex gap-2">
           <a href="https://announcements.bybit.global/en/" target="_blank" rel="noopener noreferrer"
-            className="flex items-center gap-1 text-xs text-slate-400 hover:text-yellow-400 bg-slate-800 border border-slate-700 px-3 py-2 rounded-lg transition-all">
+            className="flex items-center gap-1 text-xs text-fg-1 hover:text-hero bg-bg-2 border border-border-0 px-3 py-2 rounded-lg transition-all">
             <ExternalLink size={11} /> Global
           </a>
           <a href="https://www.bybit.eu/en-EU/promo/campaign/Card-New-Signup" target="_blank" rel="noopener noreferrer"
-            className="flex items-center gap-1 text-xs text-slate-400 hover:text-yellow-400 bg-slate-800 border border-slate-700 px-3 py-2 rounded-lg transition-all">
+            className="flex items-center gap-1 text-xs text-fg-1 hover:text-hero bg-bg-2 border border-border-0 px-3 py-2 rounded-lg transition-all">
             <ExternalLink size={11} /> EU Card
           </a>
           <a href="https://www.bybit.com/en/promo/events/welcome-gift" target="_blank" rel="noopener noreferrer"
-            className="flex items-center gap-1 text-xs text-slate-400 hover:text-yellow-400 bg-slate-800 border border-slate-700 px-3 py-2 rounded-lg transition-all">
+            className="flex items-center gap-1 text-xs text-fg-1 hover:text-hero bg-bg-2 border border-border-0 px-3 py-2 rounded-lg transition-all">
             <ExternalLink size={11} /> Welcome
           </a>
         </div>
       </div>
 
       {/* Web lookup */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
-        <p className="text-sm font-medium text-slate-300">🔍 Live campaign lookup</p>
+      <div className="bg-bg-1 border border-border-0 rounded-xl p-5 space-y-4">
+        <p className="text-sm font-medium text-fg-1">🔍 Live campaign lookup</p>
 
         <div className="space-y-3">
           <div>
-            <label className="text-xs text-slate-500 mb-1 block">Campaign / promo name</label>
+            <label className="text-xs text-fg-2 mb-1 block">Campaign / promo name</label>
             <input
               value={lookup.name}
               onChange={e => setLookup(p => ({ ...p, name: e.target.value }))}
               onKeyDown={e => e.key === 'Enter' && fetchCampaign()}
               placeholder="e.g. new user welcome gift, deposit bonus, trading competition..."
-              className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-500 outline-none transition-colors"
+              className="w-full bg-bg-2 border border-border-0 focus:border-hero/50 rounded-xl px-4 py-3 text-sm text-fg-0 placeholder-fg-2 outline-none transition-colors"
             />
           </div>
 
           <div>
-            <label className="text-xs text-slate-500 mb-1 block">Region</label>
+            <label className="text-xs text-fg-2 mb-1 block">Region</label>
             <div className="flex gap-2">
               {[
                 { val: 'eu', label: '🇪🇺 Bybit EU' },
@@ -196,8 +196,8 @@ Use plain text, no asterisk markdown. Be specific with actual numbers, dates and
                   className={cn(
                     'flex-1 text-sm px-3 py-2 rounded-lg border transition-all',
                     lookup.region === opt.val
-                      ? 'bg-yellow-400/15 border-yellow-400/40 text-yellow-400'
-                      : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200'
+                      ? 'bg-hero/15 border-hero/40 text-hero'
+                      : 'bg-bg-2 border-border-0 text-fg-1 hover:text-fg-0'
                   )}
                 >
                   {opt.label}
@@ -207,12 +207,12 @@ Use plain text, no asterisk markdown. Be specific with actual numbers, dates and
           </div>
 
           <div>
-            <label className="text-xs text-slate-500 mb-1 block">Extra context <span className="text-slate-700">(optional)</span></label>
+            <label className="text-xs text-fg-2 mb-1 block">Extra context <span className="text-fg-3">(optional)</span></label>
             <input
               value={lookup.context}
               onChange={e => setLookup(p => ({ ...p, context: e.target.value }))}
               placeholder="e.g. screenshot shows 'deposit 100 USDT get 20 USDT bonus', customer says they saw it on app homepage..."
-              className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-500 outline-none transition-colors"
+              className="w-full bg-bg-2 border border-border-0 focus:border-hero/50 rounded-xl px-4 py-3 text-sm text-fg-0 placeholder-fg-2 outline-none transition-colors"
             />
           </div>
 
@@ -220,7 +220,7 @@ Use plain text, no asterisk markdown. Be specific with actual numbers, dates and
             <button
               onClick={fetchCampaign}
               disabled={!lookup.name.trim() || loading}
-              className="flex-1 bg-yellow-400 hover:bg-yellow-300 disabled:bg-slate-700 disabled:text-slate-500 text-slate-900 font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              className="flex-1 bg-hero hover:bg-hero disabled:bg-bg-3 disabled:text-fg-2 text-[#021418] font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer"
               aria-label="Search Bybit campaigns"
             >
               {loading
@@ -232,7 +232,7 @@ Use plain text, no asterisk markdown. Be specific with actual numbers, dates and
               'flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg border shrink-0',
               getSerpApiKey()
                 ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-                : 'bg-slate-800 border-slate-700 text-slate-500'
+                : 'bg-bg-2 border-border-0 text-fg-2'
             )}>
               <Globe size={12} />
               {getSerpApiKey() ? 'Live search' : 'No SerpAPI key'}
@@ -242,14 +242,14 @@ Use plain text, no asterisk markdown. Be specific with actual numbers, dates and
 
         {/* Result */}
         {result && !loading && (
-          <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 space-y-3">
+          <div className="bg-bg-2/50 border border-border-0 rounded-xl p-4 space-y-3">
             <ResultBlock text={result} />
             {links.length > 0 && (
-              <div className="pt-2 border-t border-slate-700 space-y-1">
-                <p className="text-xs text-slate-500">Links found:</p>
+              <div className="pt-2 border-t border-border-0 space-y-1">
+                <p className="text-xs text-fg-2">Links found:</p>
                 {links.slice(0, 3).map((link, i) => (
                   <a key={i} href={link} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-xs text-yellow-400 hover:text-yellow-300 transition-colors truncate">
+                    className="flex items-center gap-1 text-xs text-hero hover:text-hero transition-colors truncate">
                     <ExternalLink size={11} /> {link}
                   </a>
                 ))}
@@ -260,48 +260,48 @@ Use plain text, no asterisk markdown. Be specific with actual numbers, dates and
       </div>
 
       {/* Filter pinned */}
-      <div className="flex items-center gap-2 bg-slate-900 border border-slate-700 focus-within:border-yellow-400/50 rounded-xl px-4 py-3">
-        <Search size={15} className="text-slate-500" />
+      <div className="flex items-center gap-2 bg-bg-1 border border-border-0 focus-within:border-hero/50 rounded-xl px-4 py-3">
+        <Search size={15} className="text-fg-2" />
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Filter pinned campaigns..."
-          className="flex-1 bg-transparent text-sm text-slate-100 placeholder-slate-500 outline-none"
+          className="flex-1 bg-transparent text-sm text-fg-0 placeholder-fg-2 outline-none"
         />
       </div>
 
       {/* Pinned campaigns */}
       <div className="grid gap-3">
         {filtered.map(c => (
-          <div key={c.id} className="bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl p-5 transition-colors">
+          <div key={c.id} className="bg-bg-1 border border-border-0 hover:border-border-0 rounded-xl p-5 transition-colors">
             <div className="flex items-start gap-3">
               <span className="text-2xl">{c.icon}</span>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-semibold text-slate-100">{c.name}</h3>
-                  <span className="text-xs bg-slate-800 text-slate-400 px-2 py-0.5 rounded">{c.category}</span>
+                  <h3 className="font-semibold text-fg-0">{c.name}</h3>
+                  <span className="text-xs bg-bg-2 text-fg-1 px-2 py-0.5 rounded">{c.category}</span>
                 </div>
-                <p className="text-sm text-slate-400 mb-2">{c.desc}</p>
-                <p className="text-xs text-slate-500">{c.details}</p>
-                <p className="text-xs text-yellow-400/70 mt-1">📍 {c.link}</p>
+                <p className="text-sm text-fg-1 mb-2">{c.desc}</p>
+                <p className="text-xs text-fg-2">{c.details}</p>
+                <p className="text-xs text-hero/70 mt-1">📍 {c.link}</p>
               </div>
             </div>
           </div>
         ))}
 
         {customCampaigns.map(c => (
-          <div key={c.id} className="bg-slate-900 border border-yellow-400/20 rounded-xl p-5 relative">
-            <button onClick={() => removeCustom(c.id)} className="absolute top-3 right-3 text-slate-600 hover:text-red-400 transition-colors">
+          <div key={c.id} className="bg-bg-1 border border-hero/20 rounded-xl p-5 relative">
+            <button onClick={() => removeCustom(c.id)} className="absolute top-3 right-3 text-fg-2 hover:text-crit transition-colors">
               <Trash2 size={13} />
             </button>
             <div className="flex items-start gap-3">
               <span className="text-2xl">{c.icon}</span>
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-semibold text-slate-100">{c.name}</h3>
-                  <span className="text-xs bg-yellow-400/10 text-yellow-400 px-2 py-0.5 rounded">Custom</span>
+                  <h3 className="font-semibold text-fg-0">{c.name}</h3>
+                  <span className="text-xs bg-hero/10 text-hero px-2 py-0.5 rounded">Custom</span>
                 </div>
-                <p className="text-sm text-slate-400">{c.desc}</p>
+                <p className="text-sm text-fg-1">{c.desc}</p>
               </div>
             </div>
           </div>
@@ -309,17 +309,17 @@ Use plain text, no asterisk markdown. Be specific with actual numbers, dates and
       </div>
 
       {showAdd ? (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
-          <p className="text-sm font-medium text-slate-300">Pin a campaign note</p>
-          <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Campaign name" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 outline-none" />
-          <textarea value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="Details / notes" rows={2} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 outline-none resize-none" />
+        <div className="bg-bg-1 border border-border-0 rounded-xl p-4 space-y-3">
+          <p className="text-sm font-medium text-fg-1">Pin a campaign note</p>
+          <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Campaign name" className="w-full bg-bg-2 border border-border-0 rounded-lg px-3 py-2 text-sm text-fg-0 outline-none" />
+          <textarea value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="Details / notes" rows={2} className="w-full bg-bg-2 border border-border-0 rounded-lg px-3 py-2 text-sm text-fg-0 outline-none resize-none" />
           <div className="flex gap-2">
-            <button onClick={addCustom} className="bg-yellow-400/20 text-yellow-400 hover:bg-yellow-400/30 text-sm px-4 py-2 rounded-lg transition-colors">Save</button>
-            <button onClick={() => setShowAdd(false)} className="text-slate-500 text-sm px-4 py-2">Cancel</button>
+            <button onClick={addCustom} className="bg-hero/20 text-hero hover:bg-hero/30 text-sm px-4 py-2 rounded-lg transition-colors">Save</button>
+            <button onClick={() => setShowAdd(false)} className="text-fg-2 text-sm px-4 py-2">Cancel</button>
           </div>
         </div>
       ) : (
-        <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 text-sm text-slate-500 hover:text-yellow-400 transition-colors">
+        <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 text-sm text-fg-2 hover:text-hero transition-colors">
           <Plus size={15} /> Pin a campaign note
         </button>
       )}

@@ -18,10 +18,10 @@ const TONE_OPTIONS = [
 ];
 
 const SCORE_COLORS = {
-  excellent: 'text-green-400 border-green-400/40 bg-green-400/10',
-  good: 'text-yellow-400 border-yellow-400/40 bg-yellow-400/10',
-  ok: 'text-orange-400 border-orange-400/40 bg-orange-400/10',
-  poor: 'text-red-400 border-red-400/40 bg-red-400/10',
+  excellent: 'text-ok border-ok/40 bg-ok/10',
+  good: 'text-hero border-hero/40 bg-hero/10',
+  ok: 'text-warn border-orange-400/40 bg-orange-400/10',
+  poor: 'text-crit border-crit/40 bg-crit/10',
 };
 
 function scoreColor(n) {
@@ -297,12 +297,12 @@ export default function Translate() {
         className="flex items-start justify-between"
       >
         <div>
-          <h1 className="text-xl font-bold text-slate-100">🇸🇪 Swedish Translator</h1>
-          <p className="text-sm text-slate-500">Translate support texts to natural, human Swedish</p>
+          <h1 className="text-xl font-bold text-fg-0">🇸🇪 Swedish Translator</h1>
+          <p className="text-sm text-fg-2">Translate support texts to natural, human Swedish</p>
         </div>
         <button
           onClick={reset}
-          className="flex items-center gap-1 text-xs text-slate-500 hover:text-red-400 transition-colors"
+          className="flex items-center gap-1 text-xs text-fg-2 hover:text-crit transition-colors"
         >
           <RotateCcw size={13} /> Reset
         </button>
@@ -327,13 +327,13 @@ export default function Translate() {
             className={cn(
               'rounded-xl p-3.5 text-left border transition-all duration-200',
               contentType === t.key
-                ? 'bg-yellow-400/10 border-yellow-400/40 shadow-lg shadow-yellow-400/5'
-                : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                ? 'bg-hero/10 border-hero/40 shadow-lg shadow-hero/5'
+                : 'bg-bg-1 border-border-0 hover:border-border-0'
             )}
           >
             <p className="text-lg mb-1">{t.icon}</p>
-            <p className={cn('font-medium text-sm', contentType === t.key ? 'text-yellow-400' : 'text-slate-200')}>{t.label}</p>
-            <p className="text-xs text-slate-500 mt-0.5">{t.desc}</p>
+            <p className={cn('font-medium text-sm', contentType === t.key ? 'text-hero' : 'text-fg-0')}>{t.label}</p>
+            <p className="text-xs text-fg-2 mt-0.5">{t.desc}</p>
           </motion.button>
         ))}
       </motion.div>
@@ -343,9 +343,9 @@ export default function Translate() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2, delay: 0.16 }}
-        className="bg-slate-900 border border-slate-800 rounded-xl p-4"
+        className="bg-bg-1 border border-border-0 rounded-xl p-4"
       >
-        <p className="text-xs font-semibold text-slate-400 mb-3 uppercase tracking-wider">Output tone</p>
+        <p className="text-xs font-semibold text-fg-1 mb-3 uppercase tracking-wider">Output tone</p>
         <div className="flex gap-2">
           {TONE_OPTIONS.map(t => (
             <button
@@ -354,8 +354,8 @@ export default function Translate() {
               className={cn(
                 'flex-1 rounded-lg px-3 py-2.5 text-left border transition-all duration-150',
                 tone === t.key
-                  ? 'bg-yellow-400/10 border-yellow-400/40 text-yellow-400'
-                  : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200 hover:border-slate-600'
+                  ? 'bg-hero/10 border-hero/40 text-hero'
+                  : 'bg-bg-2 border-border-0 text-fg-1 hover:text-fg-0 hover:border-border-1'
               )}
             >
               <p className="text-sm font-medium">{t.label}</p>
@@ -373,14 +373,14 @@ export default function Translate() {
         className="grid grid-cols-1 lg:grid-cols-2 gap-4"
       >
         {/* English input */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden flex flex-col">
-          <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-800 shrink-0">
+        <div className="bg-bg-1 border border-border-0 rounded-xl overflow-hidden flex flex-col">
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-border-0 shrink-0">
             <div className="flex items-center gap-2">
               <span className="text-base">🇬🇧</span>
-              <span className="text-sm font-semibold text-slate-300">English</span>
+              <span className="text-sm font-semibold text-fg-1">English</span>
             </div>
             {input && (
-              <button onClick={() => setInput('')} className="text-xs text-slate-600 hover:text-slate-400 transition-colors">
+              <button onClick={() => setInput('')} className="text-xs text-fg-2 hover:text-fg-1 transition-colors">
                 Clear
               </button>
             )}
@@ -394,15 +394,15 @@ export default function Translate() {
               ? 'Paste your Lark template or internal note here...'
               : 'Paste your email template here...'
             }
-            className="flex-1 w-full bg-transparent px-4 py-3 text-sm text-slate-200 placeholder-slate-600 outline-none resize-none font-mono leading-relaxed min-h-52"
+            className="flex-1 w-full bg-transparent px-4 py-3 text-sm text-fg-0 placeholder-fg-3 outline-none resize-none font-mono leading-relaxed min-h-52"
           />
-          <div className="px-4 py-2.5 border-t border-slate-800 shrink-0">
+          <div className="px-4 py-2.5 border-t border-border-0 shrink-0">
             <motion.button
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.98 }}
               onClick={translate}
               disabled={!input.trim() || translating}
-              className="w-full bg-yellow-400 hover:bg-yellow-300 disabled:bg-slate-800 disabled:text-slate-600 text-slate-900 font-semibold text-sm py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2"
+              className="w-full bg-hero hover:bg-hero disabled:bg-bg-2 disabled:text-fg-2 text-[#021418] font-semibold text-sm py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2"
             >
               {translating ? (
                 <><Loader2 size={14} className="animate-spin" /> Translating...</>
@@ -416,14 +416,14 @@ export default function Translate() {
         {/* Swedish output */}
         <div className={cn(
           'border rounded-xl overflow-hidden flex flex-col transition-all duration-300',
-          output ? 'bg-slate-900 border-yellow-400/20' : 'bg-slate-900/50 border-slate-800'
+          output ? 'bg-bg-1 border-hero/20' : 'bg-bg-1/50 border-border-0'
         )}>
-          <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-800 shrink-0">
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-border-0 shrink-0">
             <div className="flex items-center gap-2">
               <span className="text-base">🇸🇪</span>
-              <span className={cn('text-sm font-semibold', output ? 'text-yellow-400' : 'text-slate-500')}>Swedish</span>
-              {output && !outputBusy && <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />}
-              {outputBusy && <Loader2 size={11} className="animate-spin text-yellow-400/60" />}
+              <span className={cn('text-sm font-semibold', output ? 'text-hero' : 'text-fg-2')}>Swedish</span>
+              {output && !outputBusy && <span className="w-1.5 h-1.5 rounded-full bg-hero" />}
+              {outputBusy && <Loader2 size={11} className="animate-spin text-hero/60" />}
             </div>
             {output && (
               <div className="flex items-center gap-2">
@@ -436,7 +436,7 @@ export default function Translate() {
                     'flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-colors duration-150',
                     humanising
                       ? 'bg-purple-500/15 border-purple-500/30 text-purple-300'
-                      : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-purple-300 hover:border-purple-500/30 disabled:opacity-40'
+                      : 'bg-bg-2 border-border-0 text-fg-1 hover:text-purple-300 hover:border-purple-500/30 disabled:opacity-40'
                   )}
                   title="Humanise — make the Swedish sound truly native"
                 >
@@ -447,7 +447,7 @@ export default function Translate() {
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   onClick={copy}
-                  className="flex items-center gap-1.5 text-xs bg-yellow-400/20 hover:bg-yellow-400/30 text-yellow-400 px-3 py-1.5 rounded-lg transition-colors"
+                  className="flex items-center gap-1.5 text-xs bg-hero/20 hover:bg-hero/30 text-hero px-3 py-1.5 rounded-lg transition-colors"
                 >
                   <AnimatePresence mode="wait" initial={false}>
                     {copied
@@ -463,15 +463,15 @@ export default function Translate() {
           <div className="flex-1 relative min-h-52">
             {output ? (
               <pre className={cn(
-                'w-full h-full px-4 py-3 text-sm text-slate-200 whitespace-pre-wrap font-mono leading-relaxed overflow-y-auto transition-opacity duration-200',
+                'w-full h-full px-4 py-3 text-sm text-fg-0 whitespace-pre-wrap font-mono leading-relaxed overflow-y-auto transition-opacity duration-200',
                 outputBusy && 'opacity-40'
               )}>{output}</pre>
             ) : (
-              <div className="flex items-center justify-center h-full min-h-52 text-slate-700 text-sm">
+              <div className="flex items-center justify-center h-full min-h-52 text-fg-3 text-sm">
                 {translating ? (
                   <div className="flex items-center gap-2">
-                    <Loader2 size={14} className="animate-spin text-yellow-400/50" />
-                    <span className="text-slate-600">Translating...</span>
+                    <Loader2 size={14} className="animate-spin text-hero/50" />
+                    <span className="text-fg-2">Translating...</span>
                   </div>
                 ) : (
                   <div className="text-center space-y-1">
@@ -484,18 +484,18 @@ export default function Translate() {
           </div>
 
           {output && (
-            <div className="px-4 py-2.5 border-t border-slate-800 shrink-0">
+            <div className="px-4 py-2.5 border-t border-border-0 shrink-0">
               <motion.button
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={checkTone}
                 disabled={checking || applying || humanising}
-                className="w-full bg-slate-800 hover:bg-slate-700 disabled:bg-slate-800/50 disabled:text-slate-600 text-slate-200 text-sm py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 border border-slate-700 hover:border-slate-600"
+                className="w-full bg-bg-2 hover:bg-bg-3 disabled:bg-bg-2/50 disabled:text-fg-2 text-fg-0 text-sm py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 border border-border-0 hover:border-border-1"
               >
                 {checking ? (
                   <><Loader2 size={14} className="animate-spin" /> Checking tone...</>
                 ) : (
-                  <><Sparkles size={14} className="text-yellow-400" /> Check tone</>
+                  <><Sparkles size={14} className="text-hero" /> Check tone</>
                 )}
               </motion.button>
             </div>
@@ -511,17 +511,17 @@ export default function Translate() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden"
+            className="bg-bg-1 border border-border-0 rounded-xl overflow-hidden"
           >
             {/* Score bar */}
-            <div className="flex items-center gap-4 px-5 py-4 border-b border-slate-800">
+            <div className="flex items-center gap-4 px-5 py-4 border-b border-border-0">
               <div className={cn('text-3xl font-bold tabular-nums border rounded-xl w-16 h-16 flex items-center justify-center shrink-0 flex-col gap-0', scoreColor(toneResult.score))}>
                 <span>{toneResult.score}</span>
                 <span className="text-xs font-normal opacity-50">/10</span>
               </div>
               <div className="flex-1">
-                <p className="font-semibold text-slate-100">{toneResult.label}</p>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="font-semibold text-fg-0">{toneResult.label}</p>
+                <p className="text-xs text-fg-2 mt-0.5">
                   {toneResult.score >= 9 ? 'Native-level quality. Ready to use.' :
                    toneResult.score >= 7 ? 'Good. Minor improvements possible.' :
                    toneResult.score >= 5 ? 'Passable, but worth refining.' :
@@ -539,8 +539,8 @@ export default function Translate() {
                     className={cn(
                       'flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg border font-medium transition-colors duration-150',
                       applying
-                        ? 'bg-yellow-400/15 border-yellow-400/30 text-yellow-400'
-                        : 'bg-yellow-400/10 border-yellow-400/40 text-yellow-400 hover:bg-yellow-400/20 disabled:opacity-50'
+                        ? 'bg-hero/15 border-hero/30 text-hero'
+                        : 'bg-hero/10 border-hero/40 text-hero hover:bg-hero/20 disabled:opacity-50'
                     )}
                   >
                     {applying
@@ -552,7 +552,7 @@ export default function Translate() {
                 <button
                   onClick={checkTone}
                   disabled={checking}
-                  className="text-xs text-slate-600 hover:text-yellow-400 transition-colors disabled:opacity-40"
+                  className="text-xs text-fg-2 hover:text-hero transition-colors disabled:opacity-40"
                 >
                   Re-check
                 </button>
@@ -563,11 +563,11 @@ export default function Translate() {
               {/* Strengths */}
               {toneResult.strengths?.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-green-400 uppercase tracking-wider mb-2">Strengths</p>
+                  <p className="text-xs font-semibold text-ok uppercase tracking-wider mb-2">Strengths</p>
                   <ul className="space-y-1.5">
                     {toneResult.strengths.map((s, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-slate-300">
-                        <span className="text-green-400 mt-0.5 shrink-0">✓</span>
+                      <li key={i} className="flex items-start gap-2 text-sm text-fg-1">
+                        <span className="text-ok mt-0.5 shrink-0">✓</span>
                         {s}
                       </li>
                     ))}
@@ -578,11 +578,11 @@ export default function Translate() {
               {/* Improvements */}
               {toneResult.improvements?.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-yellow-400 uppercase tracking-wider mb-2">Improvements</p>
+                  <p className="text-xs font-semibold text-hero uppercase tracking-wider mb-2">Improvements</p>
                   <ul className="space-y-1.5">
                     {toneResult.improvements.map((s, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-slate-300">
-                        <span className="text-yellow-400 mt-0.5 shrink-0">→</span>
+                      <li key={i} className="flex items-start gap-2 text-sm text-fg-1">
+                        <span className="text-hero mt-0.5 shrink-0">→</span>
                         {s}
                       </li>
                     ))}
@@ -592,23 +592,23 @@ export default function Translate() {
 
               {/* Suggested rewrite */}
               {toneResult.rewrite && (
-                <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-4">
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-                    <Sparkles size={11} className="text-yellow-400" />
+                <div className="bg-bg-2/60 border border-border-0 rounded-xl p-4">
+                  <p className="text-xs font-semibold text-fg-1 uppercase tracking-wider mb-2 flex items-center gap-2">
+                    <Sparkles size={11} className="text-hero" />
                     Suggested rewrite
                   </p>
-                  <p className="text-sm text-slate-200 leading-relaxed font-mono whitespace-pre-wrap">{toneResult.rewrite}</p>
+                  <p className="text-sm text-fg-0 leading-relaxed font-mono whitespace-pre-wrap">{toneResult.rewrite}</p>
                   <div className="flex items-center gap-3 mt-3">
                     <button
                       onClick={() => navigator.clipboard.writeText(toneResult.rewrite)}
-                      className="text-xs text-slate-600 hover:text-yellow-400 transition-colors flex items-center gap-1"
+                      className="text-xs text-fg-2 hover:text-hero transition-colors flex items-center gap-1"
                     >
                       <Copy size={10} /> Copy suggestion
                     </button>
                     <button
                       onClick={applyImprovements}
                       disabled={applying}
-                      className="text-xs text-yellow-400/80 hover:text-yellow-400 disabled:opacity-40 transition-colors flex items-center gap-1 font-medium"
+                      className="text-xs text-hero/80 hover:text-hero disabled:opacity-40 transition-colors flex items-center gap-1 font-medium"
                     >
                       {applying ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
                       Apply all improvements to full text
@@ -619,7 +619,7 @@ export default function Translate() {
 
               {/* After applying — nudge to re-check */}
               {!toneResult.rewrite && !toneResult.improvements?.length && toneResult.score >= 9 && (
-                <p className="text-xs text-green-400/70 text-center py-2">
+                <p className="text-xs text-ok/70 text-center py-2">
                   ✓ This translation is at native quality — ready to send.
                 </p>
               )}
@@ -632,7 +632,7 @@ export default function Translate() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-sm text-red-400"
+            className="bg-crit/10 border border-crit/30 rounded-xl p-4 text-sm text-crit"
           >
             {toneError}
           </motion.div>
@@ -646,32 +646,32 @@ export default function Translate() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="bg-slate-900/50 border border-slate-800 rounded-xl p-5"
+            className="bg-bg-1/50 border border-border-0 rounded-xl p-5"
           >
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">How it works</p>
-            <ul className="space-y-2 text-sm text-slate-500">
+            <p className="text-xs font-semibold text-fg-2 uppercase tracking-wider mb-3">How it works</p>
+            <ul className="space-y-2 text-sm text-fg-2">
               <li className="flex items-start gap-2">
-                <ChevronRight size={13} className="text-yellow-400/50 mt-0.5 shrink-0" />
-                Paste English → hit <span className="text-slate-400">Translate</span> → get natural Swedish
+                <ChevronRight size={13} className="text-hero/50 mt-0.5 shrink-0" />
+                Paste English → hit <span className="text-fg-1">Translate</span> → get natural Swedish
               </li>
               <li className="flex items-start gap-2">
-                <ChevronRight size={13} className="text-yellow-400/50 mt-0.5 shrink-0" />
-                Hit <span className="text-slate-400">Check tone</span> → get a score, specific issues, and a suggested rewrite
+                <ChevronRight size={13} className="text-hero/50 mt-0.5 shrink-0" />
+                Hit <span className="text-fg-1">Check tone</span> → get a score, specific issues, and a suggested rewrite
               </li>
               <li className="flex items-start gap-2">
-                <ChevronRight size={13} className="text-yellow-400/50 mt-0.5 shrink-0" />
-                Hit <span className="text-yellow-400/80">Apply improvements</span> → every flagged issue is fixed in one click. Re-check after.
+                <ChevronRight size={13} className="text-hero/50 mt-0.5 shrink-0" />
+                Hit <span className="text-hero/80">Apply improvements</span> → every flagged issue is fixed in one click. Re-check after.
               </li>
               <li className="flex items-start gap-2">
-                <ChevronRight size={13} className="text-yellow-400/50 mt-0.5 shrink-0" />
+                <ChevronRight size={13} className="text-hero/50 mt-0.5 shrink-0" />
                 Hit <span className="text-purple-400/80">Humanise</span> → dedicated native-speaker pass. Use this for final polish before sending.
               </li>
               <li className="flex items-start gap-2">
-                <ChevronRight size={13} className="text-yellow-400/50 mt-0.5 shrink-0" />
-                Placeholders like <code className="text-slate-400 bg-slate-800 px-1 rounded text-xs">[NAME]</code>, <code className="text-slate-400 bg-slate-800 px-1 rounded text-xs">{'{{{Case.Anti_Phishing_Text__c}}}'}</code> are always kept intact
+                <ChevronRight size={13} className="text-hero/50 mt-0.5 shrink-0" />
+                Placeholders like <code className="text-fg-1 bg-bg-2 px-1 rounded text-xs">[NAME]</code>, <code className="text-fg-1 bg-bg-2 px-1 rounded text-xs">{'{{{Case.Anti_Phishing_Text__c}}}'}</code> are always kept intact
               </li>
               <li className="flex items-start gap-2">
-                <ChevronRight size={13} className="text-yellow-400/50 mt-0.5 shrink-0" />
+                <ChevronRight size={13} className="text-hero/50 mt-0.5 shrink-0" />
                 USDT, KYC, SEPA, TXID, 2FA — always in English. Swedish customers expect this.
               </li>
             </ul>

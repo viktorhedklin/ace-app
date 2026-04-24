@@ -201,25 +201,25 @@ export default function KnowledgeManager() {
   return (
     <div
       className={cn(
-        'bg-slate-900 border rounded-xl overflow-hidden transition-colors duration-200',
-        dragOver ? 'border-yellow-400/50' : 'border-slate-800'
+        'bg-bg-1 border rounded-xl overflow-hidden transition-colors duration-200',
+        dragOver ? 'border-hero/50' : 'border-border-0'
       )}
       onDrop={handleDrop}
       onDragOver={e => { e.preventDefault(); setDragOver(true); }}
       onDragLeave={() => setDragOver(false)}
     >
       {/* Header */}
-      <div className="px-5 py-4 border-b border-slate-800">
+      <div className="px-5 py-4 border-b border-border-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Brain size={15} className="text-yellow-400" />
-            <h2 className="font-semibold text-slate-100 text-sm">Knowledge Base</h2>
-            <span className="text-xs text-slate-600">{activeCount}/{entries.length} active</span>
+            <Brain size={15} className="text-hero" />
+            <h2 className="font-semibold text-fg-0 text-sm">Knowledge Base</h2>
+            <span className="text-xs text-fg-2">{activeCount}/{entries.length} active</span>
           </div>
           <div className="flex items-center gap-2">
             {/* Import button */}
             <label
-              className="flex items-center gap-1 text-xs text-slate-500 hover:text-yellow-400 px-2 py-1 rounded-lg hover:bg-slate-800 transition-colors duration-150 cursor-pointer"
+              className="flex items-center gap-1 text-xs text-fg-2 hover:text-hero px-2 py-1 rounded-lg hover:bg-bg-2 transition-colors duration-150 cursor-pointer"
               title="Import knowledge from JSON"
             >
               <Upload size={12} />
@@ -230,7 +230,7 @@ export default function KnowledgeManager() {
             <button
               onClick={handleExport}
               disabled={!entries.length}
-              className="flex items-center gap-1 text-xs text-slate-500 hover:text-yellow-400 disabled:hover:text-slate-500 px-2 py-1 rounded-lg hover:bg-slate-800 disabled:hover:bg-transparent transition-colors duration-150 cursor-pointer disabled:cursor-not-allowed"
+              className="flex items-center gap-1 text-xs text-fg-2 hover:text-hero disabled:hover:text-fg-2 px-2 py-1 rounded-lg hover:bg-bg-2 disabled:hover:bg-transparent transition-colors duration-150 cursor-pointer disabled:cursor-not-allowed"
               title="Export knowledge to JSON"
               aria-label="Export knowledge base"
             >
@@ -249,7 +249,7 @@ export default function KnowledgeManager() {
               exit={{ height: 0, opacity: 0 }}
               className="overflow-hidden"
             >
-              <p className="text-xs text-yellow-400 mt-2">
+              <p className="text-xs text-hero mt-2">
                 Imported {importMsg.added} new entr{importMsg.added === 1 ? 'y' : 'ies'}
                 {importMsg.dupes > 0 && ` (${importMsg.dupes} duplicate${importMsg.dupes === 1 ? '' : 's'} skipped)`}
               </p>
@@ -259,19 +259,19 @@ export default function KnowledgeManager() {
 
         {/* Drag overlay hint */}
         {dragOver && (
-          <div className="mt-2 bg-yellow-400/10 border border-dashed border-yellow-400/30 rounded-lg px-3 py-2 text-center">
-            <p className="text-xs text-yellow-400 font-medium">Drop JSON to import</p>
+          <div className="mt-2 bg-hero/10 border border-dashed border-hero/30 rounded-lg px-3 py-2 text-center">
+            <p className="text-xs text-hero font-medium">Drop JSON to import</p>
           </div>
         )}
       </div>
 
       {/* Remote Sync */}
-      <div className="px-5 py-3 border-b border-slate-800 space-y-2">
+      <div className="px-5 py-3 border-b border-border-0 space-y-2">
         <div className="flex items-center gap-2">
           <Globe size={12} className="text-cyan-400 shrink-0" />
-          <span className="text-xs font-medium text-slate-400">Remote Sync</span>
+          <span className="text-xs font-medium text-fg-1">Remote Sync</span>
           {lastSync && (
-            <span className="text-xs text-slate-700 ml-auto">
+            <span className="text-xs text-fg-3 ml-auto">
               Last: {new Date(lastSync).toLocaleDateString()} {new Date(lastSync).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
           )}
@@ -283,7 +283,7 @@ export default function KnowledgeManager() {
             onBlur={saveSyncUrl}
             onKeyDown={e => { if (e.key === 'Enter') { saveSyncUrl(); handleSync(); } }}
             placeholder="GitHub raw URL or any JSON endpoint"
-            className="flex-1 bg-slate-800 border border-slate-700 focus:border-cyan-400/50 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 outline-none transition-colors duration-150 font-mono"
+            className="flex-1 bg-bg-2 border border-border-0 focus:border-cyan-400/50 rounded-lg px-3 py-2 text-xs text-fg-0 placeholder-fg-3 outline-none transition-colors duration-150 font-mono"
           />
           <button
             onClick={handleSync}
@@ -292,7 +292,7 @@ export default function KnowledgeManager() {
               'flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg border font-medium transition-colors duration-150 shrink-0 cursor-pointer disabled:cursor-not-allowed',
               syncing
                 ? 'bg-cyan-400/10 border-cyan-400/30 text-cyan-400/60'
-                : 'bg-cyan-400/15 hover:bg-cyan-400/25 border-cyan-400/30 text-cyan-400 disabled:bg-slate-800 disabled:border-slate-700 disabled:text-slate-600'
+                : 'bg-cyan-400/15 hover:bg-cyan-400/25 border-cyan-400/30 text-cyan-400 disabled:bg-bg-2 disabled:border-border-0 disabled:text-fg-2'
             )}
             title="Sync knowledge from remote URL now"
             aria-label="Sync now"
@@ -317,8 +317,8 @@ export default function KnowledgeManager() {
                 </p>
               ) : (
                 <div className="text-xs space-y-1">
-                  <p className="text-red-400">{syncResult.reason}</p>
-                  <p className="text-slate-600">Check the URL — must return JSON with {"{"}"entries": [...]{"}"} format.</p>
+                  <p className="text-crit">{syncResult.reason}</p>
+                  <p className="text-fg-2">Check the URL — must return JSON with {"{"}"entries": [...]{"}"} format.</p>
                 </div>
               )}
             </motion.div>
@@ -330,13 +330,13 @@ export default function KnowledgeManager() {
           <button
             onClick={seedFromBuiltinKB}
             disabled={seeding}
-            className="flex items-center gap-1.5 text-xs bg-yellow-400/10 hover:bg-yellow-400/20 border border-yellow-400/20 text-yellow-400 px-3 py-1.5 rounded-lg transition-colors duration-150 cursor-pointer disabled:opacity-50"
+            className="flex items-center gap-1.5 text-xs bg-hero/10 hover:bg-hero/20 border border-hero/20 text-hero px-3 py-1.5 rounded-lg transition-colors duration-150 cursor-pointer disabled:opacity-50"
             title="Import all 45 Bybit KB articles into your Knowledge Base — no URL needed"
           >
             <Zap size={11} />
             Seed from Bybit KB
           </button>
-          <span className="text-[10px] text-slate-700">{BYBIT_KB.length} built-in articles — works offline</span>
+          <span className="text-[10px] text-fg-3">{BYBIT_KB.length} built-in articles — works offline</span>
         </div>
 
         <AnimatePresence>
@@ -347,7 +347,7 @@ export default function KnowledgeManager() {
               exit={{ height: 0, opacity: 0 }}
               className="overflow-hidden"
             >
-              <p className="text-xs text-yellow-400">
+              <p className="text-xs text-hero">
                 Seeded {seedResult.added} article{seedResult.added !== 1 ? 's' : ''}
                 {seedResult.skipped > 0 && ` (${seedResult.skipped} already existed)`}
               </p>
@@ -357,19 +357,19 @@ export default function KnowledgeManager() {
       </div>
 
       {/* Search + Add */}
-      <div className="px-5 py-3 border-b border-slate-800 flex items-center gap-2">
+      <div className="px-5 py-3 border-b border-border-0 flex items-center gap-2">
         <div className="flex-1 relative">
-          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600" />
+          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-fg-2" />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search knowledge entries..."
-            className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg pl-8 pr-3 py-2 text-xs text-slate-100 placeholder-slate-600 outline-none transition-colors duration-150"
+            className="w-full bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg pl-8 pr-3 py-2 text-xs text-fg-0 placeholder-fg-3 outline-none transition-colors duration-150"
           />
         </div>
         <button
           onClick={() => { setAdding(true); setNewTitle(''); setNewContent(''); }}
-          className="flex items-center gap-1 text-xs bg-yellow-400/15 hover:bg-yellow-400/25 border border-yellow-400/30 text-yellow-400 px-3 py-2 rounded-lg transition-colors duration-150 shrink-0 cursor-pointer"
+          className="flex items-center gap-1 text-xs bg-hero/15 hover:bg-hero/25 border border-hero/30 text-hero px-3 py-2 rounded-lg transition-colors duration-150 shrink-0 cursor-pointer"
           aria-label="Add knowledge entry"
         >
           <Plus size={12} /> Add
@@ -383,35 +383,35 @@ export default function KnowledgeManager() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden border-b border-slate-800"
+            className="overflow-hidden border-b border-border-0"
           >
-            <div className="px-5 py-4 space-y-3 bg-yellow-400/5">
-              <p className="text-xs font-medium text-yellow-400">New Knowledge Entry</p>
+            <div className="px-5 py-4 space-y-3 bg-hero/5">
+              <p className="text-xs font-medium text-hero">New Knowledge Entry</p>
               <input
                 autoFocus
                 value={newTitle}
                 onChange={e => setNewTitle(e.target.value)}
                 placeholder="Title (e.g., EU SEPA processing time)"
-                className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-500 outline-none transition-colors duration-150"
+                className="w-full bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-xs text-fg-0 placeholder-fg-2 outline-none transition-colors duration-150"
               />
               <textarea
                 value={newContent}
                 onChange={e => setNewContent(e.target.value)}
                 placeholder="Content — the knowledge to remember..."
                 rows={3}
-                className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-500 outline-none resize-none transition-colors duration-150"
+                className="w-full bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-xs text-fg-0 placeholder-fg-2 outline-none resize-none transition-colors duration-150"
               />
               <div className="flex gap-2">
                 <button
                   onClick={addEntry}
                   disabled={!newTitle.trim() || !newContent.trim()}
-                  className="flex items-center gap-1 text-xs bg-yellow-400/20 disabled:bg-slate-800 disabled:text-slate-600 text-yellow-400 hover:bg-yellow-400/30 px-3 py-1.5 rounded-lg transition-colors duration-150 cursor-pointer disabled:cursor-not-allowed"
+                  className="flex items-center gap-1 text-xs bg-hero/20 disabled:bg-bg-2 disabled:text-fg-2 text-hero hover:bg-hero/30 px-3 py-1.5 rounded-lg transition-colors duration-150 cursor-pointer disabled:cursor-not-allowed"
                 >
                   <Check size={11} /> Save
                 </button>
                 <button
                   onClick={() => setAdding(false)}
-                  className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-300 px-2 py-1.5 transition-colors duration-150 cursor-pointer"
+                  className="flex items-center gap-1 text-xs text-fg-2 hover:text-fg-1 px-2 py-1.5 transition-colors duration-150 cursor-pointer"
                 >
                   <X size={11} /> Cancel
                 </button>
@@ -425,8 +425,8 @@ export default function KnowledgeManager() {
       <div className="max-h-[400px] overflow-y-auto">
         {filtered.length === 0 ? (
           <div className="px-5 py-8 text-center">
-            <Brain size={24} className="text-slate-700 mx-auto mb-2" />
-            <p className="text-xs text-slate-600">
+            <Brain size={24} className="text-fg-3 mx-auto mb-2" />
+            <p className="text-xs text-fg-2">
               {entries.length === 0
                 ? 'No knowledge entries yet. Add one or enable Auto-Memory in chat.'
                 : 'No matches found.'}
@@ -441,30 +441,30 @@ export default function KnowledgeManager() {
               <div
                 key={entry.id}
                 className={cn(
-                  'border-b border-slate-800 last:border-0 transition-colors duration-150',
+                  'border-b border-border-0 last:border-0 transition-colors duration-150',
                   !isActive && 'opacity-50'
                 )}
               >
                 {isEditing ? (
                   /* Edit mode */
-                  <div className="px-5 py-4 space-y-3 bg-slate-800/30">
+                  <div className="px-5 py-4 space-y-3 bg-bg-2/30">
                     <input
                       autoFocus
                       value={editTitle}
                       onChange={e => setEditTitle(e.target.value)}
-                      className="w-full bg-slate-800 border border-yellow-400/30 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none"
+                      className="w-full bg-bg-2 border border-hero/30 rounded-lg px-3 py-2 text-xs text-fg-0 outline-none"
                     />
                     <textarea
                       value={editContent}
                       onChange={e => setEditContent(e.target.value)}
                       rows={4}
-                      className="w-full bg-slate-800 border border-yellow-400/30 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none resize-none"
+                      className="w-full bg-bg-2 border border-hero/30 rounded-lg px-3 py-2 text-xs text-fg-0 outline-none resize-none"
                     />
                     <div className="flex gap-2">
-                      <button onClick={saveEdit} className="flex items-center gap-1 text-xs bg-yellow-400/20 text-yellow-400 hover:bg-yellow-400/30 px-3 py-1.5 rounded-lg transition-colors duration-150 cursor-pointer">
+                      <button onClick={saveEdit} className="flex items-center gap-1 text-xs bg-hero/20 text-hero hover:bg-hero/30 px-3 py-1.5 rounded-lg transition-colors duration-150 cursor-pointer">
                         <Check size={11} /> Save
                       </button>
-                      <button onClick={() => setEditingId(null)} className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-300 px-2 py-1.5 transition-colors duration-150 cursor-pointer">
+                      <button onClick={() => setEditingId(null)} className="flex items-center gap-1 text-xs text-fg-2 hover:text-fg-1 px-2 py-1.5 transition-colors duration-150 cursor-pointer">
                         <X size={11} /> Cancel
                       </button>
                     </div>
@@ -478,7 +478,7 @@ export default function KnowledgeManager() {
                         onClick={() => toggleActive(entry.id)}
                         className={cn(
                           'shrink-0 transition-colors duration-150 cursor-pointer',
-                          isActive ? 'text-yellow-400' : 'text-slate-600'
+                          isActive ? 'text-hero' : 'text-fg-2'
                         )}
                         title={isActive ? 'Disable (exclude from prompts)' : 'Enable (include in prompts)'}
                         aria-label={isActive ? 'Disable entry' : 'Enable entry'}
@@ -492,21 +492,21 @@ export default function KnowledgeManager() {
                         className="flex-1 text-left flex items-center gap-1.5 min-w-0 cursor-pointer"
                         aria-expanded={isExpanded}
                       >
-                        <span className={cn('text-xs font-medium truncate', isActive ? 'text-slate-200' : 'text-slate-500')}>
+                        <span className={cn('text-xs font-medium truncate', isActive ? 'text-fg-0' : 'text-fg-2')}>
                           {entry.title}
                         </span>
                         <span className={cn('text-[9px] px-1.5 py-0.5 rounded font-medium shrink-0', {
-                          'bg-blue-500/15 text-blue-400': entry.source === 'official',
+                          'bg-info/15 text-info': entry.source === 'official',
                           'bg-purple-500/15 text-purple-400': entry.source === 'memory',
-                          'bg-yellow-500/15 text-yellow-400': entry.source === 'custom',
+                          'bg-hero-soft/15 text-hero': entry.source === 'custom',
                           'bg-cyan-500/15 text-cyan-400': entry.source === 'remote',
-                          'bg-slate-700 text-slate-500': !entry.source,
+                          'bg-bg-3 text-fg-2': !entry.source,
                         })}>
                           {entry.source === 'official' ? 'Bybit' : entry.source === 'memory' ? 'Memory' : entry.source === 'custom' ? 'Custom' : entry.source === 'remote' ? 'Remote' : 'Legacy'}
                         </span>
                         {isExpanded
-                          ? <ChevronUp size={10} className="text-slate-600 shrink-0" />
-                          : <ChevronDown size={10} className="text-slate-600 shrink-0" />
+                          ? <ChevronUp size={10} className="text-fg-2 shrink-0" />
+                          : <ChevronDown size={10} className="text-fg-2 shrink-0" />
                         }
                       </button>
 
@@ -514,15 +514,15 @@ export default function KnowledgeManager() {
                       <div className="flex items-center gap-1 shrink-0">
                         <button
                           onClick={() => copyEntry(entry.content, entry.id)}
-                          className="text-slate-600 hover:text-slate-300 p-1 rounded transition-colors duration-150 cursor-pointer"
+                          className="text-fg-2 hover:text-fg-1 p-1 rounded transition-colors duration-150 cursor-pointer"
                           title="Copy content"
                           aria-label="Copy entry content"
                         >
-                          {copied === entry.id ? <Check size={12} className="text-green-400" /> : <Copy size={12} />}
+                          {copied === entry.id ? <Check size={12} className="text-ok" /> : <Copy size={12} />}
                         </button>
                         <button
                           onClick={() => startEdit(entry)}
-                          className="text-slate-600 hover:text-yellow-400 p-1 rounded transition-colors duration-150 cursor-pointer"
+                          className="text-fg-2 hover:text-hero p-1 rounded transition-colors duration-150 cursor-pointer"
                           title="Edit"
                           aria-label="Edit entry"
                         >
@@ -530,7 +530,7 @@ export default function KnowledgeManager() {
                         </button>
                         <button
                           onClick={() => deleteEntry(entry.id)}
-                          className="text-slate-600 hover:text-red-400 p-1 rounded transition-colors duration-150 cursor-pointer"
+                          className="text-fg-2 hover:text-crit p-1 rounded transition-colors duration-150 cursor-pointer"
                           title="Delete"
                           aria-label="Delete entry"
                         >
@@ -549,7 +549,7 @@ export default function KnowledgeManager() {
                           transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                           className="overflow-hidden"
                         >
-                          <p className="text-xs text-slate-400 mt-2 pl-6 whitespace-pre-wrap leading-relaxed">
+                          <p className="text-xs text-fg-1 mt-2 pl-6 whitespace-pre-wrap leading-relaxed">
                             {entry.content}
                           </p>
                         </motion.div>
@@ -564,14 +564,14 @@ export default function KnowledgeManager() {
       </div>
 
       {/* Footer */}
-      <div className="px-5 py-3 border-t border-slate-800 flex items-center justify-between">
-        <p className="text-xs text-slate-700">
+      <div className="px-5 py-3 border-t border-border-0 flex items-center justify-between">
+        <p className="text-xs text-fg-3">
           {activeCount} active entr{activeCount === 1 ? 'y' : 'ies'} — injected into Chat only (utility tools skip KB)
         </p>
         {entries.length > 0 && (
           <button
             onClick={() => { if (confirm('Delete ALL knowledge entries? This cannot be undone.')) persist([]); }}
-            className="text-xs text-slate-700 hover:text-red-400 transition-colors duration-150 cursor-pointer"
+            className="text-xs text-fg-3 hover:text-crit transition-colors duration-150 cursor-pointer"
           >
             Clear all
           </button>

@@ -209,27 +209,27 @@ RULES:
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 12 }}
         transition={{ duration: 0.18, ease: 'easeOut' }}
-        className="relative w-full max-w-lg bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden"
+        className="relative w-full max-w-lg bg-bg-1 border border-border-0 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         {/* Top accent line */}
-        <div className={cn('h-0.5 w-full', platform === 'eu' ? 'bg-gradient-to-r from-yellow-400/60 via-yellow-400/20 to-transparent' : platform === 'global' ? 'bg-gradient-to-r from-green-400/60 via-green-400/20 to-transparent' : 'bg-gradient-to-r from-red-400/60 via-red-400/20 to-transparent')} />
+        <div className={cn('h-0.5 w-full', platform === 'eu' ? 'bg-gradient-to-r from-hero/60 via-hero/20 to-transparent' : platform === 'global' ? 'bg-gradient-to-r from-green-400/60 via-green-400/20 to-transparent' : 'bg-gradient-to-r from-red-400/60 via-red-400/20 to-transparent')} />
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border-0">
           <div className="flex items-center gap-2.5">
             <span className="text-base">🔴</span>
-            <span className="font-semibold text-slate-100">Escalation Builder</span>
+            <span className="font-semibold text-fg-0">Escalation Builder</span>
             {platformLabel && (
               <span className={cn(
                 'text-xs px-2 py-0.5 rounded font-bold border',
                 platform === 'eu'
-                  ? 'bg-yellow-400/15 border-yellow-400/30 text-yellow-400'
-                  : 'bg-green-400/15 border-green-400/30 text-green-400'
+                  ? 'bg-hero/15 border-hero/30 text-hero'
+                  : 'bg-ok/15 border-ok/30 text-ok'
               )}>{platformLabel}</span>
             )}
           </div>
-          <button onClick={handleClose} className="text-slate-500 hover:text-slate-300 transition-colors cursor-pointer" aria-label="Close escalation builder">
+          <button onClick={handleClose} className="text-fg-2 hover:text-fg-1 transition-colors cursor-pointer" aria-label="Close escalation builder">
             <X size={16} />
           </button>
         </div>
@@ -239,7 +239,7 @@ RULES:
           {/* Platform selector (if unknown) */}
           {!platform && (
             <div className="space-y-3">
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Which platform?</p>
+              <p className="text-xs font-semibold text-fg-1 uppercase tracking-widest">Which platform?</p>
               <div className="grid grid-cols-2 gap-3">
                 {[
                   { key: 'eu', label: 'Bybit EU', flag: '🇪🇺', sub: 'MiCA Regulated', color: 'yellow' },
@@ -252,13 +252,13 @@ RULES:
                     className={cn(
                       'rounded-xl p-4 text-left border transition-all cursor-pointer',
                       p.color === 'yellow'
-                        ? 'bg-yellow-400/8 border-yellow-400/20 hover:border-yellow-400/40'
-                        : 'bg-green-400/8 border-green-400/20 hover:border-green-400/40'
+                        ? 'bg-hero/8 border-hero/20 hover:border-hero/40'
+                        : 'bg-ok/8 border-ok/20 hover:border-ok/40'
                     )}
                   >
                     <p className="text-2xl mb-1.5">{p.flag}</p>
-                    <p className={cn('font-semibold text-sm', p.color === 'yellow' ? 'text-yellow-400' : 'text-green-400')}>{p.label}</p>
-                    <p className="text-xs text-slate-500">{p.sub}</p>
+                    <p className={cn('font-semibold text-sm', p.color === 'yellow' ? 'text-hero' : 'text-ok')}>{p.label}</p>
+                    <p className="text-xs text-fg-2">{p.sub}</p>
                   </motion.button>
                 ))}
               </div>
@@ -269,7 +269,7 @@ RULES:
             <>
               {/* Escalation type */}
               <div className="space-y-2">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Escalation type</p>
+                <p className="text-xs font-semibold text-fg-2 uppercase tracking-widest">Escalation type</p>
                 <div className="space-y-2">
                   {ESC_TYPES.map(t => (
                     <button
@@ -278,20 +278,20 @@ RULES:
                       className={cn(
                         'w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all duration-150 cursor-pointer',
                         escType === t.key
-                          ? 'bg-slate-800 border-yellow-400/40'
-                          : 'bg-slate-800/50 border-slate-700 hover:border-slate-600'
+                          ? 'bg-bg-2 border-hero/40'
+                          : 'bg-bg-2/50 border-border-0 hover:border-border-1'
                       )}
                     >
                       <span className="text-lg shrink-0">{t.icon}</span>
                       <div className="flex-1">
-                        <p className={cn('text-sm font-medium', escType === t.key ? 'text-yellow-400' : 'text-slate-200')}>{t.label}</p>
-                        <p className="text-xs text-slate-500">{t.desc}</p>
+                        <p className={cn('text-sm font-medium', escType === t.key ? 'text-hero' : 'text-fg-0')}>{t.label}</p>
+                        <p className="text-xs text-fg-2">{t.desc}</p>
                       </div>
                       <div className={cn(
                         'w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center transition-all',
-                        escType === t.key ? 'border-yellow-400 bg-yellow-400' : 'border-slate-600'
+                        escType === t.key ? 'border-hero bg-hero' : 'border-border-1'
                       )}>
-                        {escType === t.key && <div className="w-1.5 h-1.5 rounded-full bg-slate-900" />}
+                        {escType === t.key && <div className="w-1.5 h-1.5 rounded-full bg-bg-1" />}
                       </div>
                     </button>
                   ))}
@@ -306,15 +306,15 @@ RULES:
                   aria-label="Toggle troubleshooting checklist"
                 >
                   <div className="flex items-center gap-2">
-                    <AlertTriangle size={13} className="text-yellow-400" />
-                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Pre-escalation checklist</p>
+                    <AlertTriangle size={13} className="text-hero" />
+                    <p className="text-xs font-semibold text-fg-1 uppercase tracking-widest">Pre-escalation checklist</p>
                     {checklistCount > 0 && (
-                      <span className="text-xs bg-green-400/15 border border-green-400/30 text-green-400 px-1.5 py-0.5 rounded font-bold">
+                      <span className="text-xs bg-ok/15 border border-ok/30 text-ok px-1.5 py-0.5 rounded font-bold">
                         {checklistCount}/{TROUBLESHOOTING_STEPS.length}
                       </span>
                     )}
                   </div>
-                  <ChevronDown size={14} className={cn('text-slate-500 transition-transform', showChecklist && 'rotate-180')} />
+                  <ChevronDown size={14} className={cn('text-fg-2 transition-transform', showChecklist && 'rotate-180')} />
                 </button>
 
                 <AnimatePresence>
@@ -334,19 +334,19 @@ RULES:
                             className={cn(
                               'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-all cursor-pointer',
                               checklist[s.key]
-                                ? 'bg-green-400/8 border-green-400/25'
-                                : 'bg-slate-800/50 border-slate-700/50 hover:border-slate-600'
+                                ? 'bg-ok/8 border-ok/25'
+                                : 'bg-bg-2/50 border-border-0/50 hover:border-border-1'
                             )}
                           >
                             <div className={cn(
                               'w-4 h-4 rounded flex items-center justify-center shrink-0 border-2 transition-all',
-                              checklist[s.key] ? 'bg-green-400 border-green-400' : 'border-slate-600'
+                              checklist[s.key] ? 'bg-ok border-ok' : 'border-border-1'
                             )}>
-                              {checklist[s.key] && <Check size={10} className="text-slate-900" />}
+                              {checklist[s.key] && <Check size={10} className="text-[#021418]" />}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className={cn('text-xs font-medium', checklist[s.key] ? 'text-green-400' : 'text-slate-300')}>{s.label}</p>
-                              <p className="text-[10px] text-slate-500">{s.tip}</p>
+                              <p className={cn('text-xs font-medium', checklist[s.key] ? 'text-ok' : 'text-fg-1')}>{s.label}</p>
+                              <p className="text-[10px] text-fg-2">{s.tip}</p>
                             </div>
                           </button>
                         ))}
@@ -360,58 +360,58 @@ RULES:
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label htmlFor="esc-uid" className="text-xs text-slate-500 mb-1 block">👤 UID(s)</label>
+                    <label htmlFor="esc-uid" className="text-xs text-fg-2 mb-1 block">👤 UID(s)</label>
                     <input id="esc-uid" value={uid} onChange={e => { setUid(e.target.value); setTemplate(''); }}
                       placeholder="[UID]"
-                      className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none transition-colors" />
+                      className="w-full bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-sm text-fg-0 placeholder-fg-3 outline-none transition-colors" />
                   </div>
                   <div>
-                    <label htmlFor="esc-sf" className="text-xs text-slate-500 mb-1 block">📋 SF Number</label>
+                    <label htmlFor="esc-sf" className="text-xs text-fg-2 mb-1 block">📋 SF Number</label>
                     <input id="esc-sf" value={sf} onChange={e => { setSf(e.target.value); setTemplate(''); }}
                       placeholder="[SF number]"
-                      className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none transition-colors" />
+                      className="w-full bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-sm text-fg-0 placeholder-fg-3 outline-none transition-colors" />
                   </div>
                 </div>
 
                 {/* Device info fields */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label htmlFor="esc-device" className="text-xs text-slate-500 mb-1 block">📱 Device & OS</label>
+                    <label htmlFor="esc-device" className="text-xs text-fg-2 mb-1 block">📱 Device & OS</label>
                     <input id="esc-device" value={deviceOS} onChange={e => { setDeviceOS(e.target.value); setTemplate(''); }}
                       placeholder="e.g. iPhone 15 / iOS 18.2"
-                      className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none transition-colors" />
+                      className="w-full bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-sm text-fg-0 placeholder-fg-3 outline-none transition-colors" />
                   </div>
                   <div>
-                    <label htmlFor="esc-appver" className="text-xs text-slate-500 mb-1 block">📦 App / Browser Version</label>
+                    <label htmlFor="esc-appver" className="text-xs text-fg-2 mb-1 block">📦 App / Browser Version</label>
                     <input id="esc-appver" value={appVersion} onChange={e => { setAppVersion(e.target.value); setTemplate(''); }}
                       placeholder="e.g. Bybit 4.52.0 / Chrome 126"
-                      className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none transition-colors" />
+                      className="w-full bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-sm text-fg-0 placeholder-fg-3 outline-none transition-colors" />
                   </div>
                 </div>
 
                 {escType === 'lark' && (
                   <div>
-                    <label htmlFor="esc-directed" className="text-xs text-slate-500 mb-1 block">📑 Inquiry directed to</label>
+                    <label htmlFor="esc-directed" className="text-xs text-fg-2 mb-1 block">📑 Inquiry directed to</label>
                     <input id="esc-directed" value={directedTo} onChange={e => { setDirectedTo(e.target.value); setTemplate(''); }}
                       placeholder="e.g. Risk & Compliance Team, Card Ops"
-                      className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none transition-colors" />
+                      className="w-full bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-sm text-fg-0 placeholder-fg-3 outline-none transition-colors" />
                   </div>
                 )}
 
                 {escType === 'lark' && (
                   <div>
-                    <label htmlFor="esc-remarks" className="text-xs text-slate-500 mb-1 block">🏷️ Remarks <span className="text-slate-700">(optional)</span></label>
+                    <label htmlFor="esc-remarks" className="text-xs text-fg-2 mb-1 block">🏷️ Remarks <span className="text-fg-3">(optional)</span></label>
                     <input id="esc-remarks" value={remarks} onChange={e => { setRemarks(e.target.value); setTemplate(''); }}
                       placeholder="e.g. User is VIP / case is urgent / already checked X"
-                      className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none transition-colors" />
+                      className="w-full bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-sm text-fg-0 placeholder-fg-3 outline-none transition-colors" />
                   </div>
                 )}
 
                 {/* ─── Notes + Generate with ACE ─── */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label htmlFor="esc-notes" className="text-xs text-slate-500">📝 Your notes / paste chat</label>
-                    <span className="text-xs text-slate-600">{notes.length > 0 ? `${notes.length} chars` : 'Raw context'}</span>
+                    <label htmlFor="esc-notes" className="text-xs text-fg-2">📝 Your notes / paste chat</label>
+                    <span className="text-xs text-fg-2">{notes.length > 0 ? `${notes.length} chars` : 'Raw context'}</span>
                   </div>
                   <textarea
                     id="esc-notes"
@@ -419,24 +419,24 @@ RULES:
                     onChange={e => { setNotes(e.target.value); setTemplate(''); }}
                     placeholder="Paste the chat or write rough notes — ACE will structure it into a proper escalation summary..."
                     rows={3}
-                    className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none resize-y transition-colors"
+                    className="w-full bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-sm text-fg-0 placeholder-fg-3 outline-none resize-y transition-colors"
                   />
                 </div>
 
                 {/* Summary (generated or manual) */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label htmlFor="esc-summary" className="text-xs text-slate-500">📄 Escalation Summary</label>
+                    <label htmlFor="esc-summary" className="text-xs text-fg-2">📄 Escalation Summary</label>
                     <button
                       onClick={generateWithAce}
                       disabled={generating || (!messages.length && !notes.trim())}
                       className={cn(
                         'flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border transition-all cursor-pointer',
                         generating
-                          ? 'bg-yellow-400/10 border-yellow-400/20 text-yellow-400/60'
+                          ? 'bg-hero/10 border-hero/20 text-hero/60'
                           : (messages.length || notes.trim())
-                          ? 'bg-yellow-400/15 border-yellow-400/30 text-yellow-400 hover:bg-yellow-400/25'
-                          : 'bg-slate-800 border-slate-700 text-slate-600 cursor-not-allowed'
+                          ? 'bg-hero/15 border-hero/30 text-hero hover:bg-hero/25'
+                          : 'bg-bg-2 border-border-0 text-fg-2 cursor-not-allowed'
                       )}
                     >
                       {generating
@@ -451,7 +451,7 @@ RULES:
                     onChange={e => { setSummary(e.target.value); setTemplate(''); }}
                     placeholder="ACE will generate this from your notes — or write it manually..."
                     rows={3}
-                    className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none resize-none transition-colors"
+                    className="w-full bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-sm text-fg-0 placeholder-fg-3 outline-none resize-none transition-colors"
                   />
                 </div>
               </div>
@@ -460,7 +460,7 @@ RULES:
               <motion.button
                 whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
                 onClick={buildTemplate}
-                className="w-full bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full bg-hero hover:bg-hero text-[#021418] font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer"
               >
                 Build Template <ChevronRight size={16} />
               </motion.button>
@@ -475,9 +475,9 @@ RULES:
                     transition={{ duration: 0.18 }}
                     className="space-y-2"
                   >
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Ready to paste</p>
-                    <div className="bg-slate-950 border border-slate-700 rounded-xl p-4">
-                      <pre className="text-sm text-slate-200 font-mono whitespace-pre-wrap leading-relaxed">{template}</pre>
+                    <p className="text-xs font-semibold text-fg-2 uppercase tracking-widest">Ready to paste</p>
+                    <div className="bg-bg-0 border border-border-0 rounded-xl p-4">
+                      <pre className="text-sm text-fg-0 font-mono whitespace-pre-wrap leading-relaxed">{template}</pre>
                     </div>
                     <motion.button
                       whileTap={{ scale: 0.98 }}
@@ -485,8 +485,8 @@ RULES:
                       className={cn(
                         'w-full py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer',
                         copied
-                          ? 'bg-green-400/20 border border-green-400/30 text-green-400'
-                          : 'bg-slate-800 border border-slate-700 hover:border-yellow-400/40 text-slate-200 hover:text-yellow-400'
+                          ? 'bg-ok/20 border border-ok/30 text-ok'
+                          : 'bg-bg-2 border border-border-0 hover:border-hero/40 text-fg-0 hover:text-hero'
                       )}
                     >
                       {copied ? <><Check size={15} /> Copied to clipboard</> : <><Copy size={15} /> Copy</>}
@@ -498,7 +498,7 @@ RULES:
           )}
 
           {/* Privacy footer */}
-          <div className="flex items-center gap-1.5 text-xs text-slate-700 pt-1">
+          <div className="flex items-center gap-1.5 text-xs text-fg-3 pt-1">
             <Lock size={10} />
             Ace never stores or requests UID/personal data — you control what goes in these fields
           </div>

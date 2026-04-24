@@ -75,7 +75,7 @@ const TEMPLATES = {
 
 function CopyBtn({ text, copyKey, copied, onCopy }) {
   return (
-    <button onClick={() => onCopy(text, copyKey)} className="flex items-center gap-1 text-xs text-slate-500 hover:text-yellow-400 transition-colors duration-150 cursor-pointer shrink-0" aria-label={`Copy ${copyKey}`}>
+    <button onClick={() => onCopy(text, copyKey)} className="flex items-center gap-1 text-xs text-fg-2 hover:text-hero transition-colors duration-150 cursor-pointer shrink-0" aria-label={`Copy ${copyKey}`}>
       {copied === copyKey ? <><Check size={12} /> Copied</> : <><Copy size={12} /> Copy</>}
     </button>
   );
@@ -83,13 +83,13 @@ function CopyBtn({ text, copyKey, copied, onCopy }) {
 
 function TemplateBlock({ title, text, copyKey, copied, onCopy, hint }) {
   return (
-    <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 space-y-2">
+    <div className="bg-bg-2/50 border border-border-0 rounded-lg p-3 space-y-2">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold text-slate-400">{title}</p>
+        <p className="text-xs font-semibold text-fg-1">{title}</p>
         <CopyBtn text={text} copyKey={copyKey} copied={copied} onCopy={onCopy} />
       </div>
-      <p className="text-xs text-slate-300 whitespace-pre-wrap leading-relaxed font-mono">{text}</p>
-      {hint && <p className="text-[10px] text-slate-600 italic">{hint}</p>}
+      <p className="text-xs text-fg-1 whitespace-pre-wrap leading-relaxed font-mono">{text}</p>
+      {hint && <p className="text-[10px] text-fg-2 italic">{hint}</p>}
     </div>
   );
 }
@@ -99,7 +99,7 @@ function OptionBtn({ selected, onClick, children, className }) {
     <button onClick={onClick} aria-label={typeof children === 'string' ? children : undefined}
       className={cn(
         'flex items-center gap-2 px-4 py-3 rounded-xl border text-left transition-all duration-150 cursor-pointer text-sm',
-        selected ? 'bg-yellow-400/10 border-yellow-400/30 text-yellow-400' : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200 hover:border-slate-600',
+        selected ? 'bg-hero/10 border-hero/30 text-hero' : 'bg-bg-2 border-border-0 text-fg-1 hover:text-fg-0 hover:border-border-1',
         className
       )}>
       {children}
@@ -109,11 +109,11 @@ function OptionBtn({ selected, onClick, children, className }) {
 
 function Alert({ color, icon: Icon, title, children }) {
   const colors = {
-    red: 'bg-red-500/5 border-red-500/20 text-red-400',
-    orange: 'bg-orange-500/5 border-orange-500/20 text-orange-400',
-    blue: 'bg-blue-500/5 border-blue-500/20 text-blue-400',
+    red: 'bg-crit/5 border-crit/20 text-crit',
+    orange: 'bg-warn/5 border-warn/20 text-warn',
+    blue: 'bg-info/5 border-info/20 text-info',
     green: 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400',
-    yellow: 'bg-yellow-400/5 border-yellow-400/20 text-yellow-400',
+    yellow: 'bg-hero/5 border-hero/20 text-hero',
   };
   return (
     <div className={cn('border rounded-xl px-4 py-3', colors[color])}>
@@ -121,7 +121,7 @@ function Alert({ color, icon: Icon, title, children }) {
         {Icon && <Icon size={14} className="shrink-0" />}
         <p className="text-xs font-semibold">{title}</p>
       </div>
-      <div className="text-xs text-slate-400 space-y-1">{children}</div>
+      <div className="text-xs text-fg-1 space-y-1">{children}</div>
     </div>
   );
 }
@@ -129,10 +129,10 @@ function Alert({ color, icon: Icon, title, children }) {
 function Section({ title, children, defaultOpen = true }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+    <div className="bg-bg-1 border border-border-0 rounded-xl overflow-hidden">
       <button onClick={() => setOpen(o => !o)} className="w-full px-5 py-4 flex items-center justify-between cursor-pointer" aria-label={`Toggle ${title}`}>
-        <h2 className="font-semibold text-slate-100 text-sm">{title}</h2>
-        {open ? <ChevronDown size={14} className="text-slate-500" /> : <ChevronRight size={14} className="text-slate-500" />}
+        <h2 className="font-semibold text-fg-0 text-sm">{title}</h2>
+        {open ? <ChevronDown size={14} className="text-fg-2" /> : <ChevronRight size={14} className="text-fg-2" />}
       </button>
       {open && <div className="px-5 pb-5 space-y-4">{children}</div>}
     </div>
@@ -170,10 +170,10 @@ export default function FiatWithdrawal() {
     <div className="p-6 max-w-3xl mx-auto space-y-5">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-100">💶 Fiat Withdrawal</h1>
-          <p className="text-sm text-slate-500">Guided SOP for fiat withdrawal inquiries</p>
+          <h1 className="text-xl font-bold text-fg-0">💶 Fiat Withdrawal</h1>
+          <p className="text-sm text-fg-2">Guided SOP for fiat withdrawal inquiries</p>
         </div>
-        <button onClick={resetAll} className="flex items-center gap-1 text-xs text-slate-500 hover:text-red-400 transition-colors duration-150 cursor-pointer" aria-label="Reset fiat withdrawal form">
+        <button onClick={resetAll} className="flex items-center gap-1 text-xs text-fg-2 hover:text-crit transition-colors duration-150 cursor-pointer" aria-label="Reset fiat withdrawal form">
           <RotateCcw size={13} /> Reset
         </button>
       </div>
@@ -181,9 +181,9 @@ export default function FiatWithdrawal() {
       {/* Important notes */}
       <Alert color="orange" icon={AlertTriangle} title="Important Notes">
         <ul className="space-y-0.5 ml-3 list-disc">
-          <li>Once a fiat withdrawal order is placed, it <strong className="text-orange-300">CANNOT be cancelled</strong></li>
+          <li>Once a fiat withdrawal order is placed, it <strong className="text-warn">CANNOT be cancelled</strong></li>
           <li>RU/BY users: only RUB withdrawals. NG users: only NGN withdrawals</li>
-          <li>Remark field is <strong className="text-orange-300">mandatory</strong> for Level 4</li>
+          <li>Remark field is <strong className="text-warn">mandatory</strong> for Level 4</li>
         </ul>
       </Alert>
 
@@ -191,34 +191,34 @@ export default function FiatWithdrawal() {
       <Section title="Case Information">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label htmlFor="fw-uid" className="text-xs text-slate-500 mb-1 block">UID</label>
+            <label htmlFor="fw-uid" className="text-xs text-fg-2 mb-1 block">UID</label>
             <input id="fw-uid" value={form.uid} onChange={e => updateForm('uid', e.target.value)} placeholder="Customer UID"
-              className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none" />
+              className="w-full bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-sm text-fg-0 placeholder-fg-3 outline-none" />
           </div>
           <div>
-            <label htmlFor="fw-currency" className="text-xs text-slate-500 mb-1 block">Fiat Currency</label>
+            <label htmlFor="fw-currency" className="text-xs text-fg-2 mb-1 block">Fiat Currency</label>
             <input id="fw-currency" value={form.currency} onChange={e => updateForm('currency', e.target.value)} placeholder="e.g. EUR, USD, GBP"
-              className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none" />
+              className="w-full bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-sm text-fg-0 placeholder-fg-3 outline-none" />
           </div>
           <div>
-            <label htmlFor="fw-method" className="text-xs text-slate-500 mb-1 block">Payment Method</label>
+            <label htmlFor="fw-method" className="text-xs text-fg-2 mb-1 block">Payment Method</label>
             <input id="fw-method" value={form.method} onChange={e => updateForm('method', e.target.value)} placeholder="e.g. SEPA, Bank Transfer"
-              className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none" />
+              className="w-full bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-sm text-fg-0 placeholder-fg-3 outline-none" />
           </div>
           <div>
-            <label htmlFor="fw-amount" className="text-xs text-slate-500 mb-1 block">Amount</label>
+            <label htmlFor="fw-amount" className="text-xs text-fg-2 mb-1 block">Amount</label>
             <input id="fw-amount" value={form.amount} onChange={e => updateForm('amount', e.target.value)} placeholder="Withdrawal amount"
-              className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none" />
+              className="w-full bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-sm text-fg-0 placeholder-fg-3 outline-none" />
           </div>
           <div>
-            <label htmlFor="fw-orderid" className="text-xs text-slate-500 mb-1 block">Order ID</label>
+            <label htmlFor="fw-orderid" className="text-xs text-fg-2 mb-1 block">Order ID</label>
             <input id="fw-orderid" value={form.orderId} onChange={e => updateForm('orderId', e.target.value)} placeholder="If order created"
-              className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none" />
+              className="w-full bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-sm text-fg-0 placeholder-fg-3 outline-none" />
           </div>
           <div>
-            <label htmlFor="fw-error" className="text-xs text-slate-500 mb-1 block">Error Code / Message</label>
+            <label htmlFor="fw-error" className="text-xs text-fg-2 mb-1 block">Error Code / Message</label>
             <input id="fw-error" value={form.errorCode} onChange={e => updateForm('errorCode', e.target.value)} placeholder="If any"
-              className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none" />
+              className="w-full bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-sm text-fg-0 placeholder-fg-3 outline-none" />
           </div>
         </div>
       </Section>
@@ -243,19 +243,19 @@ export default function FiatWithdrawal() {
         <>
           <Section title="A — Check Withdrawal Requirements">
             <div className="space-y-3">
-              <p className="text-xs text-slate-400">Check CS:GO for each requirement. All must pass before proceeding.</p>
+              <p className="text-xs text-fg-1">Check CS:GO for each requirement. All must pass before proceeding.</p>
               <div className="space-y-2">
                 {WITHDRAWAL_REQUIREMENTS.map(r => (
                   <button key={r.key} onClick={() => setReqChecks(p => ({ ...p, [r.key]: !p[r.key] }))} className="flex items-center gap-3 w-full text-left cursor-pointer group" aria-label={`Toggle: ${r.label}`}>
                     {reqChecks[r.key]
-                      ? <CheckCircle2 size={16} className="text-green-400 shrink-0" />
-                      : <Circle size={16} className="text-slate-600 group-hover:text-slate-400 shrink-0" />}
-                    <span className={cn('text-sm', reqChecks[r.key] ? 'text-slate-500 line-through' : 'text-slate-300')}>{r.label}</span>
+                      ? <CheckCircle2 size={16} className="text-ok shrink-0" />
+                      : <Circle size={16} className="text-fg-2 group-hover:text-fg-1 shrink-0" />}
+                    <span className={cn('text-sm', reqChecks[r.key] ? 'text-fg-2 line-through' : 'text-fg-1')}>{r.label}</span>
                   </button>
                 ))}
               </div>
               {!allReqsPassed && (
-                <p className="text-xs text-orange-400">If any requirement fails, advise user to complete it before proceeding.</p>
+                <p className="text-xs text-warn">If any requirement fails, advise user to complete it before proceeding.</p>
               )}
               {allReqsPassed && (
                 <Alert color="green" icon={CheckCircle2} title="All requirements passed">
@@ -273,28 +273,28 @@ export default function FiatWithdrawal() {
                   <OptionBtn selected={scenario === '1.1'} onClick={() => { setScenario('1.1'); setRiskStatus(''); setTimeStatus(''); }}>
                     <div>
                       <p className="font-medium">Scenario 1.1: Withdrawal Account Pending Verification</p>
-                      <p className="text-xs text-slate-500">Risk order type = WithdrawBindCard / "Please wait while your account information is being verified"</p>
+                      <p className="text-xs text-fg-2">Risk order type = WithdrawBindCard / "Please wait while your account information is being verified"</p>
                     </div>
                   </OptionBtn>
                   <OptionBtn selected={scenario === '1.2'} onClick={() => { setScenario('1.2'); }}>
                     <div>
                       <p className="font-medium">Scenario 1.2: Suspicious Activity Alert</p>
-                      <p className="text-xs text-slate-500">"Risk reject, contact CS" or "Risk reject, try again after 2 hours"</p>
+                      <p className="text-xs text-fg-2">"Risk reject, contact CS" or "Risk reject, try again after 2 hours"</p>
                     </div>
                   </OptionBtn>
                 </div>
 
                 {/* Scenario 1.1 */}
                 {scenario === '1.1' && (
-                  <div className="bg-slate-800/50 rounded-xl p-4 space-y-3">
-                    <p className="text-xs text-slate-400">Check CS:GO &gt; User Profile &gt; Funding &gt; Risk Order &gt; Type = WithdrawBindCard</p>
-                    <p className="text-xs text-slate-500">Case Type: E03 Fiat Transactions &gt; Fiat Withdrawal &gt; Fiat Withdrawal Verification</p>
+                  <div className="bg-bg-2/50 rounded-xl p-4 space-y-3">
+                    <p className="text-xs text-fg-1">Check CS:GO &gt; User Profile &gt; Funding &gt; Risk Order &gt; Type = WithdrawBindCard</p>
+                    <p className="text-xs text-fg-2">Case Type: E03 Fiat Transactions &gt; Fiat Withdrawal &gt; Fiat Withdrawal Verification</p>
                     <div className="grid grid-cols-1 gap-2">
                       {RISK_ORDER_STATUSES.map(s => (
                         <OptionBtn key={s.key} selected={riskStatus === s.key} onClick={() => setRiskStatus(s.key)}>
                           <div className="flex-1">
                             <p className="font-medium">{s.label}</p>
-                            <p className="text-xs text-slate-500">{s.action} — QT {s.qt} / ET {s.et}</p>
+                            <p className="text-xs text-fg-2">{s.action} — QT {s.qt} / ET {s.et}</p>
                           </div>
                         </OptionBtn>
                       ))}
@@ -302,7 +302,7 @@ export default function FiatWithdrawal() {
 
                     {riskStatus === 'under_review' && (
                       <div className="space-y-2">
-                        <p className="text-xs text-slate-400">Is the review within or exceeded 2 business days?</p>
+                        <p className="text-xs text-fg-1">Is the review within or exceeded 2 business days?</p>
                         <div className="grid grid-cols-2 gap-2">
                           <OptionBtn selected={timeStatus === 'within'} onClick={() => setTimeStatus('within')}>Within 2 BD</OptionBtn>
                           <OptionBtn selected={timeStatus === 'exceeded'} onClick={() => setTimeStatus('exceeded')}>Exceeded 2 BD</OptionBtn>
@@ -333,9 +333,9 @@ export default function FiatWithdrawal() {
 
                 {/* Scenario 1.2 */}
                 {scenario === '1.2' && (
-                  <div className="bg-slate-800/50 rounded-xl p-4 space-y-3">
-                    <p className="text-xs text-slate-400">Check if UID is found in the Lark Suspicious Activity group.</p>
-                    <p className="text-xs text-slate-500">Case Type: E01 Account Matters &gt; Security Issue &gt; Suspicious Alert</p>
+                  <div className="bg-bg-2/50 rounded-xl p-4 space-y-3">
+                    <p className="text-xs text-fg-1">Check if UID is found in the Lark Suspicious Activity group.</p>
+                    <p className="text-xs text-fg-2">Case Type: E01 Account Matters &gt; Security Issue &gt; Suspicious Alert</p>
                     <div className="grid grid-cols-2 gap-2">
                       <OptionBtn selected={scenario === '1.2' && timeStatus === 'found'} onClick={() => setTimeStatus('found')}>UID Found in Group</OptionBtn>
                       <OptionBtn selected={scenario === '1.2' && timeStatus === 'not_found'} onClick={() => setTimeStatus('not_found')}>UID Not Found</OptionBtn>
@@ -366,7 +366,7 @@ export default function FiatWithdrawal() {
         <>
           <Section title="B — Check Order Status in CS:GO">
             <div className="space-y-3">
-              <p className="text-xs text-slate-400">CS:GO &gt; User Profile &gt; Funding &gt; Fiat Withdrawal &gt; Order ID</p>
+              <p className="text-xs text-fg-1">CS:GO &gt; User Profile &gt; Funding &gt; Fiat Withdrawal &gt; Order ID</p>
               <div className="grid grid-cols-1 gap-2">
                 {ORDER_STATUSES.map(s => (
                   <OptionBtn key={s.key} selected={orderStatus === s.key} onClick={() => { setOrderStatus(s.key); setScenario(s.scenario); setErrorType(''); setTimeStatus(''); setRestrictionStatus(''); setRefundCredited(''); }}>
@@ -381,8 +381,8 @@ export default function FiatWithdrawal() {
           {scenario === 'processing' && (
             <Section title="Scenario 2 — Order Processing">
               <div className="space-y-3">
-                <p className="text-xs text-slate-400">Verify withdrawal method via CS:GO &gt; User Profile &gt; Funding &gt; Fiat Withdrawal &gt; UpdateTime</p>
-                <p className="text-xs text-slate-500">Case Type: E03 Fiat Transactions &gt; Fiat Withdrawal &gt; Fiat Withdrawal Guidance (or Pending)</p>
+                <p className="text-xs text-fg-1">Verify withdrawal method via CS:GO &gt; User Profile &gt; Funding &gt; Fiat Withdrawal &gt; UpdateTime</p>
+                <p className="text-xs text-fg-2">Case Type: E03 Fiat Transactions &gt; Fiat Withdrawal &gt; Fiat Withdrawal Guidance (or Pending)</p>
                 <div className="grid grid-cols-2 gap-2">
                   <OptionBtn selected={timeStatus === 'within'} onClick={() => setTimeStatus('within')}>Within Processing Time</OptionBtn>
                   <OptionBtn selected={timeStatus === 'exceeded'} onClick={() => setTimeStatus('exceeded')}>Exceeded Processing Time</OptionBtn>
@@ -411,8 +411,8 @@ export default function FiatWithdrawal() {
           {scenario === 'failed' && (
             <Section title="Scenario 3 — Failed Withdrawal">
               <div className="space-y-3">
-                <p className="text-xs text-slate-400">CS:GO &gt; User Profile &gt; Status — Check for any account restrictions</p>
-                <p className="text-xs text-slate-500">Case Type: E03 Fiat Transactions &gt; Fiat Withdrawal &gt; Fiat Withdrawal Failed</p>
+                <p className="text-xs text-fg-1">CS:GO &gt; User Profile &gt; Status — Check for any account restrictions</p>
+                <p className="text-xs text-fg-2">Case Type: E03 Fiat Transactions &gt; Fiat Withdrawal &gt; Fiat Withdrawal Failed</p>
 
                 <div className="grid grid-cols-2 gap-2">
                   <OptionBtn selected={restrictionStatus === 'none'} onClick={() => { setRestrictionStatus('none'); setErrorType(''); }}>No Restriction</OptionBtn>
@@ -427,30 +427,30 @@ export default function FiatWithdrawal() {
 
                 {restrictionStatus === 'none' && (
                   <div className="space-y-3">
-                    <p className="text-xs text-slate-400">Check the error code from CS:GO (hover over "!" icon on failed status).</p>
+                    <p className="text-xs text-fg-1">Check the error code from CS:GO (hover over "!" icon on failed status).</p>
                     <div className="grid grid-cols-1 gap-2">
                       <OptionBtn selected={errorType === 'non_3'} onClick={() => setErrorType('non_3')}>
                         <div>
                           <p className="font-medium">Error code NOT starting with 3</p>
-                          <p className="text-xs text-slate-500">Check FAQ for known error codes</p>
+                          <p className="text-xs text-fg-2">Check FAQ for known error codes</p>
                         </div>
                       </OptionBtn>
                       <OptionBtn selected={errorType === '300300001'} onClick={() => setErrorType('300300001')}>
                         <div>
                           <p className="font-medium">Error 300300001 — Fiat Risk Control</p>
-                          <p className="text-xs text-slate-500">User triggered fiat risk control, documents required</p>
+                          <p className="text-xs text-fg-2">User triggered fiat risk control, documents required</p>
                         </div>
                       </OptionBtn>
                       <OptionBtn selected={errorType === '300370101'} onClick={() => setErrorType('300370101')}>
                         <div>
                           <p className="font-medium">Error 300370101 — 24h Security Restriction</p>
-                          <p className="text-xs text-slate-500">24-hour restriction due to security settings change</p>
+                          <p className="text-xs text-fg-2">24-hour restriction due to security settings change</p>
                         </div>
                       </OptionBtn>
                       <OptionBtn selected={errorType === 'other_3'} onClick={() => setErrorType('other_3')}>
                         <div>
                           <p className="font-medium">Other 3XXXXXXX Error Codes</p>
-                          <p className="text-xs text-slate-500">Escalate to P2 directly</p>
+                          <p className="text-xs text-fg-2">Escalate to P2 directly</p>
                         </div>
                       </OptionBtn>
                     </div>
@@ -480,25 +480,25 @@ export default function FiatWithdrawal() {
                         </Alert>
 
                         <div>
-                          <label htmlFor="fw-appeal" className="text-xs text-slate-500 mb-1 block">Appeal ID (from Lark group)</label>
+                          <label htmlFor="fw-appeal" className="text-xs text-fg-2 mb-1 block">Appeal ID (from Lark group)</label>
                           <input id="fw-appeal" value={form.appealId} onChange={e => updateForm('appealId', e.target.value)} placeholder="Appeal ID"
-                            className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none" />
+                            className="w-full bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-sm text-fg-0 placeholder-fg-3 outline-none" />
                         </div>
 
-                        <p className="text-xs text-slate-400">Select the risk status from CS:GO Risk Order:</p>
+                        <p className="text-xs text-fg-1">Select the risk status from CS:GO Risk Order:</p>
                         <div className="grid grid-cols-1 gap-2">
                           {RISK_ORDER_STATUSES.map(s => (
                             <OptionBtn key={s.key} selected={riskStatus === s.key} onClick={() => { setRiskStatus(s.key); setTimeStatus(''); }}>
                               <div className="flex-1">
                                 <p className="font-medium">{s.label}</p>
-                                <p className="text-xs text-slate-500">{s.action}</p>
+                                <p className="text-xs text-fg-2">{s.action}</p>
                               </div>
                             </OptionBtn>
                           ))}
                           <OptionBtn selected={riskStatus === 'expired'} onClick={() => { setRiskStatus('expired'); setTimeStatus(''); }}>
                             <div className="flex-1">
                               <p className="font-medium">Expired</p>
-                              <p className="text-xs text-slate-500">Advise user to retry fiat withdrawal (may trigger new risk control)</p>
+                              <p className="text-xs text-fg-2">Advise user to retry fiat withdrawal (may trigger new risk control)</p>
                             </div>
                           </OptionBtn>
                         </div>
@@ -510,7 +510,7 @@ export default function FiatWithdrawal() {
                         )}
                         {riskStatus === 'under_review' && (
                           <div className="space-y-2">
-                            <p className="text-xs text-slate-400">Check trigger time — within or exceeded 2 business days?</p>
+                            <p className="text-xs text-fg-1">Check trigger time — within or exceeded 2 business days?</p>
                             <div className="grid grid-cols-2 gap-2">
                               <OptionBtn selected={timeStatus === 'within'} onClick={() => setTimeStatus('within')}>Within 2 BD</OptionBtn>
                               <OptionBtn selected={timeStatus === 'exceeded'} onClick={() => setTimeStatus('exceeded')}>Exceeded 2 BD</OptionBtn>
@@ -596,14 +596,14 @@ export default function FiatWithdrawal() {
           {scenario === 'success_not_received' && (
             <Section title="Scenario 4 — Success but Funds Not Received">
               <div className="space-y-3">
-                <p className="text-xs text-slate-500">Case Type: E03 Fiat Transactions &gt; Fiat Withdrawal &gt; Unreceived Fiat Withdrawal</p>
+                <p className="text-xs text-fg-2">Case Type: E03 Fiat Transactions &gt; Fiat Withdrawal &gt; Unreceived Fiat Withdrawal</p>
                 <Alert color="red" icon={AlertTriangle} title="Escalate to P2 — Collect Information First">
                   <p>Obtain fiat withdrawal details and escalate. Use QT a06-en-email-follow-up, then Macro Pool 1 &gt; Pool 2. Apply ET 4803.</p>
                 </Alert>
                 <div>
-                  <label htmlFor="fw-fullname" className="text-xs text-slate-500 mb-1 block">Full Name (as per KYC)</label>
+                  <label htmlFor="fw-fullname" className="text-xs text-fg-2 mb-1 block">Full Name (as per KYC)</label>
                   <input id="fw-fullname" value={form.fullName} onChange={e => updateForm('fullName', e.target.value)} placeholder="Customer full name"
-                    className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none" />
+                    className="w-full bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-sm text-fg-0 placeholder-fg-3 outline-none" />
                 </div>
                 <TemplateBlock title="Escalation Note" text={TEMPLATES.escalation_success_not_received(form.uid, form.orderId, form.amount, form.currency, form.fullName)} copyKey="esc-success" copied={copied} onCopy={copy} />
               </div>
@@ -614,8 +614,8 @@ export default function FiatWithdrawal() {
           {scenario === 'refund' && (
             <Section title="Scenario 5 — Refund Not Reflected">
               <div className="space-y-3">
-                <p className="text-xs text-slate-500">Case Type: E03 Fiat Transactions &gt; Fiat Withdrawal &gt; Fiat Withdrawal Reversal</p>
-                <p className="text-xs text-slate-400">Verify if refund has been credited to user's Bybit Funding Account.</p>
+                <p className="text-xs text-fg-2">Case Type: E03 Fiat Transactions &gt; Fiat Withdrawal &gt; Fiat Withdrawal Reversal</p>
+                <p className="text-xs text-fg-1">Verify if refund has been credited to user's Bybit Funding Account.</p>
                 <div className="grid grid-cols-2 gap-2">
                   <OptionBtn selected={refundCredited === 'yes'} onClick={() => setRefundCredited('yes')}>Refund Credited</OptionBtn>
                   <OptionBtn selected={refundCredited === 'no'} onClick={() => setRefundCredited('no')}>Refund NOT Credited</OptionBtn>
@@ -646,8 +646,8 @@ export default function FiatWithdrawal() {
       {inquiryType === 'other' && (
         <Section title="C — Refund Not Reflected in Account">
           <div className="space-y-3">
-            <p className="text-xs text-slate-500">Case Type: E03 Fiat Transactions &gt; Fiat Withdrawal &gt; Fiat Withdrawal Reversal</p>
-            <p className="text-xs text-slate-400">Check if refund has been credited to Bybit Funding Account.</p>
+            <p className="text-xs text-fg-2">Case Type: E03 Fiat Transactions &gt; Fiat Withdrawal &gt; Fiat Withdrawal Reversal</p>
+            <p className="text-xs text-fg-1">Check if refund has been credited to Bybit Funding Account.</p>
             <div className="grid grid-cols-2 gap-2">
               <OptionBtn selected={refundCredited === 'yes'} onClick={() => setRefundCredited('yes')}>Refund Credited</OptionBtn>
               <OptionBtn selected={refundCredited === 'no'} onClick={() => setRefundCredited('no')}>Refund NOT Credited</OptionBtn>
@@ -672,16 +672,16 @@ export default function FiatWithdrawal() {
 
       {/* ─── Level 4 Fields Reminder ─────────────────────────────────────── */}
       {inquiryType && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 space-y-2">
-          <p className="text-xs font-semibold text-slate-400">Level 4 Fields (Mandatory)</p>
+        <div className="bg-bg-2/50 border border-border-0 rounded-xl px-4 py-3 space-y-2">
+          <p className="text-xs font-semibold text-fg-1">Level 4 Fields (Mandatory)</p>
           <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-            <span className="text-slate-500">Fiat Currency:</span><span className="text-slate-300">{form.currency || '[from CS:GO]'}</span>
-            <span className="text-slate-500">Amount:</span><span className="text-slate-300">{form.amount || '[from CS:GO]'}</span>
-            <span className="text-slate-500">Payment Method:</span><span className="text-slate-300">{form.method || '[from CS:GO]'}</span>
-            <span className="text-slate-500">Withdrawal Status:</span><span className="text-slate-300">{orderStatus ? ORDER_STATUSES.find(s => s.key === orderStatus)?.label.split(' ')[0] : '[from CS:GO]'}</span>
-            <span className="text-slate-500">Withdrawal Date:</span><span className="text-slate-300">[Initiated Date and Time]</span>
-            <span className="text-slate-500">Order ID:</span><span className="text-slate-300">{form.orderId || '[from CS:GO]'}</span>
-            <span className="text-slate-500">Fiat Channel:</span><span className="text-slate-300">[from CS:GO]</span>
+            <span className="text-fg-2">Fiat Currency:</span><span className="text-fg-1">{form.currency || '[from CS:GO]'}</span>
+            <span className="text-fg-2">Amount:</span><span className="text-fg-1">{form.amount || '[from CS:GO]'}</span>
+            <span className="text-fg-2">Payment Method:</span><span className="text-fg-1">{form.method || '[from CS:GO]'}</span>
+            <span className="text-fg-2">Withdrawal Status:</span><span className="text-fg-1">{orderStatus ? ORDER_STATUSES.find(s => s.key === orderStatus)?.label.split(' ')[0] : '[from CS:GO]'}</span>
+            <span className="text-fg-2">Withdrawal Date:</span><span className="text-fg-1">[Initiated Date and Time]</span>
+            <span className="text-fg-2">Order ID:</span><span className="text-fg-1">{form.orderId || '[from CS:GO]'}</span>
+            <span className="text-fg-2">Fiat Channel:</span><span className="text-fg-1">[from CS:GO]</span>
           </div>
         </div>
       )}

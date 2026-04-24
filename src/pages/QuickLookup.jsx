@@ -12,10 +12,10 @@ function ResultBlock({ text }) {
         if (!line.trim()) return <div key={i} className="h-2" />;
         const parts = line.split(/(\*\*[^*]+\*\*)/g);
         return (
-          <p key={i} className="text-sm text-slate-300 leading-relaxed">
+          <p key={i} className="text-sm text-fg-1 leading-relaxed">
             {parts.map((part, j) =>
               part.startsWith('**') && part.endsWith('**')
-                ? <strong key={j} className="text-slate-100 font-semibold">{part.slice(2, -2)}</strong>
+                ? <strong key={j} className="text-fg-0 font-semibold">{part.slice(2, -2)}</strong>
                 : <span key={j}>{part}</span>
             )}
           </p>
@@ -32,9 +32,9 @@ function KBHit({ article }) {
   const domainMeta = DOMAINS.find(d => d.id === article.domain);
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+    <div className="bg-bg-1 border border-border-0 rounded-xl overflow-hidden">
       <button
-        className="w-full flex items-start gap-3 px-4 py-3 text-left cursor-pointer hover:bg-slate-800/40 transition-colors duration-150"
+        className="w-full flex items-start gap-3 px-4 py-3 text-left cursor-pointer hover:bg-bg-2/40 transition-colors duration-150"
         onClick={() => setOpen(o => !o)}
         aria-expanded={open}
       >
@@ -44,33 +44,33 @@ function KBHit({ article }) {
             <span className={cn('text-xs font-medium px-1.5 py-0.5 rounded border', colors.bg, colors.text, colors.border)}>
               {article.domain}
             </span>
-            <span className="text-xs text-slate-400 font-medium">{article.title}</span>
+            <span className="text-xs text-fg-1 font-medium">{article.title}</span>
           </div>
-          <p className="text-xs text-slate-600">{article.subtitle}</p>
+          <p className="text-xs text-fg-2">{article.subtitle}</p>
         </div>
-        {open ? <ChevronUp size={14} className="text-slate-600 shrink-0 mt-1" /> : <ChevronDown size={14} className="text-slate-600 shrink-0 mt-1" />}
+        {open ? <ChevronUp size={14} className="text-fg-2 shrink-0 mt-1" /> : <ChevronDown size={14} className="text-fg-2 shrink-0 mt-1" />}
       </button>
 
       {open && (
-        <div className="px-4 pb-4 space-y-3 border-t border-slate-800/60">
+        <div className="px-4 pb-4 space-y-3 border-t border-border-0/60">
           <ul className="pt-3 space-y-1.5">
             {article.keyPoints.map((p, i) => (
-              <li key={i} className="flex items-start gap-2 text-xs text-slate-300">
+              <li key={i} className="flex items-start gap-2 text-xs text-fg-1">
                 <span className={cn('shrink-0 mt-0.5', colors.text)}>→</span> {p}
               </li>
             ))}
           </ul>
           {article.agentTips?.length > 0 && (
-            <div className="bg-yellow-400/5 border border-yellow-400/15 rounded-lg p-2.5 space-y-1">
+            <div className="bg-hero/5 border border-hero/15 rounded-lg p-2.5 space-y-1">
               {article.agentTips.map((t, i) => (
-                <p key={i} className="text-xs text-yellow-400/80 flex items-start gap-1.5">
+                <p key={i} className="text-xs text-hero/80 flex items-start gap-1.5">
                   <span className="shrink-0">✦</span> {t}
                 </p>
               ))}
             </div>
           )}
           <a href={article.url} target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-yellow-400 transition-colors duration-150">
+            className="inline-flex items-center gap-1 text-xs text-fg-2 hover:text-hero transition-colors duration-150">
             Open in Bybit Help Center <ExternalLink size={11} />
           </a>
         </div>
@@ -140,26 +140,26 @@ export default function QuickLookup() {
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-5">
       <div>
-        <h1 className="text-xl font-bold text-slate-100">Quick Lookup</h1>
-        <p className="text-sm text-slate-500">Instant SOP cards + Bybit KB hits for any issue</p>
+        <h1 className="text-xl font-bold text-fg-0">Quick Lookup</h1>
+        <p className="text-sm text-fg-2">Instant SOP cards + Bybit KB hits for any issue</p>
       </div>
 
       {/* Search bar */}
       <div className="flex gap-2">
-        <div className="flex-1 flex items-center gap-2 bg-slate-900 border border-slate-700 focus-within:border-yellow-400/50 rounded-xl px-4 py-3 transition-colors duration-150">
-          <Search size={16} className="text-slate-500 shrink-0" />
+        <div className="flex-1 flex items-center gap-2 bg-bg-1 border border-border-0 focus-within:border-hero/50 rounded-xl px-4 py-3 transition-colors duration-150">
+          <Search size={16} className="text-fg-2 shrink-0" />
           <input
             value={query}
             onChange={e => setQuery(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && lookup()}
             placeholder="e.g. KYC failed, missing ETH deposit, P2P scam, card declined..."
-            className="flex-1 bg-transparent text-sm text-slate-100 placeholder-slate-500 outline-none"
+            className="flex-1 bg-transparent text-sm text-fg-0 placeholder-fg-2 outline-none"
           />
         </div>
         <button
           onClick={() => lookup()}
           disabled={!query.trim() || loading}
-          className="bg-yellow-400 hover:bg-yellow-300 disabled:bg-slate-700 text-slate-900 disabled:text-slate-500 font-medium px-5 rounded-xl transition-colors duration-150 text-sm min-w-[80px] flex items-center justify-center"
+          className="bg-hero hover:bg-hero disabled:bg-bg-3 text-[#021418] disabled:text-fg-2 font-medium px-5 rounded-xl transition-colors duration-150 text-sm min-w-[80px] flex items-center justify-center"
         >
           {loading ? <Loader2 size={16} className="animate-spin" /> : 'Look up'}
         </button>
@@ -167,7 +167,7 @@ export default function QuickLookup() {
 
       {/* Domain filter */}
       <div className="space-y-2">
-        <p className="text-xs text-slate-600">Browse by topic</p>
+        <p className="text-xs text-fg-2">Browse by topic</p>
         <div className="flex flex-wrap gap-2">
           {DOMAINS.map(d => {
             const colors = DOMAIN_COLORS[d.color];
@@ -180,7 +180,7 @@ export default function QuickLookup() {
                   'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-150 cursor-pointer',
                   active
                     ? cn(colors.bg, colors.text, colors.border)
-                    : 'bg-slate-900 text-slate-500 border-slate-800 hover:text-slate-300 hover:border-slate-700'
+                    : 'bg-bg-1 text-fg-2 border-border-0 hover:text-fg-1 hover:border-border-0'
                 )}
               >
                 <span>{d.icon}</span> {d.label}
@@ -197,7 +197,7 @@ export default function QuickLookup() {
             <button
               key={t.articleId}
               onClick={() => { setQuery(t.label); lookup(t.label); }}
-              className="w-full text-left text-xs bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 px-3 py-2 rounded-lg transition-colors duration-150 border border-slate-700"
+              className="w-full text-left text-xs bg-bg-2 hover:bg-bg-3 text-fg-1 hover:text-fg-0 px-3 py-2 rounded-lg transition-colors duration-150 border border-border-0"
             >
               {t.label}
             </button>
@@ -205,13 +205,13 @@ export default function QuickLookup() {
         </div>
       ) : (
         <div>
-          <p className="text-xs text-slate-600 mb-2">Common topics</p>
+          <p className="text-xs text-fg-2 mb-2">Common topics</p>
           <div className="flex flex-wrap gap-2">
             {EXTRA_TOPICS.map(t => (
               <button
                 key={t}
                 onClick={() => { setQuery(t); lookup(t); }}
-                className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 px-3 py-1.5 rounded-lg transition-colors duration-150 border border-slate-700"
+                className="text-xs bg-bg-2 hover:bg-bg-3 text-fg-1 hover:text-fg-0 px-3 py-1.5 rounded-lg transition-colors duration-150 border border-border-0"
               >
                 {t}
               </button>
@@ -223,8 +223,8 @@ export default function QuickLookup() {
       {/* Instant KB hits */}
       {kbHits.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs text-slate-500 flex items-center gap-1.5">
-            <span className="text-yellow-400">⚡</span> Matching Bybit articles
+          <p className="text-xs text-fg-2 flex items-center gap-1.5">
+            <span className="text-hero">⚡</span> Matching Bybit articles
           </p>
           {kbHits.map(article => (
             <KBHit key={article.id} article={article} />
@@ -234,15 +234,15 @@ export default function QuickLookup() {
 
       {/* AI result */}
       {loading && (
-        <div className="flex items-center gap-3 text-slate-500 py-8 justify-center">
-          <Loader2 size={20} className="animate-spin text-yellow-400" />
+        <div className="flex items-center gap-3 text-fg-2 py-8 justify-center">
+          <Loader2 size={20} className="animate-spin text-hero" />
           <span className="text-sm">Generating SOP card...</span>
         </div>
       )}
       {result && !loading && (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-          <p className="text-xs text-slate-600 mb-3 flex items-center gap-1.5">
-            <span className="text-yellow-400">✦</span> Ace SOP card
+        <div className="bg-bg-1 border border-border-0 rounded-xl p-5">
+          <p className="text-xs text-fg-2 mb-3 flex items-center gap-1.5">
+            <span className="text-hero">✦</span> Ace SOP card
           </p>
           <ResultBlock text={result} />
         </div>

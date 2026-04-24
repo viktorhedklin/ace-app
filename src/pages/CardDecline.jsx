@@ -36,24 +36,24 @@ export default function CardDecline() {
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-slate-100">💳 Card Decline</h1>
-        <p className="text-sm text-slate-500">Decode card error codes and guide customers to resolution</p>
+        <h1 className="text-xl font-bold text-fg-0">💳 Card Decline</h1>
+        <p className="text-sm text-fg-2">Decode card error codes and guide customers to resolution</p>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex-1 flex items-center gap-2 bg-slate-900 border border-slate-700 focus-within:border-yellow-400/50 rounded-xl px-4 py-3">
-          <Search size={15} className="text-slate-500 shrink-0" />
+        <div className="flex-1 flex items-center gap-2 bg-bg-1 border border-border-0 focus-within:border-hero/50 rounded-xl px-4 py-3">
+          <Search size={15} className="text-fg-2 shrink-0" />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search by code, error name, or cause..."
-            className="flex-1 bg-transparent text-sm text-slate-100 placeholder-slate-500 outline-none"
+            className="flex-1 bg-transparent text-sm text-fg-0 placeholder-fg-2 outline-none"
           />
         </div>
         <select
           value={category}
           onChange={e => setCategory(e.target.value)}
-          className="bg-slate-900 border border-slate-700 text-slate-300 text-sm rounded-xl px-4 py-3 outline-none"
+          className="bg-bg-1 border border-border-0 text-fg-1 text-sm rounded-xl px-4 py-3 outline-none"
         >
           {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
@@ -61,49 +61,49 @@ export default function CardDecline() {
 
       <div className="space-y-2">
         {filtered.map(err => (
-          <div key={err.code} className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+          <div key={err.code} className="bg-bg-1 border border-border-0 rounded-xl overflow-hidden">
             <button
               onClick={() => setExpanded(expanded === err.code ? null : err.code)}
-              className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-slate-800/50 transition-colors"
+              className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-bg-2/50 transition-colors"
             >
               <span className="text-xl w-7">{err.icon}</span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-mono font-bold text-yellow-400 text-sm">{err.code}</span>
-                  <span className="font-medium text-slate-100 text-sm">{err.title}</span>
+                  <span className="font-mono font-bold text-hero text-sm">{err.code}</span>
+                  <span className="font-medium text-fg-0 text-sm">{err.title}</span>
                 </div>
-                <p className="text-xs text-slate-500">{err.category}</p>
+                <p className="text-xs text-fg-2">{err.category}</p>
               </div>
-              <span className="text-slate-600 text-sm">{expanded === err.code ? '▲' : '▼'}</span>
+              <span className="text-fg-2 text-sm">{expanded === err.code ? '▲' : '▼'}</span>
             </button>
             {expanded === err.code && (
-              <div className="px-5 pb-5 space-y-3 border-t border-slate-800">
-                <div className="bg-slate-800/50 rounded-lg p-3 mt-3">
-                  <p className="text-xs text-slate-500 mb-1">Cause</p>
-                  <p className="text-sm text-slate-300">{err.cause}</p>
+              <div className="px-5 pb-5 space-y-3 border-t border-border-0">
+                <div className="bg-bg-2/50 rounded-lg p-3 mt-3">
+                  <p className="text-xs text-fg-2 mb-1">Cause</p>
+                  <p className="text-sm text-fg-1">{err.cause}</p>
                 </div>
-                <div className="bg-slate-800/50 rounded-lg p-3">
-                  <p className="text-xs text-slate-500 mb-1">Agent action</p>
-                  <p className="text-sm text-slate-300">{err.action}</p>
+                <div className="bg-bg-2/50 rounded-lg p-3">
+                  <p className="text-xs text-fg-2 mb-1">Agent action</p>
+                  <p className="text-sm text-fg-1">{err.action}</p>
                 </div>
-                <div className="bg-slate-800/30 rounded-lg p-3 relative group">
+                <div className="bg-bg-2/30 rounded-lg p-3 relative group">
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-xs text-slate-500">Customer message</p>
+                    <p className="text-xs text-fg-2">Customer message</p>
                     <button
                       onClick={() => navigator.clipboard.writeText(err.template)}
-                      className="text-xs text-slate-500 hover:text-yellow-400 transition-colors"
+                      className="text-xs text-fg-2 hover:text-hero transition-colors"
                     >
                       Copy
                     </button>
                   </div>
-                  <p className="text-xs text-slate-400 leading-relaxed">{err.template}</p>
+                  <p className="text-xs text-fg-1 leading-relaxed">{err.template}</p>
                 </div>
               </div>
             )}
           </div>
         ))}
         {filtered.length === 0 && (
-          <div className="text-center py-12 text-slate-600">
+          <div className="text-center py-12 text-fg-2">
             <p className="text-lg mb-1">No results</p>
             <p className="text-sm">Try a different search term or clear filters</p>
           </div>

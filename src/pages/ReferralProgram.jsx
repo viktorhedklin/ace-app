@@ -91,7 +91,7 @@ Reference: https://announcements.bybit.com/article/update-on-referral-program-ne
 
 function CopyBtn({ text, copyKey, copied, onCopy }) {
   return (
-    <button onClick={() => onCopy(text, copyKey)} className="flex items-center gap-1 text-xs text-slate-500 hover:text-yellow-400 transition-colors duration-150 cursor-pointer shrink-0" aria-label={`Copy ${copyKey}`}>
+    <button onClick={() => onCopy(text, copyKey)} className="flex items-center gap-1 text-xs text-fg-2 hover:text-hero transition-colors duration-150 cursor-pointer shrink-0" aria-label={`Copy ${copyKey}`}>
       {copied === copyKey ? <><Check size={12} /> Copied</> : <><Copy size={12} /> Copy</>}
     </button>
   );
@@ -99,12 +99,12 @@ function CopyBtn({ text, copyKey, copied, onCopy }) {
 
 function TemplateBlock({ title, text, copyKey, copied, onCopy }) {
   return (
-    <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 space-y-2">
+    <div className="bg-bg-2/50 border border-border-0 rounded-lg p-3 space-y-2">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold text-slate-400">{title}</p>
+        <p className="text-xs font-semibold text-fg-1">{title}</p>
         <CopyBtn text={text} copyKey={copyKey} copied={copied} onCopy={onCopy} />
       </div>
-      <p className="text-xs text-slate-300 whitespace-pre-wrap leading-relaxed font-mono">{text}</p>
+      <p className="text-xs text-fg-1 whitespace-pre-wrap leading-relaxed font-mono">{text}</p>
     </div>
   );
 }
@@ -114,7 +114,7 @@ function OptionBtn({ selected, onClick, children, className }) {
     <button onClick={onClick} aria-label={typeof children === 'string' ? children : undefined}
       className={cn(
         'flex items-center gap-2 px-4 py-3 rounded-xl border text-left transition-all duration-150 cursor-pointer text-sm',
-        selected ? 'bg-yellow-400/10 border-yellow-400/30 text-yellow-400' : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200 hover:border-slate-600',
+        selected ? 'bg-hero/10 border-hero/30 text-hero' : 'bg-bg-2 border-border-0 text-fg-1 hover:text-fg-0 hover:border-border-1',
         className
       )}>
       {children}
@@ -124,11 +124,11 @@ function OptionBtn({ selected, onClick, children, className }) {
 
 function Alert({ color, icon: Icon, title, children }) {
   const colors = {
-    red: 'bg-red-500/5 border-red-500/20 text-red-400',
-    orange: 'bg-orange-500/5 border-orange-500/20 text-orange-400',
-    blue: 'bg-blue-500/5 border-blue-500/20 text-blue-400',
+    red: 'bg-crit/5 border-crit/20 text-crit',
+    orange: 'bg-warn/5 border-warn/20 text-warn',
+    blue: 'bg-info/5 border-info/20 text-info',
     green: 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400',
-    yellow: 'bg-yellow-400/5 border-yellow-400/20 text-yellow-400',
+    yellow: 'bg-hero/5 border-hero/20 text-hero',
   };
   return (
     <div className={cn('border rounded-xl px-4 py-3', colors[color])}>
@@ -136,7 +136,7 @@ function Alert({ color, icon: Icon, title, children }) {
         {Icon && <Icon size={14} className="shrink-0" />}
         <p className="text-xs font-semibold">{title}</p>
       </div>
-      {children && <div className="text-xs text-slate-400 space-y-1">{children}</div>}
+      {children && <div className="text-xs text-fg-1 space-y-1">{children}</div>}
     </div>
   );
 }
@@ -144,10 +144,10 @@ function Alert({ color, icon: Icon, title, children }) {
 function Section({ title, children, defaultOpen = true }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+    <div className="bg-bg-1 border border-border-0 rounded-xl overflow-hidden">
       <button onClick={() => setOpen(o => !o)} className="w-full px-5 py-4 flex items-center justify-between cursor-pointer" aria-label={`Toggle ${title}`}>
-        <h2 className="font-semibold text-slate-100 text-sm">{title}</h2>
-        {open ? <ChevronDown size={14} className="text-slate-500" /> : <ChevronRight size={14} className="text-slate-500" />}
+        <h2 className="font-semibold text-fg-0 text-sm">{title}</h2>
+        {open ? <ChevronDown size={14} className="text-fg-2" /> : <ChevronRight size={14} className="text-fg-2" />}
       </button>
       {open && <div className="px-5 pb-5 space-y-4">{children}</div>}
     </div>
@@ -178,10 +178,10 @@ export default function ReferralProgram() {
     <div className="p-6 max-w-3xl mx-auto space-y-5">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-100">🎁 Referral Program</h1>
-          <p className="text-sm text-slate-500">Guided workflow for referral inquiries</p>
+          <h1 className="text-xl font-bold text-fg-0">🎁 Referral Program</h1>
+          <p className="text-sm text-fg-2">Guided workflow for referral inquiries</p>
         </div>
-        <button onClick={resetAll} className="flex items-center gap-1 text-xs text-slate-500 hover:text-red-400 transition-colors duration-150 cursor-pointer" aria-label="Reset referral form">
+        <button onClick={resetAll} className="flex items-center gap-1 text-xs text-fg-2 hover:text-crit transition-colors duration-150 cursor-pointer" aria-label="Reset referral form">
           <RotateCcw size={13} /> Reset
         </button>
       </div>
@@ -190,7 +190,7 @@ export default function ReferralProgram() {
       <Alert color="yellow" icon={AlertTriangle} title="Key Rules">
         <ul className="space-y-0.5 ml-3 list-disc">
           <li>Resolve all inquiries within live chat whenever possible</li>
-          <li>For C&B escalations, seek assistance from <strong className="text-yellow-300">SME C&B</strong> through the shift group first</li>
+          <li>For C&B escalations, seek assistance from <strong className="text-hero">SME C&B</strong> through the shift group first</li>
           <li>Escalations must go to SME C&B only — do NOT route to other departments directly</li>
           <li>Do NOT disclose Inviter IDs due to privacy policy</li>
         </ul>
@@ -221,14 +221,14 @@ export default function ReferralProgram() {
               <Link2 size={16} className="shrink-0" />
               <div>
                 <p className="font-medium">Referral Code Inquiry</p>
-                <p className="text-xs text-slate-500">Check, add, change, or bind a referral code</p>
+                <p className="text-xs text-fg-2">Check, add, change, or bind a referral code</p>
               </div>
             </OptionBtn>
             <OptionBtn selected={inquiryType === 'reward'} onClick={() => { setInquiryType('reward'); setCodeScenario(''); setInviterBound(''); setHasCardApp(''); }}>
               <Gift size={16} className="shrink-0" />
               <div>
                 <p className="font-medium">Reward / Commission Inquiry</p>
-                <p className="text-xs text-slate-500">Did not receive rewards or commission</p>
+                <p className="text-xs text-fg-2">Did not receive rewards or commission</p>
               </div>
             </OptionBtn>
           </div>
@@ -239,7 +239,7 @@ export default function ReferralProgram() {
       {inquiryType === 'code' && (
         <Section title="Referral Code — Scenario">
           <div className="space-y-3">
-            <p className="text-xs text-slate-400">Check CS:GO &gt; User Profile &gt; <strong className="text-slate-300">{csgoField}</strong></p>
+            <p className="text-xs text-fg-1">Check CS:GO &gt; User Profile &gt; <strong className="text-fg-1">{csgoField}</strong></p>
 
             <div className="grid grid-cols-1 gap-2">
               <OptionBtn selected={codeScenario === 'check'} onClick={() => { setCodeScenario('check'); setInviterBound(''); setHasCardApp(''); }}>
@@ -281,7 +281,7 @@ export default function ReferralProgram() {
                     )}
                     {product === 'card' && (
                       <div className="space-y-2">
-                        <p className="text-xs text-slate-400">Check CS:GO &gt; BybitCard &gt; Application History</p>
+                        <p className="text-xs text-fg-1">Check CS:GO &gt; BybitCard &gt; Application History</p>
                         <div className="grid grid-cols-2 gap-2">
                           <OptionBtn selected={hasCardApp === 'yes'} onClick={() => setHasCardApp('yes')}>Has Card Application</OptionBtn>
                           <OptionBtn selected={hasCardApp === 'no'} onClick={() => setHasCardApp('no')}>No Card Application</OptionBtn>
@@ -337,7 +337,7 @@ export default function ReferralProgram() {
                 )}
                 {product === 'card' && (
                   <div className="space-y-2">
-                    <p className="text-xs text-slate-400">Check CS:GO &gt; User Profile for Bybit Card Inviter ID</p>
+                    <p className="text-xs text-fg-1">Check CS:GO &gt; User Profile for Bybit Card Inviter ID</p>
                     <div className="grid grid-cols-2 gap-2">
                       <OptionBtn selected={inviterBound === 'yes'} onClick={() => setInviterBound('yes')}>Already Bound</OptionBtn>
                       <OptionBtn selected={inviterBound === 'no'} onClick={() => { setInviterBound('no'); setHasCardApp(''); }}>Not Bound</OptionBtn>
@@ -352,7 +352,7 @@ export default function ReferralProgram() {
                     )}
                     {inviterBound === 'no' && (
                       <div className="space-y-2">
-                        <p className="text-xs text-slate-400">Check Card Application History:</p>
+                        <p className="text-xs text-fg-1">Check Card Application History:</p>
                         <div className="grid grid-cols-2 gap-2">
                           <OptionBtn selected={hasCardApp === 'yes'} onClick={() => setHasCardApp('yes')}>Has Application</OptionBtn>
                           <OptionBtn selected={hasCardApp === 'no'} onClick={() => setHasCardApp('no')}>No Application</OptionBtn>
@@ -395,13 +395,13 @@ export default function ReferralProgram() {
                 <OptionBtn selected={role === 'referrer'} onClick={() => setRole('referrer')}>
                   <div className="text-center w-full">
                     <p className="font-medium">Referrer (M1)</p>
-                    <p className="text-xs text-slate-500">Inviter — not receiving commission</p>
+                    <p className="text-xs text-fg-2">Inviter — not receiving commission</p>
                   </div>
                 </OptionBtn>
                 <OptionBtn selected={role === 'referee'} onClick={() => setRole('referee')}>
                   <div className="text-center w-full">
                     <p className="font-medium">Referee (M2)</p>
-                    <p className="text-xs text-slate-500">Invitee — not receiving reward</p>
+                    <p className="text-xs text-fg-2">Invitee — not receiving reward</p>
                   </div>
                 </OptionBtn>
               </div>
@@ -434,60 +434,60 @@ export default function ReferralProgram() {
       <Section title="General Knowledge — Quick Reference" defaultOpen={false}>
         <div className="space-y-4">
           {/* Qualified referee */}
-          <div className="bg-slate-800/50 rounded-lg p-4 space-y-2">
-            <p className="text-xs font-semibold text-yellow-400">What is a Qualified Referee?</p>
-            <ol className="text-xs text-slate-400 list-decimal ml-4 space-y-1">
+          <div className="bg-bg-2/50 rounded-lg p-4 space-y-2">
+            <p className="text-xs font-semibold text-hero">What is a Qualified Referee?</p>
+            <ol className="text-xs text-fg-1 list-decimal ml-4 space-y-1">
               <li>Sign up using M1's referral link or code</li>
-              <li>Deposit at least <strong className="text-slate-300">100 USDT</strong> (or equivalent) within <strong className="text-slate-300">7 days</strong> of sign-up</li>
-              <li>Accumulate trading volume of at least <strong className="text-slate-300">500 USDT</strong> within <strong className="text-slate-300">30 days</strong> (TradeFi: $100,000)</li>
+              <li>Deposit at least <strong className="text-fg-1">100 USDT</strong> (or equivalent) within <strong className="text-fg-1">7 days</strong> of sign-up</li>
+              <li>Accumulate trading volume of at least <strong className="text-fg-1">500 USDT</strong> within <strong className="text-fg-1">30 days</strong> (TradeFi: $100,000)</li>
             </ol>
-            <p className="text-[10px] text-slate-600">Eligible deposits: One-Click Buy, P2P, Crypto, Fiat. Internal transfers do NOT count. Zero-fee spot pairs do NOT count.</p>
+            <p className="text-[10px] text-fg-2">Eligible deposits: One-Click Buy, P2P, Crypto, Fiat. Internal transfers do NOT count. Zero-fee spot pairs do NOT count.</p>
           </div>
 
           {/* Commission tiers */}
-          <div className="bg-slate-800/50 rounded-lg p-4 space-y-2">
-            <p className="text-xs font-semibold text-yellow-400">Commission Rates</p>
+          <div className="bg-bg-2/50 rounded-lg p-4 space-y-2">
+            <p className="text-xs font-semibold text-hero">Commission Rates</p>
             <div className="space-y-1.5">
               {COMMISSION_TIERS.map((t, i) => (
                 <div key={i} className="flex items-start gap-2">
                   <span className="text-xs font-bold text-emerald-400 w-8 shrink-0">{t.rate}</span>
-                  <span className="text-xs text-slate-400">{t.requirement}</span>
+                  <span className="text-xs text-fg-1">{t.requirement}</span>
                 </div>
               ))}
             </div>
-            <p className="text-[10px] text-slate-600">Commission valid for 365 days from referee registration. Quarters: Jan-Mar, Apr-Jun, Jul-Sep, Oct-Dec.</p>
+            <p className="text-[10px] text-fg-2">Commission valid for 365 days from referee registration. Quarters: Jan-Mar, Apr-Jun, Jul-Sep, Oct-Dec.</p>
           </div>
 
           {/* Quarterly cap */}
-          <div className="bg-slate-800/50 rounded-lg p-4 space-y-2">
-            <p className="text-xs font-semibold text-yellow-400">Quarterly Commission Cap</p>
-            <p className="text-xs text-slate-400">Max <strong className="text-slate-300">$5,000</strong>/quarter (effective Feb 7, 2026)</p>
-            <p className="text-xs text-slate-400"><strong className="text-emerald-400">Exemption:</strong> Invite 15+ new users (each deposits $100+ and completes first trade) = no cap next quarter</p>
-            <p className="text-xs text-slate-400"><strong className="text-blue-400">VIP:</strong> Contact Relationship Manager for special arrangements</p>
+          <div className="bg-bg-2/50 rounded-lg p-4 space-y-2">
+            <p className="text-xs font-semibold text-hero">Quarterly Commission Cap</p>
+            <p className="text-xs text-fg-1">Max <strong className="text-fg-1">$5,000</strong>/quarter (effective Feb 7, 2026)</p>
+            <p className="text-xs text-fg-1"><strong className="text-emerald-400">Exemption:</strong> Invite 15+ new users (each deposits $100+ and completes first trade) = no cap next quarter</p>
+            <p className="text-xs text-fg-1"><strong className="text-info">VIP:</strong> Contact Relationship Manager for special arrangements</p>
           </div>
 
           {/* Referral vs Affiliate */}
-          <div className="bg-slate-800/50 rounded-lg p-4 space-y-2">
-            <p className="text-xs font-semibold text-yellow-400">Referral vs Affiliate — How to Tell</p>
+          <div className="bg-bg-2/50 rounded-lg p-4 space-y-2">
+            <p className="text-xs font-semibold text-hero">Referral vs Affiliate — How to Tell</p>
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div>
-                <p className="text-slate-500 font-medium mb-1">Referral</p>
-                <ul className="text-slate-400 space-y-0.5">
+                <p className="text-fg-2 font-medium mb-1">Referral</p>
+                <ul className="text-fg-1 space-y-0.5">
                   <li>Bound when user registers via friend invite</li>
                   <li>Shows as "Inviter ID" in CS:GO</li>
                   <li>Cannot be manually added after registration</li>
                 </ul>
               </div>
               <div>
-                <p className="text-slate-500 font-medium mb-1">Affiliate</p>
-                <ul className="text-slate-400 space-y-0.5">
+                <p className="text-fg-2 font-medium mb-1">Affiliate</p>
+                <ul className="text-fg-1 space-y-0.5">
                   <li>Bound via Affiliate Code or Link</li>
                   <li>Shows as separate field in CS:GO</li>
                   <li>Can be manually added if requirements met</li>
                 </ul>
               </div>
             </div>
-            <p className="text-[10px] text-slate-600">If affiliate-related, refer to SOP - C01 - Affiliate related inquiries</p>
+            <p className="text-[10px] text-fg-2">If affiliate-related, refer to SOP - C01 - Affiliate related inquiries</p>
           </div>
 
           {/* Template for quarterly cap */}
@@ -497,9 +497,9 @@ export default function ReferralProgram() {
 
       {/* Case type */}
       {product && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3">
-          <p className="text-xs text-slate-500 mb-1">Case Type</p>
-          <p className="text-sm text-slate-200 font-mono">
+        <div className="bg-bg-2/50 border border-border-0 rounded-xl px-4 py-3">
+          <p className="text-xs text-fg-2 mb-1">Case Type</p>
+          <p className="text-sm text-fg-0 font-mono">
             C01 - Campaign & Bonus &gt; {product === 'card' ? 'Card Referral Program' : product === 'pay' ? 'Pay Referral Program' : 'Referral Program'} &gt; {inquiryType === 'code' ? 'Code Inquiry' : inquiryType === 'reward' ? 'Reward Inquiry' : '[Select Inquiry Type]'}
           </p>
         </div>

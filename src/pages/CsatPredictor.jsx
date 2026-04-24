@@ -13,7 +13,7 @@ function StarDisplay({ score }) {
       {[1, 2, 3, 4, 5].map(i => (
         <span key={i} className={cn(
           'text-2xl transition-all',
-          i <= full ? 'text-yellow-400' : i === full + 1 && half ? 'text-yellow-400/50' : 'text-slate-700'
+          i <= full ? 'text-hero' : i === full + 1 && half ? 'text-hero/50' : 'text-fg-3'
         )}>★</span>
       ))}
     </div>
@@ -24,7 +24,7 @@ function ScoreGauge({ score }) {
   const pct = ((score - 1) / 4) * 100;
   const color = score >= 4.5 ? '#4ade80' : score >= 4.0 ? '#facc15' : score >= 3.0 ? '#fb923c' : '#f87171';
   return (
-    <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+    <div className="w-full h-2 bg-bg-2 rounded-full overflow-hidden">
       <motion.div
         initial={{ width: 0 }}
         animate={{ width: `${pct}%` }}
@@ -93,19 +93,19 @@ Factors: 3–5 items. Mix positives and negatives where appropriate.`,
     setTimeout(() => setCopied(false), 2000);
   }
 
-  const scoreColor = result?.score >= 4.5 ? 'text-green-400' : result?.score >= 4.0 ? 'text-yellow-400' : result?.score >= 3.0 ? 'text-orange-400' : 'text-red-400';
+  const scoreColor = result?.score >= 4.5 ? 'text-ok' : result?.score >= 4.0 ? 'text-hero' : result?.score >= 3.0 ? 'text-warn' : 'text-crit';
 
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-slate-100">⭐ CSAT Predictor</h1>
-        <p className="text-sm text-slate-500">Predicts the score a real customer would give your response — before you send it</p>
+        <h1 className="text-xl font-bold text-fg-0">⭐ CSAT Predictor</h1>
+        <p className="text-sm text-fg-2">Predicts the score a real customer would give your response — before you send it</p>
       </div>
 
       <div className="space-y-3">
         <div>
-          <label className="text-xs text-slate-500 mb-1.5 block" htmlFor="csat-customer">
-            Customer's message <span className="text-slate-700">(optional but improves accuracy)</span>
+          <label className="text-xs text-fg-2 mb-1.5 block" htmlFor="csat-customer">
+            Customer's message <span className="text-fg-3">(optional but improves accuracy)</span>
           </label>
           <textarea
             id="csat-customer"
@@ -113,12 +113,12 @@ Factors: 3–5 items. Mix positives and negatives where appropriate.`,
             onChange={e => setCustomerMsg(e.target.value)}
             placeholder="Paste what the customer said…"
             rows={3}
-            className="w-full bg-slate-900 border border-slate-700 focus:border-yellow-400/50 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-500 outline-none resize-none transition-colors"
+            className="w-full bg-bg-1 border border-border-0 focus:border-hero/50 rounded-xl px-4 py-3 text-sm text-fg-0 placeholder-fg-2 outline-none resize-none transition-colors"
           />
         </div>
         <div>
-          <label className="text-xs text-slate-500 mb-1.5 block" htmlFor="csat-response">
-            Your response draft <span className="text-red-400/70">*</span>
+          <label className="text-xs text-fg-2 mb-1.5 block" htmlFor="csat-response">
+            Your response draft <span className="text-crit/70">*</span>
           </label>
           <textarea
             id="csat-response"
@@ -126,13 +126,13 @@ Factors: 3–5 items. Mix positives and negatives where appropriate.`,
             onChange={e => setAgentResponse(e.target.value)}
             placeholder="Paste your response here…"
             rows={6}
-            className="w-full bg-slate-900 border border-slate-700 focus:border-yellow-400/50 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-500 outline-none resize-none transition-colors"
+            className="w-full bg-bg-1 border border-border-0 focus:border-hero/50 rounded-xl px-4 py-3 text-sm text-fg-0 placeholder-fg-2 outline-none resize-none transition-colors"
           />
         </div>
         <button
           onClick={predict}
           disabled={!agentResponse.trim() || loading}
-          className="w-full bg-yellow-400 hover:bg-yellow-300 disabled:bg-slate-700 disabled:text-slate-500 text-slate-900 font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+          className="w-full bg-hero hover:bg-hero disabled:bg-bg-3 disabled:text-fg-2 text-[#021418] font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
         >
           {loading ? <><Loader2 size={15} className="animate-spin" /> Predicting…</> : '⭐ Predict CSAT score'}
         </button>
@@ -148,19 +148,19 @@ Factors: 3–5 items. Mix positives and negatives where appropriate.`,
             className="space-y-4"
           >
             {/* Score card */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+            <div className="bg-bg-1 border border-border-0 rounded-2xl p-5 space-y-3">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="flex items-end gap-2">
                     <span className={cn('text-5xl font-bold tabular-nums tracking-tight', scoreColor)}>
                       {result.score?.toFixed(1)}
                     </span>
-                    <span className="text-slate-600 text-sm mb-1.5">/ 5.0</span>
+                    <span className="text-fg-2 text-sm mb-1.5">/ 5.0</span>
                   </div>
                   <StarDisplay score={result.score} />
                 </div>
                 <div className="text-right max-w-[55%]">
-                  <p className="text-xs font-semibold text-slate-400">{SCORE_LABEL(result.score)}</p>
+                  <p className="text-xs font-semibold text-fg-1">{SCORE_LABEL(result.score)}</p>
                 </div>
               </div>
               <ScoreGauge score={result.score} />
@@ -168,16 +168,16 @@ Factors: 3–5 items. Mix positives and negatives where appropriate.`,
 
             {/* Verdict */}
             {result.verdict && (
-              <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-3">
-                <p className="text-xs text-slate-500 mb-1">Customer's likely reaction</p>
-                <p className="text-sm text-slate-200 italic">"{result.verdict}"</p>
+              <div className="bg-bg-2/50 border border-border-0/50 rounded-xl px-4 py-3">
+                <p className="text-xs text-fg-2 mb-1">Customer's likely reaction</p>
+                <p className="text-sm text-fg-0 italic">"{result.verdict}"</p>
               </div>
             )}
 
             {/* Factors */}
             {result.factors?.length > 0 && (
               <div className="space-y-2">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Score factors</p>
+                <p className="text-xs font-semibold text-fg-2 uppercase tracking-wider">Score factors</p>
                 <div className="space-y-1.5">
                   {result.factors.map((f, i) => (
                     <motion.div
@@ -188,8 +188,8 @@ Factors: 3–5 items. Mix positives and negatives where appropriate.`,
                       className={cn(
                         'flex items-start gap-3 px-4 py-2.5 rounded-xl border text-sm',
                         f.positive
-                          ? 'bg-green-500/8 border-green-500/20 text-green-300'
-                          : 'bg-red-500/8 border-red-500/20 text-red-300'
+                          ? 'bg-ok/8 border-ok/20 text-ok'
+                          : 'bg-crit/8 border-crit/20 text-crit'
                       )}
                     >
                       <span className="text-base shrink-0 mt-0.5">{f.positive ? '✓' : '✗'}</span>
@@ -205,18 +205,18 @@ Factors: 3–5 items. Mix positives and negatives where appropriate.`,
 
             {/* Improved version */}
             {result.improved && (
-              <div className="bg-slate-900 border border-yellow-400/20 rounded-2xl p-5 space-y-3">
+              <div className="bg-bg-1 border border-hero/20 rounded-2xl p-5 space-y-3">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-yellow-400">✦ Improved version</p>
+                  <p className="text-sm font-semibold text-hero">✦ Improved version</p>
                   <button
                     onClick={copyImproved}
-                    className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-yellow-400 transition-colors"
+                    className="flex items-center gap-1.5 text-xs text-fg-2 hover:text-hero transition-colors"
                   >
-                    {copied ? <Check size={12} className="text-green-400" /> : <Copy size={12} />}
+                    {copied ? <Check size={12} className="text-ok" /> : <Copy size={12} />}
                     {copied ? 'Copied' : 'Copy'}
                   </button>
                 </div>
-                <p className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">{result.improved}</p>
+                <p className="text-sm text-fg-1 whitespace-pre-wrap leading-relaxed">{result.improved}</p>
               </div>
             )}
           </motion.div>
@@ -224,7 +224,7 @@ Factors: 3–5 items. Mix positives and negatives where appropriate.`,
       </AnimatePresence>
 
       {result?.error && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-sm text-red-400">{result.error}</div>
+        <div className="bg-crit/10 border border-crit/30 rounded-xl p-4 text-sm text-crit">{result.error}</div>
       )}
     </div>
   );

@@ -83,17 +83,17 @@ Proof attached: [yes / no]
 Issue: [delayed / unmatched / wrong reference / possible return]`;
 
 const TAG_STYLE = {
-  WAIT:    'bg-yellow-400/15 text-yellow-400 border-yellow-400/30',
-  ESCALATE:'bg-red-400/15 text-red-400 border-red-400/30',
-  HOLD:    'bg-blue-400/15 text-blue-400 border-blue-400/30',
+  WAIT:    'bg-hero/15 text-hero border-hero/30',
+  ESCALATE:'bg-crit/15 text-crit border-crit/30',
+  HOLD:    'bg-info/15 text-info border-info/30',
 };
 
 const COLOR = {
-  yellow: { border: 'border-yellow-400/25', dot: 'bg-yellow-400', label: 'text-yellow-400' },
-  red:    { border: 'border-red-400/25',    dot: 'bg-red-400',    label: 'text-red-400' },
-  orange: { border: 'border-orange-400/25', dot: 'bg-orange-400', label: 'text-orange-400' },
-  blue:   { border: 'border-blue-400/25',   dot: 'bg-blue-400',   label: 'text-blue-400' },
-  green:  { border: 'border-green-400/25',  dot: 'bg-green-400',  label: 'text-green-400' },
+  yellow: { border: 'border-hero/25', dot: 'bg-hero', label: 'text-hero' },
+  red:    { border: 'border-crit/25',    dot: 'bg-crit',    label: 'text-crit' },
+  orange: { border: 'border-orange-400/25', dot: 'bg-orange-400', label: 'text-warn' },
+  blue:   { border: 'border-info/25',   dot: 'bg-info',   label: 'text-info' },
+  green:  { border: 'border-ok/25',  dot: 'bg-ok',  label: 'text-ok' },
 };
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -116,8 +116,8 @@ function CopyBtn({ text, className = '' }) {
       className={cn(
         'flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border transition-all',
         done
-          ? 'bg-green-400/15 border-green-400/30 text-green-400'
-          : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-yellow-400 hover:border-yellow-400/40',
+          ? 'bg-ok/15 border-ok/30 text-ok'
+          : 'bg-bg-2 border-border-0 text-fg-1 hover:text-hero hover:border-hero/40',
         className
       )}
     >
@@ -129,13 +129,13 @@ function CopyBtn({ text, className = '' }) {
 function Section({ title, children, defaultOpen = true }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+    <div className="bg-bg-1 border border-border-0 rounded-xl overflow-hidden">
       <button
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-center justify-between px-4 py-3 text-left"
       >
-        <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">{title}</span>
-        {open ? <ChevronUp size={13} className="text-slate-600" /> : <ChevronDown size={13} className="text-slate-600" />}
+        <span className="text-xs font-semibold text-fg-1 uppercase tracking-widest">{title}</span>
+        {open ? <ChevronUp size={13} className="text-fg-2" /> : <ChevronDown size={13} className="text-fg-2" />}
       </button>
       <AnimatePresence initial={false}>
         {open && (
@@ -174,12 +174,12 @@ export default function SepaDelay() {
         className="flex items-center justify-between"
       >
         <div>
-          <h1 className="text-xl font-bold text-slate-100">💶 SEPA Deposit Delay</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Step-by-step cheat sheet — keep this open during the case</p>
+          <h1 className="text-xl font-bold text-fg-0">💶 SEPA Deposit Delay</h1>
+          <p className="text-sm text-fg-2 mt-0.5">Step-by-step cheat sheet — keep this open during the case</p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs bg-blue-500/15 border border-blue-500/30 text-blue-400 px-2.5 py-1 rounded-lg font-medium">🇪🇺 EU</span>
-          <span className="text-xs bg-slate-800 border border-slate-700 text-slate-500 px-2.5 py-1 rounded-lg font-medium">🌍 Global</span>
+          <span className="text-xs bg-info/15 border border-info/30 text-info px-2.5 py-1 rounded-lg font-medium">🇪🇺 EU</span>
+          <span className="text-xs bg-bg-2 border border-border-0 text-fg-2 px-2.5 py-1 rounded-lg font-medium">🌍 Global</span>
         </div>
       </motion.div>
 
@@ -195,18 +195,18 @@ export default function SepaDelay() {
         ].map((s, i) => (
           <div key={s.n} className={cn(
             'rounded-xl p-3 border flex items-center gap-3',
-            s.color === 'yellow' ? 'bg-yellow-400/8 border-yellow-400/25' :
-            s.color === 'green'  ? 'bg-green-400/8 border-green-400/25' :
-            'bg-slate-900 border-slate-800'
+            s.color === 'yellow' ? 'bg-hero/8 border-hero/25' :
+            s.color === 'green'  ? 'bg-ok/8 border-ok/25' :
+            'bg-bg-1 border-border-0'
           )}>
             <span className={cn(
               'text-2xl font-black tabular-nums leading-none shrink-0',
-              s.color === 'yellow' ? 'text-yellow-400' :
-              s.color === 'green'  ? 'text-green-400' : 'text-slate-700'
+              s.color === 'yellow' ? 'text-hero' :
+              s.color === 'green'  ? 'text-ok' : 'text-fg-3'
             )}>{s.n}</span>
             <div>
-              <p className={cn('font-semibold text-sm', s.color === 'yellow' ? 'text-yellow-400' : s.color === 'green' ? 'text-green-400' : 'text-slate-300')}>{s.label}</p>
-              <p className="text-xs text-slate-500">{s.sub}</p>
+              <p className={cn('font-semibold text-sm', s.color === 'yellow' ? 'text-hero' : s.color === 'green' ? 'text-ok' : 'text-fg-1')}>{s.label}</p>
+              <p className="text-xs text-fg-2">{s.sub}</p>
             </div>
           </div>
         ))}
@@ -230,15 +230,15 @@ export default function SepaDelay() {
                   className={cn(
                     'w-full flex items-center gap-3 px-3 py-2 rounded-lg border text-left text-sm transition-all duration-150',
                     checkedItems[item]
-                      ? 'bg-green-400/10 border-green-400/25 text-green-400'
-                      : 'bg-slate-800/60 border-slate-700 text-slate-300 hover:border-slate-600'
+                      ? 'bg-ok/10 border-ok/25 text-ok'
+                      : 'bg-bg-2/60 border-border-0 text-fg-1 hover:border-border-1'
                   )}
                 >
                   <span className={cn(
                     'w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-all',
-                    checkedItems[item] ? 'bg-green-400 border-green-400' : 'border-slate-600'
+                    checkedItems[item] ? 'bg-ok border-ok' : 'border-border-1'
                   )}>
-                    {checkedItems[item] && <Check size={10} className="text-slate-900" />}
+                    {checkedItems[item] && <Check size={10} className="text-[#021418]" />}
                   </span>
                   {item}
                 </button>
@@ -246,7 +246,7 @@ export default function SepaDelay() {
               {checkedCount > 0 && (
                 <button
                   onClick={() => setCheckedItems({})}
-                  className="text-xs text-slate-600 hover:text-slate-400 transition-colors mt-1"
+                  className="text-xs text-fg-2 hover:text-fg-1 transition-colors mt-1"
                 >
                   Clear all
                 </button>
@@ -260,9 +260,9 @@ export default function SepaDelay() {
               {CAUSES.map(c => (
                 <span key={c.label} className={cn(
                   'text-xs px-2.5 py-1 rounded-lg border font-medium',
-                  c.color === 'yellow' ? 'bg-yellow-400/10 border-yellow-400/25 text-yellow-400' :
-                  c.color === 'red'    ? 'bg-red-400/10 border-red-400/25 text-red-400' :
-                  'bg-orange-400/10 border-orange-400/25 text-orange-400'
+                  c.color === 'yellow' ? 'bg-hero/10 border-hero/25 text-hero' :
+                  c.color === 'red'    ? 'bg-crit/10 border-crit/25 text-crit' :
+                  'bg-orange-400/10 border-orange-400/25 text-warn'
                 )}>{c.label}</span>
               ))}
             </div>
@@ -272,9 +272,9 @@ export default function SepaDelay() {
           <Section title="Proof must show" defaultOpen={false}>
             <div className="px-4 pb-4 flex flex-wrap gap-2">
               {PROOF_NEEDS.map(p => (
-                <span key={p} className="text-xs px-2.5 py-1 rounded-lg border bg-slate-800 border-slate-700 text-slate-400">{p}</span>
+                <span key={p} className="text-xs px-2.5 py-1 rounded-lg border bg-bg-2 border-border-0 text-fg-1">{p}</span>
               ))}
-              <p className="w-full text-xs text-slate-600 mt-1">Never ask for password, 2FA, or full card details.</p>
+              <p className="w-full text-xs text-fg-2 mt-1">Never ask for password, 2FA, or full card details.</p>
             </div>
           </Section>
         </div>
@@ -289,7 +289,7 @@ export default function SepaDelay() {
                   initial={{ opacity: 0, x: 8 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.15 + i * 0.05 }}
-                  className={cn('rounded-xl border p-3.5', COLOR[t.color].border, 'bg-slate-800/40')}
+                  className={cn('rounded-xl border p-3.5', COLOR[t.color].border, 'bg-bg-2/40')}
                 >
                   <div className="flex items-start justify-between gap-2 mb-1.5">
                     <div className="flex items-center gap-2">
@@ -298,7 +298,7 @@ export default function SepaDelay() {
                     </div>
                     <span className={cn('text-xs px-2 py-0.5 rounded border font-bold shrink-0', TAG_STYLE[t.tag])}>{t.tag}</span>
                   </div>
-                  <p className="text-xs text-slate-400 leading-relaxed pl-7">{t.action}</p>
+                  <p className="text-xs text-fg-1 leading-relaxed pl-7">{t.action}</p>
                 </motion.div>
               ))}
             </div>
@@ -308,8 +308,8 @@ export default function SepaDelay() {
           <Section title="When to escalate" defaultOpen={false}>
             <div className="px-4 pb-4 space-y-1.5">
               {ESCALATE_WHEN.map(e => (
-                <div key={e} className="flex items-start gap-2 text-sm text-slate-400">
-                  <span className="text-red-400 mt-1 shrink-0 text-xs">◆</span>
+                <div key={e} className="flex items-start gap-2 text-sm text-fg-1">
+                  <span className="text-crit mt-1 shrink-0 text-xs">◆</span>
                   {e}
                 </div>
               ))}
@@ -324,37 +324,37 @@ export default function SepaDelay() {
         className="grid grid-cols-1 md:grid-cols-2 gap-4"
       >
         {/* Safe wording */}
-        <div className="bg-slate-900 border border-yellow-400/20 rounded-xl overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-800">
+        <div className="bg-bg-1 border border-hero/20 rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-border-0">
             <div className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
-              <span className="text-xs font-semibold text-yellow-400 uppercase tracking-widest">Safe wording — customer</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-hero animate-pulse" />
+              <span className="text-xs font-semibold text-hero uppercase tracking-widest">Safe wording — customer</span>
             </div>
             <CopyBtn text={SAFE_WORDING} />
           </div>
-          <p className="px-4 py-3 text-sm text-slate-300 leading-relaxed">{SAFE_WORDING}</p>
+          <p className="px-4 py-3 text-sm text-fg-1 leading-relaxed">{SAFE_WORDING}</p>
         </div>
 
         {/* Internal note */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-800">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Internal note template</span>
+        <div className="bg-bg-1 border border-border-0 rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-border-0">
+            <span className="text-xs font-semibold text-fg-1 uppercase tracking-widest">Internal note template</span>
             <CopyBtn text={INTERNAL_NOTE} />
           </div>
-          <pre className="px-4 py-3 text-xs text-slate-400 leading-relaxed font-mono whitespace-pre-wrap">{INTERNAL_NOTE}</pre>
+          <pre className="px-4 py-3 text-xs text-fg-1 leading-relaxed font-mono whitespace-pre-wrap">{INTERNAL_NOTE}</pre>
         </div>
       </motion.div>
 
       {/* Never do */}
       <motion.div
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.18, delay: 0.22 }}
-        className="bg-red-500/5 border border-red-500/20 rounded-xl px-5 py-3"
+        className="bg-crit/5 border border-crit/20 rounded-xl px-5 py-3"
       >
-        <p className="text-xs font-semibold text-red-400 uppercase tracking-widest mb-2">Never</p>
+        <p className="text-xs font-semibold text-crit uppercase tracking-widest mb-2">Never</p>
         <div className="flex flex-wrap gap-x-6 gap-y-1">
           {['Promise an ETA', 'Say "it will arrive today"', 'Blame user before confirming facts', 'Mention internal review logic', 'Share internal system details'].map(d => (
-            <span key={d} className="text-xs text-slate-500 flex items-center gap-1.5">
-              <span className="text-red-500 text-xs">✕</span> {d}
+            <span key={d} className="text-xs text-fg-2 flex items-center gap-1.5">
+              <span className="text-crit text-xs">✕</span> {d}
             </span>
           ))}
         </div>

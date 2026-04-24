@@ -5,12 +5,12 @@ import { getOpenAIKey } from '@/api/openai';
 import { Check, Trash2, Zap, Scale, Leaf, BarChart3, DollarSign, Clock, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const SCORE_COLORS = ['', 'bg-red-500/30 text-red-300', 'bg-orange-500/25 text-orange-300', 'bg-yellow-500/20 text-yellow-300', 'bg-emerald-500/20 text-emerald-300', 'bg-emerald-500/35 text-emerald-200'];
+const SCORE_COLORS = ['', 'bg-crit/30 text-crit', 'bg-warn/25 text-warn', 'bg-hero-soft/20 text-hero', 'bg-emerald-500/20 text-emerald-300', 'bg-emerald-500/35 text-emerald-200'];
 const SCORE_LABELS = ['', 'Poor', 'Fair', 'Good', 'Great', 'Best'];
 
 const COST_MODES = [
-  { key: 'performance', label: 'Performance', icon: Zap, desc: 'Best model everywhere', color: 'text-orange-400', bg: 'bg-orange-400/10 border-orange-400/30' },
-  { key: 'balanced', label: 'Balanced', icon: Scale, desc: 'Smart tiering per feature', color: 'text-yellow-400', bg: 'bg-yellow-400/10 border-yellow-400/30' },
+  { key: 'performance', label: 'Performance', icon: Zap, desc: 'Best model everywhere', color: 'text-warn', bg: 'bg-orange-400/10 border-orange-400/30' },
+  { key: 'balanced', label: 'Balanced', icon: Scale, desc: 'Smart tiering per feature', color: 'text-hero', bg: 'bg-hero/10 border-hero/30' },
   { key: 'economy', label: 'Economy', icon: Leaf, desc: 'Cheapest viable option', color: 'text-emerald-400', bg: 'bg-emerald-400/10 border-emerald-400/30' },
 ];
 
@@ -21,7 +21,7 @@ const PROVIDERS = [
 
 function ScoreBadge({ score }) {
   return (
-    <span className={cn('inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-bold', SCORE_COLORS[score] || 'bg-slate-800 text-slate-500')}>
+    <span className={cn('inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-bold', SCORE_COLORS[score] || 'bg-bg-2 text-fg-2')}>
       {score}
     </span>
   );
@@ -29,10 +29,10 @@ function ScoreBadge({ score }) {
 
 function Section({ title, icon: Icon, children }) {
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-      <div className="px-5 py-4 border-b border-slate-800 flex items-center gap-2">
-        {Icon && <Icon size={15} className="text-yellow-400" />}
-        <h2 className="font-semibold text-slate-100 text-sm">{title}</h2>
+    <div className="bg-bg-1 border border-border-0 rounded-xl overflow-hidden">
+      <div className="px-5 py-4 border-b border-border-0 flex items-center gap-2">
+        {Icon && <Icon size={15} className="text-hero" />}
+        <h2 className="font-semibold text-fg-0 text-sm">{title}</h2>
       </div>
       <div className="p-5">{children}</div>
     </div>
@@ -66,7 +66,7 @@ function UsageSection() {
   if (!days.length) {
     return (
       <Section title="Usage & Cost" icon={BarChart3}>
-        <p className="text-sm text-slate-500">No usage data yet. Start using ACE and token counts will appear here.</p>
+        <p className="text-sm text-fg-2">No usage data yet. Start using ACE and token counts will appear here.</p>
       </Section>
     );
   }
@@ -76,17 +76,17 @@ function UsageSection() {
       <div className="space-y-4">
         {/* Summary cards */}
         <div className="grid grid-cols-3 gap-3">
-          <div className="bg-slate-800 rounded-lg px-4 py-3 text-center">
-            <p className="text-xs text-slate-500">Total cost</p>
-            <p className="text-lg font-bold text-yellow-400">${totalCost.toFixed(2)}</p>
+          <div className="bg-bg-2 rounded-lg px-4 py-3 text-center">
+            <p className="text-xs text-fg-2">Total cost</p>
+            <p className="text-lg font-bold text-hero">${totalCost.toFixed(2)}</p>
           </div>
-          <div className="bg-slate-800 rounded-lg px-4 py-3 text-center">
-            <p className="text-xs text-slate-500">API calls</p>
-            <p className="text-lg font-bold text-slate-100">{totalCalls.toLocaleString()}</p>
+          <div className="bg-bg-2 rounded-lg px-4 py-3 text-center">
+            <p className="text-xs text-fg-2">API calls</p>
+            <p className="text-lg font-bold text-fg-0">{totalCalls.toLocaleString()}</p>
           </div>
-          <div className="bg-slate-800 rounded-lg px-4 py-3 text-center">
-            <p className="text-xs text-slate-500">Days tracked</p>
-            <p className="text-lg font-bold text-slate-100">{days.length}</p>
+          <div className="bg-bg-2 rounded-lg px-4 py-3 text-center">
+            <p className="text-xs text-fg-2">Days tracked</p>
+            <p className="text-lg font-bold text-fg-0">{days.length}</p>
           </div>
         </div>
 
@@ -95,15 +95,15 @@ function UsageSection() {
           {Object.entries(totals).sort((a, b) => b[1].cost - a[1].cost).map(([modelId, data]) => {
             const catalog = MODEL_CATALOG.find(m => m.id === modelId);
             return (
-              <div key={modelId} className="flex items-center justify-between bg-slate-800/50 rounded-lg px-4 py-2.5">
+              <div key={modelId} className="flex items-center justify-between bg-bg-2/50 rounded-lg px-4 py-2.5">
                 <div className="flex items-center gap-3">
                   <span className="text-sm">{catalog?.provider === 'openai' ? '🟢' : '🟣'}</span>
                   <div>
-                    <p className="text-sm text-slate-200">{catalog?.name || modelId}</p>
-                    <p className="text-xs text-slate-500">{data.calls} calls · {((data.input + data.output) / 1000).toFixed(1)}K tokens</p>
+                    <p className="text-sm text-fg-0">{catalog?.name || modelId}</p>
+                    <p className="text-xs text-fg-2">{data.calls} calls · {((data.input + data.output) / 1000).toFixed(1)}K tokens</p>
                   </div>
                 </div>
-                <p className="text-sm font-mono font-medium text-slate-300">${data.cost.toFixed(2)}</p>
+                <p className="text-sm font-mono font-medium text-fg-1">${data.cost.toFixed(2)}</p>
               </div>
             );
           })}
@@ -111,7 +111,7 @@ function UsageSection() {
 
         <button
           onClick={() => { if (window.confirm('Clear all usage data?')) { clearUsage(); setUsage({}); } }}
-          className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-red-400 transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 text-xs text-fg-2 hover:text-crit transition-colors cursor-pointer"
           aria-label="Clear usage data"
         >
           <Trash2 size={11} /> Clear usage data
@@ -147,15 +147,15 @@ export default function Models() {
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-slate-100">🧪 Models & Usage</h1>
-        <p className="text-sm text-slate-500">Compare models, track costs, pick the best fit per feature</p>
+        <h1 className="text-xl font-bold text-fg-0">🧪 Models & Usage</h1>
+        <p className="text-sm text-fg-2">Compare models, track costs, pick the best fit per feature</p>
       </div>
 
       {/* API Key status */}
       {(!hasAnthropicKey || !hasOpenAIKey) && (
-        <div className="flex items-start gap-2 bg-yellow-400/5 border border-yellow-400/20 rounded-xl px-4 py-3">
-          <AlertTriangle size={14} className="text-yellow-400 shrink-0 mt-0.5" />
-          <p className="text-xs text-slate-400">
+        <div className="flex items-start gap-2 bg-hero/5 border border-hero/20 rounded-xl px-4 py-3">
+          <AlertTriangle size={14} className="text-hero shrink-0 mt-0.5" />
+          <p className="text-xs text-fg-1">
             {!hasAnthropicKey && !hasOpenAIKey ? 'No API keys set. Add them in Settings to start using models.' :
              !hasAnthropicKey ? 'No Anthropic key set — Claude models unavailable. Add one in Settings.' :
              'No OpenAI key set — GPT models unavailable. Add one in Settings.'}
@@ -167,7 +167,7 @@ export default function Models() {
       <Section title="Active Configuration" icon={Zap}>
         <div className="space-y-4">
           <div>
-            <p className="text-xs text-slate-500 mb-2">Provider</p>
+            <p className="text-xs text-fg-2 mb-2">Provider</p>
             <div className="grid grid-cols-2 gap-2">
               {PROVIDERS.map(p => (
                 <button
@@ -176,17 +176,17 @@ export default function Models() {
                   aria-label={`Select ${p.label} provider`}
                   className={cn(
                     'flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all duration-150 cursor-pointer',
-                    provider === p.key ? 'bg-yellow-400/10 border-yellow-400/30' : 'bg-slate-800 border-slate-700 hover:border-slate-600'
+                    provider === p.key ? 'bg-hero/10 border-hero/30' : 'bg-bg-2 border-border-0 hover:border-border-1'
                   )}
                 >
                   <span className="text-lg">{p.icon}</span>
                   <div className="flex-1">
-                    <p className={cn('text-sm font-medium', provider === p.key ? 'text-yellow-400' : 'text-slate-200')}>{p.label}</p>
-                    <p className="text-xs text-slate-500">{p.models}</p>
+                    <p className={cn('text-sm font-medium', provider === p.key ? 'text-hero' : 'text-fg-0')}>{p.label}</p>
+                    <p className="text-xs text-fg-2">{p.models}</p>
                   </div>
                   {provider === p.key && (
-                    <div className="w-5 h-5 rounded-full bg-yellow-400 flex items-center justify-center shrink-0">
-                      <Check size={10} className="text-slate-900" />
+                    <div className="w-5 h-5 rounded-full bg-hero flex items-center justify-center shrink-0">
+                      <Check size={10} className="text-[#021418]" />
                     </div>
                   )}
                 </button>
@@ -195,7 +195,7 @@ export default function Models() {
           </div>
 
           <div>
-            <p className="text-xs text-slate-500 mb-2">Cost mode</p>
+            <p className="text-xs text-fg-2 mb-2">Cost mode</p>
             <div className="grid grid-cols-3 gap-2">
               {COST_MODES.map(m => {
                 const Icon = m.icon;
@@ -207,11 +207,11 @@ export default function Models() {
                     aria-label={`Select ${m.label} cost mode`}
                     className={cn(
                       'flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border text-center transition-all duration-150 cursor-pointer',
-                      active ? m.bg : 'bg-slate-800 border-slate-700 hover:border-slate-600'
+                      active ? m.bg : 'bg-bg-2 border-border-0 hover:border-border-1'
                     )}
                   >
-                    <Icon size={16} className={active ? m.color : 'text-slate-500'} />
-                    <p className={cn('text-xs font-medium', active ? m.color : 'text-slate-300')}>{m.label}</p>
+                    <Icon size={16} className={active ? m.color : 'text-fg-2'} />
+                    <p className={cn('text-xs font-medium', active ? m.color : 'text-fg-1')}>{m.label}</p>
                   </button>
                 );
               })}
@@ -219,8 +219,8 @@ export default function Models() {
           </div>
 
           {/* Active model summary */}
-          <div className="bg-slate-800/50 rounded-lg px-4 py-3 space-y-1.5">
-            <p className="text-xs text-slate-500 font-medium">Current model assignment</p>
+          <div className="bg-bg-2/50 rounded-lg px-4 py-3 space-y-1.5">
+            <p className="text-xs text-fg-2 font-medium">Current model assignment</p>
             {[
               { tier: 'Chat (main conversation)', model: activeModels.chat },
               { tier: 'Utility tools (Campaign, QC, etc.)', model: activeModels.utility },
@@ -229,8 +229,8 @@ export default function Models() {
               const catalog = MODEL_CATALOG.find(m => m.id === row.model);
               return (
                 <div key={row.tier} className="flex items-center justify-between">
-                  <span className="text-xs text-slate-400">{row.tier}</span>
-                  <span className="text-xs font-medium text-slate-200">
+                  <span className="text-xs text-fg-1">{row.tier}</span>
+                  <span className="text-xs font-medium text-fg-0">
                     {catalog?.provider === 'openai' ? '🟢' : '🟣'} {catalog?.name || row.model}
                   </span>
                 </div>
@@ -245,33 +245,33 @@ export default function Models() {
         <div className="overflow-x-auto -mx-5 px-5">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-slate-800">
-                <th className="text-left py-2 pr-3 text-slate-500 font-medium">Model</th>
-                <th className="text-right py-2 px-2 text-slate-500 font-medium">Input $/MTok</th>
-                <th className="text-right py-2 px-2 text-slate-500 font-medium">Output $/MTok</th>
-                <th className="text-center py-2 px-2 text-slate-500 font-medium">Speed</th>
-                <th className="text-left py-2 pl-3 text-slate-500 font-medium">Best for</th>
+              <tr className="border-b border-border-0">
+                <th className="text-left py-2 pr-3 text-fg-2 font-medium">Model</th>
+                <th className="text-right py-2 px-2 text-fg-2 font-medium">Input $/MTok</th>
+                <th className="text-right py-2 px-2 text-fg-2 font-medium">Output $/MTok</th>
+                <th className="text-center py-2 px-2 text-fg-2 font-medium">Speed</th>
+                <th className="text-left py-2 pl-3 text-fg-2 font-medium">Best for</th>
               </tr>
             </thead>
             <tbody>
               {MODEL_CATALOG.map(m => (
-                <tr key={m.id} className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
+                <tr key={m.id} className="border-b border-border-0/50 hover:bg-bg-2/30 transition-colors">
                   <td className="py-2.5 pr-3">
                     <div className="flex items-center gap-2">
                       <span>{m.provider === 'openai' ? '🟢' : '🟣'}</span>
-                      <span className="text-slate-200 font-medium">{m.name}</span>
+                      <span className="text-fg-0 font-medium">{m.name}</span>
                     </div>
                   </td>
-                  <td className="text-right py-2.5 px-2 font-mono text-slate-300">${m.inputPrice}</td>
-                  <td className="text-right py-2.5 px-2 font-mono text-slate-300">${m.outputPrice}</td>
+                  <td className="text-right py-2.5 px-2 font-mono text-fg-1">${m.inputPrice}</td>
+                  <td className="text-right py-2.5 px-2 font-mono text-fg-1">${m.outputPrice}</td>
                   <td className="text-center py-2.5 px-2">
                     <span className={cn('px-2 py-0.5 rounded text-xs',
                       m.speed === 'Very fast' ? 'bg-emerald-500/20 text-emerald-400' :
-                      m.speed === 'Fast' ? 'bg-yellow-500/15 text-yellow-400' :
-                      'bg-orange-500/15 text-orange-400'
+                      m.speed === 'Fast' ? 'bg-hero-soft/15 text-hero' :
+                      'bg-warn/15 text-warn'
                     )}>{m.speed}</span>
                   </td>
-                  <td className="py-2.5 pl-3 text-slate-400">{m.strengths.slice(0, 2).join(', ')}</td>
+                  <td className="py-2.5 pl-3 text-fg-1">{m.strengths.slice(0, 2).join(', ')}</td>
                 </tr>
               ))}
             </tbody>
@@ -282,14 +282,14 @@ export default function Models() {
       {/* Feature suitability matrix */}
       <Section title="Feature Suitability Matrix" icon={Clock}>
         <div className="space-y-3">
-          <p className="text-xs text-slate-500">Score 1-5 — how well each model handles each ACE feature. Higher is better.</p>
+          <p className="text-xs text-fg-2">Score 1-5 — how well each model handles each ACE feature. Higher is better.</p>
           <div className="overflow-x-auto -mx-5 px-5">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-slate-800">
-                  <th className="text-left py-2 pr-3 text-slate-500 font-medium">Feature</th>
+                <tr className="border-b border-border-0">
+                  <th className="text-left py-2 pr-3 text-fg-2 font-medium">Feature</th>
                   {MODEL_CATALOG.map(m => (
-                    <th key={m.id} className="text-center py-2 px-1.5 text-slate-500 font-medium whitespace-nowrap">
+                    <th key={m.id} className="text-center py-2 px-1.5 text-fg-2 font-medium whitespace-nowrap">
                       {m.provider === 'openai' ? '🟢' : '🟣'} {m.name.split(' ').pop()}
                     </th>
                   ))}
@@ -297,15 +297,15 @@ export default function Models() {
               </thead>
               <tbody>
                 {Object.entries(FEATURE_LABELS).map(([key, label]) => (
-                  <tr key={key} className="border-b border-slate-800/50">
-                    <td className="py-2 pr-3 text-slate-300 font-medium">{label}</td>
+                  <tr key={key} className="border-b border-border-0/50">
+                    <td className="py-2 pr-3 text-fg-1 font-medium">{label}</td>
                     {MODEL_CATALOG.map(m => {
                       const score = m.features[key] || 0;
                       return (
                         <td key={m.id} className="text-center py-2 px-1.5">
                           <div className="flex flex-col items-center gap-0.5">
                             <ScoreBadge score={score} />
-                            <span className="text-[10px] text-slate-600">{SCORE_LABELS[score]}</span>
+                            <span className="text-[10px] text-fg-2">{SCORE_LABELS[score]}</span>
                           </div>
                         </td>
                       );
@@ -322,28 +322,28 @@ export default function Models() {
       <Section title="Strengths & Weaknesses" icon={BarChart3}>
         <div className="grid gap-4 md:grid-cols-2">
           {MODEL_CATALOG.map(m => (
-            <div key={m.id} className="bg-slate-800/50 rounded-lg p-4 space-y-2">
+            <div key={m.id} className="bg-bg-2/50 rounded-lg p-4 space-y-2">
               <div className="flex items-center gap-2">
                 <span>{m.provider === 'openai' ? '🟢' : '🟣'}</span>
-                <h3 className="text-sm font-semibold text-slate-200">{m.name}</h3>
-                <span className="text-xs text-slate-500 font-mono">${m.inputPrice}/${m.outputPrice}</span>
+                <h3 className="text-sm font-semibold text-fg-0">{m.name}</h3>
+                <span className="text-xs text-fg-2 font-mono">${m.inputPrice}/${m.outputPrice}</span>
               </div>
               <div>
                 <p className="text-[10px] text-emerald-400 font-medium mb-1">STRENGTHS</p>
                 <ul className="space-y-0.5">
                   {m.strengths.map((s, i) => (
-                    <li key={i} className="text-xs text-slate-400 flex items-start gap-1.5">
+                    <li key={i} className="text-xs text-fg-1 flex items-start gap-1.5">
                       <span className="text-emerald-500 mt-0.5 shrink-0">+</span> {s}
                     </li>
                   ))}
                 </ul>
               </div>
               <div>
-                <p className="text-[10px] text-red-400 font-medium mb-1">WEAKNESSES</p>
+                <p className="text-[10px] text-crit font-medium mb-1">WEAKNESSES</p>
                 <ul className="space-y-0.5">
                   {m.weaknesses.map((w, i) => (
-                    <li key={i} className="text-xs text-slate-400 flex items-start gap-1.5">
-                      <span className="text-red-500 mt-0.5 shrink-0">-</span> {w}
+                    <li key={i} className="text-xs text-fg-1 flex items-start gap-1.5">
+                      <span className="text-crit mt-0.5 shrink-0">-</span> {w}
                     </li>
                   ))}
                 </ul>
@@ -357,13 +357,13 @@ export default function Models() {
       <UsageSection />
 
       {/* Cost estimation */}
-      <div className="bg-slate-800/30 border border-slate-800 rounded-xl p-5 space-y-2">
-        <p className="text-xs font-medium text-slate-400">Cost estimation tip</p>
-        <p className="text-xs text-slate-500 leading-relaxed">
+      <div className="bg-bg-2/30 border border-border-0 rounded-xl p-5 space-y-2">
+        <p className="text-xs font-medium text-fg-1">Cost estimation tip</p>
+        <p className="text-xs text-fg-2 leading-relaxed">
           A typical shift with ~50 chat messages + 10 tool uses costs roughly:
-          <strong className="text-slate-300"> $2.50/shift</strong> on Balanced (Anthropic),
-          <strong className="text-slate-300"> $1.00/shift</strong> on Balanced (OpenAI), or
-          <strong className="text-slate-300"> $0.30/shift</strong> on Economy (OpenAI).
+          <strong className="text-fg-1"> $2.50/shift</strong> on Balanced (Anthropic),
+          <strong className="text-fg-1"> $1.00/shift</strong> on Balanced (OpenAI), or
+          <strong className="text-fg-1"> $0.30/shift</strong> on Economy (OpenAI).
           Prompt caching saves an additional 40-60% on Anthropic models.
         </p>
       </div>

@@ -249,9 +249,12 @@ export default function Dashboard() {
               <span>10+</span>
             </div>
           </div>
-          <Heatmap data={heatmapData} />
-          {events.length === 0 && (
-            <p className="type-caption text-fg-3 text-center mt-4">No cases recorded yet — heatmap fills as you work.</p>
+          {events.length === 0 ? (
+            <div className="flex items-center justify-center py-10 border border-dashed border-border-0 rounded-xl">
+              <p className="type-caption text-fg-3">Heatmap will populate after your first case.</p>
+            </div>
+          ) : (
+            <Heatmap data={heatmapData} />
           )}
         </div>
 

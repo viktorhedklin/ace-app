@@ -53,26 +53,26 @@ function HealthRadar({ uid }) {
 
   const bars = [
     { label: 'Volume', value: metrics.volume, color: 'bg-cyan-400', desc: `${metrics.total} cases` },
-    { label: 'Risk', value: metrics.risk, color: metrics.risk >= 3 ? 'bg-red-400' : 'bg-yellow-400', desc: `${metrics.risk} flags` },
+    { label: 'Risk', value: metrics.risk, color: metrics.risk >= 3 ? 'bg-crit' : 'bg-hero', desc: `${metrics.risk} flags` },
     { label: 'Resolved', value: metrics.reliability, color: 'bg-emerald-400', desc: `${metrics.reliability}/5` },
   ];
 
   return (
-    <div className="px-4 py-3 border-b border-slate-800 space-y-2">
+    <div className="px-4 py-3 border-b border-border-0 space-y-2">
       <div className="flex items-center gap-2">
         <Shield size={11} className="text-cyan-400" />
-        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Health Radar</span>
+        <span className="text-[10px] font-semibold text-fg-1 uppercase tracking-wider">Health Radar</span>
       </div>
       {bars.map(b => (
         <div key={b.label} className="flex items-center gap-2">
-          <span className="text-[10px] text-slate-600 w-14 shrink-0">{b.label}</span>
-          <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+          <span className="text-[10px] text-fg-2 w-14 shrink-0">{b.label}</span>
+          <div className="flex-1 h-1.5 bg-bg-2 rounded-full overflow-hidden">
             <div
               className={cn('h-full rounded-full transition-all duration-500', b.color)}
               style={{ width: `${(b.value / 5) * 100}%` }}
             />
           </div>
-          <span className="text-[10px] text-slate-600 w-12 text-right shrink-0">{b.desc}</span>
+          <span className="text-[10px] text-fg-2 w-12 text-right shrink-0">{b.desc}</span>
         </div>
       ))}
     </div>
@@ -178,8 +178,8 @@ export default function CaseTimeline() {
           'fixed top-1/2 right-0 -translate-y-1/2 z-30 flex flex-col items-center justify-center gap-1',
           'w-7 h-20 rounded-l-lg border border-r-0 text-xs transition-colors duration-150',
           open
-            ? 'bg-yellow-400/15 border-yellow-400/30 text-yellow-400'
-            : 'bg-slate-900 border-slate-700 text-slate-600 hover:text-slate-400'
+            ? 'bg-hero/15 border-hero/30 text-hero'
+            : 'bg-bg-1 border-border-0 text-fg-2 hover:text-fg-1'
         )}
         aria-label="Toggle Case Timeline"
         title="Case Timeline — last 4 hours"
@@ -197,25 +197,25 @@ export default function CaseTimeline() {
             exit={{ x: 320 }}
             transition={{ type: 'spring', stiffness: 400, damping: 35 }}
             className={cn(
-              'fixed top-0 right-0 h-full w-72 z-30 bg-slate-950 border-l flex flex-col shadow-2xl transition-colors duration-200',
-              dragOver ? 'border-yellow-400/60' : 'border-slate-800'
+              'fixed top-0 right-0 h-full w-72 z-30 bg-bg-0 border-l flex flex-col shadow-2xl transition-colors duration-200',
+              dragOver ? 'border-hero/60' : 'border-border-0'
             )}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border-0 shrink-0">
               <div>
-                <h2 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
-                  <Clock size={13} className="text-yellow-400" />
+                <h2 className="text-sm font-semibold text-fg-0 flex items-center gap-2">
+                  <Clock size={13} className="text-hero" />
                   Case Timeline
                 </h2>
-                <p className="text-xs text-slate-600 mt-0.5">Last 4 hours · {cases.length} events</p>
+                <p className="text-xs text-fg-2 mt-0.5">Last 4 hours · {cases.length} events</p>
               </div>
               <button
                 onClick={() => setOpen(false)}
-                className="text-slate-600 hover:text-slate-400 flex items-center justify-center w-7 h-7 rounded-lg hover:bg-slate-800 transition-colors duration-150"
+                className="text-fg-2 hover:text-fg-1 flex items-center justify-center w-7 h-7 rounded-lg hover:bg-bg-2 transition-colors duration-150"
                 aria-label="Close timeline"
               >
                 <X size={13} />
@@ -224,10 +224,10 @@ export default function CaseTimeline() {
 
             {/* Drag-over overlay */}
             {dragOver && (
-              <div className="absolute inset-0 z-10 bg-yellow-400/5 border-2 border-dashed border-yellow-400/40 rounded-xl flex items-center justify-center pointer-events-none">
+              <div className="absolute inset-0 z-10 bg-hero/5 border-2 border-dashed border-hero/40 rounded-xl flex items-center justify-center pointer-events-none">
                 <div className="text-center">
-                  <Upload size={24} className="text-yellow-400 mx-auto mb-2" />
-                  <p className="text-xs text-yellow-400 font-medium">Drop JSON to restore</p>
+                  <Upload size={24} className="text-hero mx-auto mb-2" />
+                  <p className="text-xs text-hero font-medium">Drop JSON to restore</p>
                 </div>
               </div>
             )}
@@ -239,12 +239,12 @@ export default function CaseTimeline() {
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  className="px-4 py-2 bg-yellow-400/10 border-b border-yellow-400/20 text-center overflow-hidden"
+                  className="px-4 py-2 bg-hero/10 border-b border-hero/20 text-center overflow-hidden"
                 >
-                  <p className="text-xs text-yellow-400 font-medium">
+                  <p className="text-xs text-hero font-medium">
                     Restored {restored.count} case{restored.count !== 1 ? 's' : ''} from snapshot
                   </p>
-                  <p className="text-[10px] text-yellow-400/60 mt-0.5">Exported: {restored.ts}</p>
+                  <p className="text-[10px] text-hero/60 mt-0.5">Exported: {restored.ts}</p>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -256,8 +256,8 @@ export default function CaseTimeline() {
             <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
               {cases.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center gap-3 py-12">
-                  <Clock size={28} className="text-slate-700" />
-                  <p className="text-xs text-slate-600">No cases in the last 4 hours.<br />Events appear as you work.</p>
+                  <Clock size={28} className="text-fg-3" />
+                  <p className="text-xs text-fg-2">No cases in the last 4 hours.<br />Events appear as you work.</p>
                 </div>
               ) : (
                 cases.map((c, i) => {
@@ -273,36 +273,36 @@ export default function CaseTimeline() {
                       className={cn(
                         'relative flex items-start gap-3 px-3 py-2.5 rounded-xl border text-xs transition-colors duration-150',
                         isVIP5
-                          ? 'bg-yellow-400/10 border-yellow-400/40'
+                          ? 'bg-hero/10 border-hero/40'
                           : isVIP3
-                          ? 'bg-yellow-400/5 border-yellow-400/20'
-                          : 'bg-slate-900 border-slate-800'
+                          ? 'bg-hero/5 border-hero/20'
+                          : 'bg-bg-1 border-border-0'
                       )}
                       style={isVIP5 ? { boxShadow: '0 0 16px rgba(250,204,21,0.25)' } : {}}
                     >
                       <span className="text-base shrink-0 mt-0.5">{icon}</span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-1">
-                          <span className={cn('font-medium truncate', isVIP5 ? 'text-yellow-300' : 'text-slate-300')}>
+                          <span className={cn('font-medium truncate', isVIP5 ? 'text-hero' : 'text-fg-1')}>
                             {c.tool?.replace('/', '').replace(/-/g, ' ') || 'case'}
                           </span>
                           {c.vipLevel > 0 && (
                             <span className={cn(
                               'text-xs px-1.5 py-0.5 rounded font-bold shrink-0',
-                              isVIP5 ? 'bg-yellow-400/30 text-yellow-300' :
-                              isVIP3 ? 'bg-yellow-400/15 text-yellow-400' :
-                              'bg-blue-500/20 text-blue-400'
+                              isVIP5 ? 'bg-hero/30 text-hero' :
+                              isVIP3 ? 'bg-hero/15 text-hero' :
+                              'bg-info/20 text-info'
                             )}>
                               {VIP_LABELS[c.vipLevel]}
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 mt-0.5 text-slate-600">
+                        <div className="flex items-center gap-2 mt-0.5 text-fg-2">
                           <span>{formatTime(c.ts)}</span>
                           <ChevronRight size={9} />
                           <span>{relTime(c.ts)}</span>
                         </div>
-                        {c.uid && <span className="text-slate-700 font-mono text-[10px]">{scrubPII(c.uid)}</span>}
+                        {c.uid && <span className="text-fg-3 font-mono text-[10px]">{scrubPII(c.uid)}</span>}
                       </div>
                     </motion.div>
                   );
@@ -311,7 +311,7 @@ export default function CaseTimeline() {
             </div>
 
             {/* Footer */}
-            <div className="px-4 py-3 border-t border-slate-800 shrink-0 space-y-2">
+            <div className="px-4 py-3 border-t border-border-0 shrink-0 space-y-2">
               {cases.length > 0 && (
                 <button
                   onClick={handleExportSnapshot}
@@ -319,8 +319,8 @@ export default function CaseTimeline() {
                   className={cn(
                     'w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-150',
                     exporting
-                      ? 'bg-yellow-400/10 text-yellow-400/60 cursor-not-allowed'
-                      : 'bg-slate-800 text-slate-300 hover:bg-yellow-400/15 hover:text-yellow-400 cursor-pointer'
+                      ? 'bg-hero/10 text-hero/60 cursor-not-allowed'
+                      : 'bg-bg-2 text-fg-1 hover:bg-hero/15 hover:text-hero cursor-pointer'
                   )}
                   aria-label="Save Case Snapshot"
                 >
@@ -328,7 +328,7 @@ export default function CaseTimeline() {
                   {exporting ? 'Saved' : 'Save Case Snapshot'}
                 </button>
               )}
-              <p className="text-xs text-slate-700 text-center">Events sourced from IndexedDB · zero PII</p>
+              <p className="text-xs text-fg-3 text-center">Events sourced from IndexedDB · zero PII</p>
             </div>
           </motion.div>
         )}

@@ -172,7 +172,7 @@ function CopyBtn({ text }) {
   const [ok, setOk] = useState(false);
   return (
     <button onClick={() => { navigator.clipboard.writeText(text); setOk(true); setTimeout(() => setOk(false), 2000); }}
-      className="text-slate-500 hover:text-yellow-400 transition-colors cursor-pointer" aria-label="Copy">
+      className="text-fg-2 hover:text-hero transition-colors cursor-pointer" aria-label="Copy">
       {ok ? <Check size={13} /> : <Copy size={13} />}
     </button>
   );
@@ -181,16 +181,16 @@ function CopyBtn({ text }) {
 function QTCard({ qt }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="bg-yellow-400/10 border border-yellow-400/20 rounded-lg overflow-hidden">
+    <div className="bg-hero/10 border border-hero/20 rounded-lg overflow-hidden">
       <button onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-yellow-400/5 transition-colors cursor-pointer">
-        <span className="text-xs font-medium text-yellow-300"><span className="text-yellow-400/80 mr-1.5">{qt.code}</span>{qt.title}</span>
+        className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-hero/5 transition-colors cursor-pointer">
+        <span className="text-xs font-medium text-hero"><span className="text-hero/80 mr-1.5">{qt.code}</span>{qt.title}</span>
         <div className="flex items-center gap-2">
           <CopyBtn text={qt.text} />
-          {open ? <ChevronUp size={12} className="text-yellow-400/50" /> : <ChevronDown size={12} className="text-yellow-400/50" />}
+          {open ? <ChevronUp size={12} className="text-hero/50" /> : <ChevronDown size={12} className="text-hero/50" />}
         </div>
       </button>
-      {open && <pre className="px-3 pb-3 text-xs text-slate-400 whitespace-pre-wrap leading-relaxed border-t border-yellow-400/10 pt-2">{qt.text}</pre>}
+      {open && <pre className="px-3 pb-3 text-xs text-fg-1 whitespace-pre-wrap leading-relaxed border-t border-hero/10 pt-2">{qt.text}</pre>}
     </div>
   );
 }
@@ -198,41 +198,41 @@ function QTCard({ qt }) {
 function TemplateCard({ et }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="bg-slate-800/50 rounded-lg overflow-hidden">
+    <div className="bg-bg-2/50 rounded-lg overflow-hidden">
       <button onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-slate-800 transition-colors cursor-pointer">
-        <span className="text-xs font-medium text-slate-300"><span className="text-yellow-400/80 mr-1.5">{et.code}</span>{et.title}</span>
+        className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-bg-2 transition-colors cursor-pointer">
+        <span className="text-xs font-medium text-fg-1"><span className="text-hero/80 mr-1.5">{et.code}</span>{et.title}</span>
         <div className="flex items-center gap-2">
           <CopyBtn text={et.body} />
-          {open ? <ChevronUp size={12} className="text-slate-600" /> : <ChevronDown size={12} className="text-slate-600" />}
+          {open ? <ChevronUp size={12} className="text-fg-2" /> : <ChevronDown size={12} className="text-fg-2" />}
         </div>
       </button>
-      {open && <pre className="px-3 pb-3 text-xs text-slate-400 whitespace-pre-wrap leading-relaxed border-t border-slate-700/50 pt-2">{et.body}</pre>}
+      {open && <pre className="px-3 pb-3 text-xs text-fg-1 whitespace-pre-wrap leading-relaxed border-t border-border-0/50 pt-2">{et.body}</pre>}
     </div>
   );
 }
 
 function StepCard({ title, steps, caseType, escalation, template, children }) {
   return (
-    <div className="bg-slate-800/40 border border-slate-700/50 rounded-xl p-4 space-y-3">
-      {title && <h4 className="text-sm font-semibold text-slate-100">{title}</h4>}
+    <div className="bg-bg-2/40 border border-border-0/50 rounded-xl p-4 space-y-3">
+      {title && <h4 className="text-sm font-semibold text-fg-0">{title}</h4>}
       {steps && (
-        <ol className="space-y-1.5 text-xs text-slate-300 leading-relaxed">
-          {steps.map((s, i) => <li key={i} className="flex gap-2"><span className="text-yellow-400/70 shrink-0">{i + 1}.</span><span>{s}</span></li>)}
+        <ol className="space-y-1.5 text-xs text-fg-1 leading-relaxed">
+          {steps.map((s, i) => <li key={i} className="flex gap-2"><span className="text-hero/70 shrink-0">{i + 1}.</span><span>{s}</span></li>)}
         </ol>
       )}
       {caseType && (
         <div className="flex items-center gap-2 text-xs">
-          <ClipboardList size={12} className="text-blue-400 shrink-0" />
-          <span className="text-slate-500">Case type:</span>
-          <span className="text-blue-300 font-mono text-xs">{caseType}</span>
+          <ClipboardList size={12} className="text-info shrink-0" />
+          <span className="text-fg-2">Case type:</span>
+          <span className="text-info font-mono text-xs">{caseType}</span>
           <CopyBtn text={caseType} />
         </div>
       )}
       {escalation && (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 space-y-2">
-          <p className="text-xs font-medium text-red-400 flex items-center gap-1.5"><ShieldAlert size={12} /> Escalation Note</p>
-          <pre className="text-xs text-slate-400 whitespace-pre-wrap">{escalation}</pre>
+        <div className="bg-crit/10 border border-crit/20 rounded-lg p-3 space-y-2">
+          <p className="text-xs font-medium text-crit flex items-center gap-1.5"><ShieldAlert size={12} /> Escalation Note</p>
+          <pre className="text-xs text-fg-1 whitespace-pre-wrap">{escalation}</pre>
           <CopyBtn text={escalation} />
         </div>
       )}
@@ -244,7 +244,7 @@ function StepCard({ title, steps, caseType, escalation, template, children }) {
 
 function BackBtn({ onClick }) {
   return (
-    <button onClick={onClick} className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-yellow-400 transition-colors mb-4 cursor-pointer">
+    <button onClick={onClick} className="flex items-center gap-1.5 text-xs text-fg-2 hover:text-hero transition-colors mb-4 cursor-pointer">
       <ArrowLeft size={13} /> Back to scenarios
     </button>
   );
@@ -252,9 +252,9 @@ function BackBtn({ onClick }) {
 
 function InfoBox({ children, tone = 'blue' }) {
   const toneMap = {
-    blue: 'bg-blue-500/10 border-blue-500/20 text-blue-300',
-    yellow: 'bg-yellow-400/10 border-yellow-400/20 text-yellow-300',
-    red: 'bg-red-500/10 border-red-500/20 text-red-400',
+    blue: 'bg-info/10 border-info/20 text-info',
+    yellow: 'bg-hero/10 border-hero/20 text-hero',
+    red: 'bg-crit/10 border-crit/20 text-crit',
   };
   return (
     <div className={cn('border rounded-lg p-3 flex gap-2 items-start', toneMap[tone])}>
@@ -268,8 +268,8 @@ function SubOption({ label, active, onClick }) {
   return (
     <button onClick={onClick}
       className={cn(
-        'text-left w-full bg-slate-800/40 border rounded-lg p-3 text-xs transition-colors cursor-pointer',
-        active ? 'border-yellow-400/50 text-yellow-300' : 'border-slate-700/50 text-slate-300 hover:border-slate-600'
+        'text-left w-full bg-bg-2/40 border rounded-lg p-3 text-xs transition-colors cursor-pointer',
+        active ? 'border-hero/50 text-hero' : 'border-border-0/50 text-fg-1 hover:border-border-1'
       )}>
       {label}
     </button>
@@ -282,25 +282,25 @@ function SubOption({ label, active, onClick }) {
 
 function CaseInfo({ data, setData }) {
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-      <h3 className="text-xs font-semibold text-slate-400 mb-3">Case Details (auto-fills escalation notes)</h3>
+    <div className="bg-bg-1 border border-border-0 rounded-xl p-4">
+      <h3 className="text-xs font-semibold text-fg-1 mb-3">Case Details (auto-fills escalation notes)</h3>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <input placeholder="UID" value={data.uid}
           onChange={e => setData(p => ({ ...p, uid: e.target.value }))}
-          className="bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-1.5 text-xs text-slate-100 outline-none transition-colors" aria-label="UID" />
+          className="bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-1.5 text-xs text-fg-0 outline-none transition-colors" aria-label="UID" />
         <input placeholder="Order ID (if any)" value={data.oid}
           onChange={e => setData(p => ({ ...p, oid: e.target.value }))}
-          className="bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-1.5 text-xs text-slate-100 outline-none transition-colors" aria-label="Order ID" />
+          className="bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-1.5 text-xs text-fg-0 outline-none transition-colors" aria-label="Order ID" />
         <select value={data.accountStatus}
           onChange={e => setData(p => ({ ...p, accountStatus: e.target.value }))}
-          className="bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-1.5 text-xs text-slate-100 outline-none transition-colors cursor-pointer" aria-label="Account status">
+          className="bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-1.5 text-xs text-fg-0 outline-none transition-colors cursor-pointer" aria-label="Account status">
           <option value="">Account status...</option>
           <option value="Abnormal">Abnormal</option>
           <option value="Normal">Normal</option>
         </select>
         <select value={data.vip}
           onChange={e => setData(p => ({ ...p, vip: e.target.value }))}
-          className="bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-1.5 text-xs text-slate-100 outline-none transition-colors cursor-pointer" aria-label="VIP status">
+          className="bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-1.5 text-xs text-fg-0 outline-none transition-colors cursor-pointer" aria-label="VIP status">
           <option value="">VIP status...</option>
           <option value="no">Non-VIP</option>
           <option value="yes">VIP</option>
@@ -322,10 +322,10 @@ function HighRiskFlow({ onBack, caseData }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
-      <h3 className="text-sm font-bold text-slate-100">🔒 High Risk Transaction</h3>
+      <h3 className="text-sm font-bold text-fg-0">🔒 High Risk Transaction</h3>
 
       <InfoBox tone="blue">
-        <strong>How to check:</strong> CSGO {'>'} User Profile {'>'} Funding {'>'} Risk Order. If type = <span className="text-yellow-300 font-mono">APPEAL-P2P</span>, follow the status below. If no record found → see Scenario 10 (Company Risk).
+        <strong>How to check:</strong> CSGO {'>'} User Profile {'>'} Funding {'>'} Risk Order. If type = <span className="text-hero font-mono">APPEAL-P2P</span>, follow the status below. If no record found → see Scenario 10 (Company Risk).
       </InfoBox>
 
       {!sub && (
@@ -345,13 +345,13 @@ function HighRiskFlow({ onBack, caseData }) {
           template={ET.G6660}
         >
           <QTCard qt={QT.highRisk_a} />
-          <button onClick={() => setSub(null)} className="text-xs text-slate-500 hover:text-yellow-400 cursor-pointer">← Change status</button>
+          <button onClick={() => setSub(null)} className="text-xs text-fg-2 hover:text-hero cursor-pointer">← Change status</button>
         </StepCard>
       )}
 
       {sub === 'review' && !reviewTime && (
         <div className="space-y-2">
-          <p className="text-xs text-slate-400">How long has the review been pending?</p>
+          <p className="text-xs text-fg-1">How long has the review been pending?</p>
           <div className="grid grid-cols-2 gap-2">
             <SubOption label="≤ 48 hours" onClick={() => setReviewTime('lt48')} />
             <SubOption label="> 48 hours" onClick={() => setReviewTime('gt48')} />
@@ -367,7 +367,7 @@ function HighRiskFlow({ onBack, caseData }) {
           template={ET.G6982}
         >
           <QTCard qt={QT.highRisk_b} />
-          <button onClick={() => setReviewTime(null)} className="text-xs text-slate-500 hover:text-yellow-400 cursor-pointer">← Change time</button>
+          <button onClick={() => setReviewTime(null)} className="text-xs text-fg-2 hover:text-hero cursor-pointer">← Change time</button>
         </StepCard>
       )}
 
@@ -383,7 +383,7 @@ function HighRiskFlow({ onBack, caseData }) {
           escalation={TECHOPS_NOTE(caseData.uid, 'Asking for report review progress')}
         >
           <QTCard qt={QT.followup} />
-          <button onClick={() => setReviewTime(null)} className="text-xs text-slate-500 hover:text-yellow-400 cursor-pointer">← Change time</button>
+          <button onClick={() => setReviewTime(null)} className="text-xs text-fg-2 hover:text-hero cursor-pointer">← Change time</button>
         </StepCard>
       )}
 
@@ -395,13 +395,13 @@ function HighRiskFlow({ onBack, caseData }) {
           template={ET.G6665}
         >
           <QTCard qt={QT.highRisk_c} />
-          <button onClick={() => setSub(null)} className="text-xs text-slate-500 hover:text-yellow-400 cursor-pointer">← Change status</button>
+          <button onClick={() => setSub(null)} className="text-xs text-fg-2 hover:text-hero cursor-pointer">← Change status</button>
         </StepCard>
       )}
 
       {sub === 'rejected' && !rejectedType && (
         <div className="space-y-2">
-          <h4 className="text-xs font-semibold text-slate-300">Scenario 1.1 — Check ban type + ExpireTime:</h4>
+          <h4 className="text-xs font-semibold text-fg-1">Scenario 1.1 — Check ban type + ExpireTime:</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <SubOption label="P2P Ban (All) + ExpireTime ✅" onClick={() => setRejectedType('p2pBan_exp')} />
             <SubOption label="P2P Ads Ban Only + ExpireTime ✅" onClick={() => setRejectedType('adsBan_exp')} />
@@ -419,7 +419,7 @@ function HighRiskFlow({ onBack, caseData }) {
           template={ET.G6662}
         >
           <QTCard qt={QT.highRisk_d} />
-          <button onClick={() => setRejectedType(null)} className="text-xs text-slate-500 hover:text-yellow-400 cursor-pointer">← Change ban type</button>
+          <button onClick={() => setRejectedType(null)} className="text-xs text-fg-2 hover:text-hero cursor-pointer">← Change ban type</button>
         </StepCard>
       )}
 
@@ -431,7 +431,7 @@ function HighRiskFlow({ onBack, caseData }) {
           template={ET.G6664}
         >
           <QTCard qt={QT.highRisk_e} />
-          <button onClick={() => setRejectedType(null)} className="text-xs text-slate-500 hover:text-yellow-400 cursor-pointer">← Change ban type</button>
+          <button onClick={() => setRejectedType(null)} className="text-xs text-fg-2 hover:text-hero cursor-pointer">← Change ban type</button>
         </StepCard>
       )}
 
@@ -443,7 +443,7 @@ function HighRiskFlow({ onBack, caseData }) {
           template={ET.G6661}
         >
           <QTCard qt={QT.followup} />
-          <button onClick={() => setRejectedType(null)} className="text-xs text-slate-500 hover:text-yellow-400 cursor-pointer">← Change ban type</button>
+          <button onClick={() => setRejectedType(null)} className="text-xs text-fg-2 hover:text-hero cursor-pointer">← Change ban type</button>
         </StepCard>
       )}
 
@@ -455,7 +455,7 @@ function HighRiskFlow({ onBack, caseData }) {
           template={ET.G6663}
         >
           <QTCard qt={QT.followup} />
-          <button onClick={() => setRejectedType(null)} className="text-xs text-slate-500 hover:text-yellow-400 cursor-pointer">← Change ban type</button>
+          <button onClick={() => setRejectedType(null)} className="text-xs text-fg-2 hover:text-hero cursor-pointer">← Change ban type</button>
         </StepCard>
       )}
     </div>
@@ -472,10 +472,10 @@ function ViolationFlow({ onBack, caseData }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
-      <h3 className="text-sm font-bold text-slate-100">⚠️ P2P Violation</h3>
+      <h3 className="text-sm font-bold text-fg-0">⚠️ P2P Violation</h3>
 
       <InfoBox tone="blue">
-        Ban remark contains <span className="font-mono text-yellow-300">maliciousComplaintOrReport</span> — check CSGO for ExpireDate.
+        Ban remark contains <span className="font-mono text-hero">maliciousComplaintOrReport</span> — check CSGO for ExpireDate.
       </InfoBox>
 
       {!sub && (
@@ -494,7 +494,7 @@ function ViolationFlow({ onBack, caseData }) {
           template={ET.G6332}
         >
           <QTCard qt={QT.highRisk_d} />
-          <button onClick={() => setSub(null)} className="text-xs text-slate-500 hover:text-yellow-400 cursor-pointer">← Change sub-scenario</button>
+          <button onClick={() => setSub(null)} className="text-xs text-fg-2 hover:text-hero cursor-pointer">← Change sub-scenario</button>
         </StepCard>
       )}
 
@@ -506,7 +506,7 @@ function ViolationFlow({ onBack, caseData }) {
           template={ET.G6331}
         >
           <QTCard qt={QT.followup} />
-          <button onClick={() => setSub(null)} className="text-xs text-slate-500 hover:text-yellow-400 cursor-pointer">← Change sub-scenario</button>
+          <button onClick={() => setSub(null)} className="text-xs text-fg-2 hover:text-hero cursor-pointer">← Change sub-scenario</button>
         </StepCard>
       )}
 
@@ -522,7 +522,7 @@ function ViolationFlow({ onBack, caseData }) {
           escalation={`UID: ${caseData.uid || '[INPUT UID]'}\nAccount: VIP\nBan remark: [paste from CSGO]\nSummary: Account permanently banned. Please further review and follow up with the user.\n— Run Macro Pool 1 to Pool 2`}
         >
           <QTCard qt={QT.followup} />
-          <button onClick={() => setSub(null)} className="text-xs text-slate-500 hover:text-yellow-400 cursor-pointer">← Change sub-scenario</button>
+          <button onClick={() => setSub(null)} className="text-xs text-fg-2 hover:text-hero cursor-pointer">← Change sub-scenario</button>
         </StepCard>
       )}
     </div>
@@ -540,7 +540,7 @@ function SensitiveWordsFlow({ onBack, caseData }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
-      <h3 className="text-sm font-bold text-slate-100">🔤 Sensitive Words Triggered</h3>
+      <h3 className="text-sm font-bold text-fg-0">🔤 Sensitive Words Triggered</h3>
 
       <InfoBox tone="blue">
         Images in P2P chat window are scanned for sensitive content. If detected, account is restricted.
@@ -562,13 +562,13 @@ function SensitiveWordsFlow({ onBack, caseData }) {
           template={ET.G6660}
         >
           <QTCard qt={QT.highRisk_a} />
-          <button onClick={() => setSub(null)} className="text-xs text-slate-500 hover:text-yellow-400 cursor-pointer">← Change status</button>
+          <button onClick={() => setSub(null)} className="text-xs text-fg-2 hover:text-hero cursor-pointer">← Change status</button>
         </StepCard>
       )}
 
       {sub === 'review' && !reviewTime && (
         <div className="space-y-2">
-          <p className="text-xs text-slate-400">How long has the review been pending?</p>
+          <p className="text-xs text-fg-1">How long has the review been pending?</p>
           <div className="grid grid-cols-2 gap-2">
             <SubOption label="≤ 48 hours" onClick={() => setReviewTime('lt48')} />
             <SubOption label="> 48 hours" onClick={() => setReviewTime('gt48')} />
@@ -584,7 +584,7 @@ function SensitiveWordsFlow({ onBack, caseData }) {
           template={ET.G6982}
         >
           <QTCard qt={QT.highRisk_b} />
-          <button onClick={() => setReviewTime(null)} className="text-xs text-slate-500 hover:text-yellow-400 cursor-pointer">← Change time</button>
+          <button onClick={() => setReviewTime(null)} className="text-xs text-fg-2 hover:text-hero cursor-pointer">← Change time</button>
         </StepCard>
       )}
 
@@ -600,7 +600,7 @@ function SensitiveWordsFlow({ onBack, caseData }) {
           escalation={TECHOPS_NOTE(caseData.uid, 'Asking for report review progress')}
         >
           <QTCard qt={QT.followup} />
-          <button onClick={() => setReviewTime(null)} className="text-xs text-slate-500 hover:text-yellow-400 cursor-pointer">← Change time</button>
+          <button onClick={() => setReviewTime(null)} className="text-xs text-fg-2 hover:text-hero cursor-pointer">← Change time</button>
         </StepCard>
       )}
     </div>
@@ -618,7 +618,7 @@ function OfflineAppealFlow({ onBack, caseData }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
-      <h3 className="text-sm font-bold text-slate-100">📧 Offline Appeal — Financial Loss</h3>
+      <h3 className="text-sm font-bold text-fg-0">📧 Offline Appeal — Financial Loss</h3>
 
       <InfoBox tone="blue">
         <strong>Offline appeal</strong> = P2P order closed &gt; 5 working days. User can no longer appeal via the Landing Page.
@@ -642,7 +642,7 @@ function OfflineAppealFlow({ onBack, caseData }) {
 
       {sub === 'found_pending' && !replyTime && (
         <div className="space-y-2">
-          <p className="text-xs text-slate-400">Last reply time:</p>
+          <p className="text-xs text-fg-1">Last reply time:</p>
           <div className="grid grid-cols-2 gap-2">
             <SubOption label="≤ 48 hours" onClick={() => setReplyTime('lt48')} />
             <SubOption label="> 48 hours" onClick={() => setReplyTime('gt48')} />
@@ -656,7 +656,7 @@ function OfflineAppealFlow({ onBack, caseData }) {
           steps={['Inform user the review may take up to 48 hours. Ask them to wait patiently during this period.']}
           caseType={CASE_TYPES.dispute_both}
         >
-          <button onClick={() => setReplyTime(null)} className="text-xs text-slate-500 hover:text-yellow-400 cursor-pointer">← Change time</button>
+          <button onClick={() => setReplyTime(null)} className="text-xs text-fg-2 hover:text-hero cursor-pointer">← Change time</button>
         </StepCard>
       )}
 
@@ -667,7 +667,7 @@ function OfflineAppealFlow({ onBack, caseData }) {
           caseType={CASE_TYPES.dispute_both}
         >
           <QTCard qt={QT.followup} />
-          <button onClick={() => setReplyTime(null)} className="text-xs text-slate-500 hover:text-yellow-400 cursor-pointer">← Change time</button>
+          <button onClick={() => setReplyTime(null)} className="text-xs text-fg-2 hover:text-hero cursor-pointer">← Change time</button>
         </StepCard>
       )}
 
@@ -702,7 +702,7 @@ function OnlineAppealFlow({ onBack, caseData }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
-      <h3 className="text-sm font-bold text-slate-100">🖥️ Online Appeal — Financial Loss</h3>
+      <h3 className="text-sm font-bold text-fg-0">🖥️ Online Appeal — Financial Loss</h3>
 
       <InfoBox tone="blue">
         <strong>Online appeal</strong> = P2P order closed ≤ 5 working days. User can still appeal via the Landing Page.
@@ -729,7 +729,7 @@ function OnlineAppealFlow({ onBack, caseData }) {
 
       {sub === 'found_pending' && !replyTime && (
         <div className="space-y-2">
-          <p className="text-xs text-slate-400">Last reply time:</p>
+          <p className="text-xs text-fg-1">Last reply time:</p>
           <div className="grid grid-cols-2 gap-2">
             <SubOption label="≤ 48 hours" onClick={() => setReplyTime('lt48')} />
             <SubOption label="> 48 hours" onClick={() => setReplyTime('gt48')} />
@@ -783,7 +783,7 @@ function ScammerNoAssetFlow({ onBack }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
-      <h3 className="text-sm font-bold text-slate-100">🚫 P2P Scammer — No Asset</h3>
+      <h3 className="text-sm font-bold text-fg-0">🚫 P2P Scammer — No Asset</h3>
 
       <InfoBox tone="red">
         User scammed counterparty in a P2P order, leaving <strong>no assets remaining</strong>. Account + P2P permanently restricted.
@@ -814,7 +814,7 @@ function ScammerWithAssetFlow({ onBack, caseData }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
-      <h3 className="text-sm font-bold text-slate-100">💰 P2P Scammer — With Asset</h3>
+      <h3 className="text-sm font-bold text-fg-0">💰 P2P Scammer — With Asset</h3>
 
       <InfoBox tone="blue">
         User scammed counterparty but has remaining assets. Assets held for 90 days for investigation; may compensate additional victims.
@@ -854,7 +854,7 @@ function ScammerWithAssetFlow({ onBack, caseData }) {
             <QTCard qt={QT.followup} />
           </StepCard>
 
-          <button onClick={() => setSub(null)} className="text-xs text-slate-500 hover:text-yellow-400 cursor-pointer">← Change variant</button>
+          <button onClick={() => setSub(null)} className="text-xs text-fg-2 hover:text-hero cursor-pointer">← Change variant</button>
         </div>
       )}
 
@@ -872,7 +872,7 @@ function ScammerWithAssetFlow({ onBack, caseData }) {
           <InfoBox tone="red">
             In Charge Team: Product Risk Team. Restriction Reason: <strong>Scammer - Serious Suspection</strong>. Column 4 (Account Ban) must be completed thoroughly.
           </InfoBox>
-          <button onClick={() => setSub(null)} className="text-xs text-slate-500 hover:text-yellow-400 cursor-pointer">← Change variant</button>
+          <button onClick={() => setSub(null)} className="text-xs text-fg-2 hover:text-hero cursor-pointer">← Change variant</button>
         </StepCard>
       )}
     </div>
@@ -888,7 +888,7 @@ function WrongJudgmentFlow({ onBack }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
-      <h3 className="text-sm font-bold text-slate-100">⚖️ Wrong Judgment by Agent</h3>
+      <h3 className="text-sm font-bold text-fg-0">⚖️ Wrong Judgment by Agent</h3>
 
       <InfoBox tone="blue">
         Order was incorrectly judged by the agent. Withdrawal ban is <strong>temporary</strong> — only for asset transfer. Process takes 3-5 business days.
@@ -923,10 +923,10 @@ function ReportFlow({ onBack, caseData }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
-      <h3 className="text-sm font-bold text-slate-100">📋 P2P Report / Disagree</h3>
+      <h3 className="text-sm font-bold text-fg-0">📋 P2P Report / Disagree</h3>
 
       <InfoBox tone="blue">
-        Check CSGO {'>'} User Profile {'>'} Funding {'>'} Risk Order. Type = <span className="font-mono text-yellow-300">P2PReport</span> (filed report) or <span className="font-mono text-yellow-300">P2PReportDisagree</span> (counterparty disagreed within 72h).
+        Check CSGO {'>'} User Profile {'>'} Funding {'>'} Risk Order. Type = <span className="font-mono text-hero">P2PReport</span> (filed report) or <span className="font-mono text-hero">P2PReportDisagree</span> (counterparty disagreed within 72h).
       </InfoBox>
 
       {!branch && (
@@ -949,8 +949,8 @@ function ReportBanBranch({ onBack, caseData }) {
 
   return (
     <div className="space-y-3">
-      <button onClick={onBack} className="text-xs text-slate-500 hover:text-yellow-400 cursor-pointer">← Back to 9.1/9.2 choice</button>
-      <h4 className="text-sm font-semibold text-slate-200">9.1 — P2P Report Ban</h4>
+      <button onClick={onBack} className="text-xs text-fg-2 hover:text-hero cursor-pointer">← Back to 9.1/9.2 choice</button>
+      <h4 className="text-sm font-semibold text-fg-0">9.1 — P2P Report Ban</h4>
 
       {!status && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -962,7 +962,7 @@ function ReportBanBranch({ onBack, caseData }) {
 
       {status === 'review' && !subTime && (
         <div className="space-y-2">
-          <p className="text-xs text-slate-400">Time since Trigger Time:</p>
+          <p className="text-xs text-fg-1">Time since Trigger Time:</p>
           <div className="grid grid-cols-2 gap-2">
             <SubOption label="≤ 48 hours" onClick={() => setSubTime('lt48')} />
             <SubOption label="> 48 hours" onClick={() => setSubTime('gt48')} />
@@ -998,7 +998,7 @@ function ReportBanBranch({ onBack, caseData }) {
 
       {status === 'approved' && !subTime && (
         <div className="space-y-2">
-          <p className="text-xs text-slate-400">Time since Review Time:</p>
+          <p className="text-xs text-fg-1">Time since Review Time:</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <SubOption label="≤ 72h (within dispute window)" onClick={() => setSubTime('within72')} />
             <SubOption label="> 72h — User has NO P2P ban" onClick={() => setSubTime('after72_noban')} />
@@ -1047,7 +1047,7 @@ function ReportBanBranch({ onBack, caseData }) {
 
       {status === 'rejected' && !rejectType && (
         <div className="space-y-2">
-          <p className="text-xs text-slate-400">Account status:</p>
+          <p className="text-xs text-fg-1">Account status:</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <SubOption label="No Restriction Found" onClick={() => setRejectType('no_ban')} />
             <SubOption label="P2P Report / Trading Ban" onClick={() => setRejectType('with_ban')} />
@@ -1106,8 +1106,8 @@ function ReportDisagreeBranch({ onBack, caseData }) {
 
   return (
     <div className="space-y-3">
-      <button onClick={onBack} className="text-xs text-slate-500 hover:text-yellow-400 cursor-pointer">← Back to 9.1/9.2 choice</button>
-      <h4 className="text-sm font-semibold text-slate-200">9.2 — P2P Report Disagree Ban</h4>
+      <button onClick={onBack} className="text-xs text-fg-2 hover:text-hero cursor-pointer">← Back to 9.1/9.2 choice</button>
+      <h4 className="text-sm font-semibold text-fg-0">9.2 — P2P Report Disagree Ban</h4>
 
       <InfoBox tone="blue">
         Counterparty responded within 72h and disagrees with the report.
@@ -1124,7 +1124,7 @@ function ReportDisagreeBranch({ onBack, caseData }) {
 
       {status === 'pending' && !subTime && (
         <div className="space-y-2">
-          <p className="text-xs text-slate-400">Time since Trigger Time:</p>
+          <p className="text-xs text-fg-1">Time since Trigger Time:</p>
           <div className="grid grid-cols-2 gap-2">
             <SubOption label="≤ 72 hours" onClick={() => setSubTime('lt72')} />
             <SubOption label="> 72 hours" onClick={() => setSubTime('gt72')} />
@@ -1145,7 +1145,7 @@ function ReportDisagreeBranch({ onBack, caseData }) {
 
       {status === 'pending' && subTime === 'gt72' && (
         <div className="space-y-3">
-          <p className="text-xs text-slate-400">VIP status:</p>
+          <p className="text-xs text-fg-1">VIP status:</p>
           <div className="grid grid-cols-2 gap-2">
             <SubOption label="Non-VIP" onClick={() => setSubType('non_vip')} />
             <SubOption label="VIP" onClick={() => setSubType('vip')} />
@@ -1180,7 +1180,7 @@ function ReportDisagreeBranch({ onBack, caseData }) {
 
       {status === 'review' && !subTime && (
         <div className="space-y-2">
-          <p className="text-xs text-slate-400">Time since Review Time:</p>
+          <p className="text-xs text-fg-1">Time since Review Time:</p>
           <div className="grid grid-cols-2 gap-2">
             <SubOption label="≤ 48 hours" onClick={() => setSubTime('lt48')} />
             <SubOption label="> 48 hours" onClick={() => setSubTime('gt48')} />
@@ -1227,7 +1227,7 @@ function ReportDisagreeBranch({ onBack, caseData }) {
 
       {status === 'rejected' && !subType && (
         <div className="space-y-2">
-          <p className="text-xs text-slate-400">Account status:</p>
+          <p className="text-xs text-fg-1">Account status:</p>
           <div className="grid grid-cols-2 gap-2">
             <SubOption label="No Restriction Found" onClick={() => setSubType('no_ban')} />
             <SubOption label="Withdrawal Ban Found" onClick={() => setSubType('withdrawal_ban')} />
@@ -1271,7 +1271,7 @@ function CompanyRiskFlow({ onBack, caseData }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
-      <h3 className="text-sm font-bold text-slate-100">🏢 Company Risk Triggered</h3>
+      <h3 className="text-sm font-bold text-fg-0">🏢 Company Risk Triggered</h3>
 
       <InfoBox tone="blue">
         <strong>Conditions:</strong> No record found in CSGO Risk Order, BUT UID is found in P2P Company Risk Team Hits (Lark group).
@@ -1305,10 +1305,10 @@ function FrozenFlow({ onBack, caseData }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
-      <h3 className="text-sm font-bold text-slate-100">❄️ Amount Frozen After Order Cancel/Complete</h3>
+      <h3 className="text-sm font-bold text-fg-0">❄️ Amount Frozen After Order Cancel/Complete</h3>
 
       <InfoBox tone="blue">
-        <strong>How to verify:</strong> Asset {'>'} Detail of Asset {'>'} OrderLock matches order amount. Asset {'>'} Frozen Asset Details {'>'} ChangeType = <span className="font-mono text-yellow-300">Fiat Deposit Freeze - Risk Control (Transfer in)</span>.
+        <strong>How to verify:</strong> Asset {'>'} Detail of Asset {'>'} OrderLock matches order amount. Asset {'>'} Frozen Asset Details {'>'} ChangeType = <span className="font-mono text-hero">Fiat Deposit Freeze - Risk Control (Transfer in)</span>.
       </InfoBox>
 
       {!subTime && (
@@ -1357,10 +1357,10 @@ function T1Flow({ onBack }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
-      <h3 className="text-sm font-bold text-slate-100">⏰ T+1 Withdrawal Restriction</h3>
+      <h3 className="text-sm font-bold text-fg-0">⏰ T+1 Withdrawal Restriction</h3>
 
       <InfoBox tone="blue">
-        <strong>How to verify:</strong> CSGO {'>'} Asset {'>'} Withdrawal Restriction {'>'} Type: <span className="font-mono text-yellow-300">Buy Crypto</span>.
+        <strong>How to verify:</strong> CSGO {'>'} Asset {'>'} Withdrawal Restriction {'>'} Type: <span className="font-mono text-hero">Buy Crypto</span>.
         <br /><strong>Reason:</strong> P2P order triggered T+1 — fund withdrawals restricted for one full day (T) from transaction completion.
       </InfoBox>
 
@@ -1391,7 +1391,7 @@ function HighRiskAdvFlow({ onBack, caseData }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
-      <h3 className="text-sm font-bold text-slate-100">📢 High Risk Advertiser</h3>
+      <h3 className="text-sm font-bold text-fg-0">📢 High Risk Advertiser</h3>
 
       <InfoBox tone="blue">
         Advertiser flagged by risk system — needs 200 USDT security deposit + documents for review.
@@ -1420,7 +1420,7 @@ function HighRiskAdvFlow({ onBack, caseData }) {
 
       {status === 'review' && !subTime && (
         <div className="space-y-2">
-          <p className="text-xs text-slate-400">Time since submission:</p>
+          <p className="text-xs text-fg-1">Time since submission:</p>
           <div className="grid grid-cols-2 gap-2">
             <SubOption label="≤ 48 hours" onClick={() => setSubTime('lt48')} />
             <SubOption label="> 48 hours" onClick={() => setSubTime('gt48')} />
@@ -1466,7 +1466,7 @@ function HighRiskAdvFlow({ onBack, caseData }) {
 
       {status === 'rejected' && !subType && (
         <div className="space-y-2">
-          <p className="text-xs text-slate-400">Account status:</p>
+          <p className="text-xs text-fg-1">Account status:</p>
           <div className="grid grid-cols-2 gap-2">
             <SubOption label="No Restriction Found" onClick={() => setSubType('no_ban')} />
             <SubOption label="P2P Ads / Withdrawal Ban" onClick={() => setSubType('with_ban')} />
@@ -1571,10 +1571,10 @@ When the agent asks for a reply draft, write concise, empathetic Bybit-style cha
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-xl font-bold text-slate-100">P2P Restriction</h1>
-          <p className="text-xs text-slate-500 mt-1">SOP E05-P2P Restriction v2.3 — 13 scenarios, integrated ACE chat</p>
+          <h1 className="text-xl font-bold text-fg-0">P2P Restriction</h1>
+          <p className="text-xs text-fg-2 mt-1">SOP E05-P2P Restriction v2.3 — 13 scenarios, integrated ACE chat</p>
         </div>
-        <div className="text-xs text-slate-500 flex items-center gap-1.5">
+        <div className="text-xs text-fg-2 flex items-center gap-1.5">
           <ShieldAlert size={12} /> Always check (1) account status, (2) ban type, (3) ban remark first
         </div>
       </div>
@@ -1585,16 +1585,16 @@ When the agent asks for a reply draft, write concise, empathetic Bybit-style cha
       {/* Scenario grid or active flow */}
       {!scenario ? (
         <div>
-          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Select a scenario</h2>
+          <h2 className="text-xs font-semibold text-fg-1 uppercase tracking-wider mb-3">Select a scenario</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {SCENARIOS.map(s => (
               <button key={s.id} onClick={() => setScenario(s.id)}
-                className="group text-left bg-slate-800/40 border border-slate-700/50 hover:border-yellow-400/40 hover:bg-slate-800 rounded-xl p-4 transition-all cursor-pointer">
+                className="group text-left bg-bg-2/40 border border-border-0/50 hover:border-hero/40 hover:bg-bg-2 rounded-xl p-4 transition-all cursor-pointer">
                 <div className="flex items-start gap-2">
                   <span className="text-xl">{s.icon}</span>
                   <div>
-                    <h3 className="text-sm font-semibold text-slate-100 group-hover:text-yellow-300 transition-colors">{s.name}</h3>
-                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">{s.desc}</p>
+                    <h3 className="text-sm font-semibold text-fg-0 group-hover:text-hero transition-colors">{s.name}</h3>
+                    <p className="text-xs text-fg-2 mt-1 leading-relaxed">{s.desc}</p>
                   </div>
                 </div>
               </button>
@@ -1616,45 +1616,45 @@ When the agent asks for a reply draft, write concise, empathetic Bybit-style cha
       )}
 
       {/* Collapsible reference: QTs */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+      <div className="bg-bg-1 border border-border-0 rounded-xl overflow-hidden">
         <button onClick={() => setQtsOpen(o => !o)}
-          className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-800/50 transition-colors cursor-pointer">
-          <span className="text-xs font-semibold text-slate-300">All Quicktexts ({Object.keys(QT).length})</span>
-          {qtsOpen ? <ChevronUp size={14} className="text-slate-500" /> : <ChevronDown size={14} className="text-slate-500" />}
+          className="w-full flex items-center justify-between px-4 py-3 hover:bg-bg-2/50 transition-colors cursor-pointer">
+          <span className="text-xs font-semibold text-fg-1">All Quicktexts ({Object.keys(QT).length})</span>
+          {qtsOpen ? <ChevronUp size={14} className="text-fg-2" /> : <ChevronDown size={14} className="text-fg-2" />}
         </button>
         {qtsOpen && (
-          <div className="p-3 space-y-2 border-t border-slate-800">
+          <div className="p-3 space-y-2 border-t border-border-0">
             {Object.values(QT).map(qt => <QTCard key={qt.code} qt={qt} />)}
           </div>
         )}
       </div>
 
       {/* Collapsible reference: ETs */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+      <div className="bg-bg-1 border border-border-0 rounded-xl overflow-hidden">
         <button onClick={() => setEtsOpen(o => !o)}
-          className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-800/50 transition-colors cursor-pointer">
-          <span className="text-xs font-semibold text-slate-300">All Email Templates ({Object.keys(ET).length})</span>
-          {etsOpen ? <ChevronUp size={14} className="text-slate-500" /> : <ChevronDown size={14} className="text-slate-500" />}
+          className="w-full flex items-center justify-between px-4 py-3 hover:bg-bg-2/50 transition-colors cursor-pointer">
+          <span className="text-xs font-semibold text-fg-1">All Email Templates ({Object.keys(ET).length})</span>
+          {etsOpen ? <ChevronUp size={14} className="text-fg-2" /> : <ChevronDown size={14} className="text-fg-2" />}
         </button>
         {etsOpen && (
-          <div className="p-3 space-y-2 border-t border-slate-800">
+          <div className="p-3 space-y-2 border-t border-border-0">
             {Object.values(ET).map(et => <TemplateCard key={et.code} et={et} />)}
           </div>
         )}
       </div>
 
       {/* Collapsible reference: HC Links */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+      <div className="bg-bg-1 border border-border-0 rounded-xl overflow-hidden">
         <button onClick={() => setHcOpen(o => !o)}
-          className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-800/50 transition-colors cursor-pointer">
-          <span className="text-xs font-semibold text-slate-300">Help Center Links ({HC_LINKS.length})</span>
-          {hcOpen ? <ChevronUp size={14} className="text-slate-500" /> : <ChevronDown size={14} className="text-slate-500" />}
+          className="w-full flex items-center justify-between px-4 py-3 hover:bg-bg-2/50 transition-colors cursor-pointer">
+          <span className="text-xs font-semibold text-fg-1">Help Center Links ({HC_LINKS.length})</span>
+          {hcOpen ? <ChevronUp size={14} className="text-fg-2" /> : <ChevronDown size={14} className="text-fg-2" />}
         </button>
         {hcOpen && (
-          <div className="p-3 space-y-1.5 border-t border-slate-800">
+          <div className="p-3 space-y-1.5 border-t border-border-0">
             {HC_LINKS.map(l => (
               <a key={l.url} href={l.url} target="_blank" rel="noreferrer"
-                className="flex items-center justify-between text-xs text-blue-300 hover:text-yellow-300 bg-slate-800/40 hover:bg-slate-800 px-3 py-2 rounded-lg transition-colors">
+                className="flex items-center justify-between text-xs text-info hover:text-hero bg-bg-2/40 hover:bg-bg-2 px-3 py-2 rounded-lg transition-colors">
                 <span>{l.label}</span>
                 <ExternalLink size={11} />
               </a>
@@ -1664,8 +1664,8 @@ When the agent asks for a reply draft, write concise, empathetic Bybit-style cha
       </div>
 
       {/* Footer reminder */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 text-xs text-slate-500 leading-relaxed">
-        <div className="flex items-center gap-1.5 mb-2 text-slate-300">
+      <div className="bg-bg-1 border border-border-0 rounded-xl p-4 text-xs text-fg-2 leading-relaxed">
+        <div className="flex items-center gap-1.5 mb-2 text-fg-1">
           <CheckCircle2 size={13} className="text-emerald-400" />
           <span className="font-semibold">Escalation protocol reminder</span>
         </div>

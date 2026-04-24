@@ -294,10 +294,10 @@ export default function MultiChat() {
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* Workspace header */}
-      <div className="bg-slate-950 border-b border-slate-800 flex items-center justify-between px-4 py-2 shrink-0">
+      <div className="bg-bg-0 border-b border-border-0 flex items-center justify-between px-4 py-2 shrink-0">
         <div className="flex items-center gap-2.5">
-          <span className="text-sm font-semibold text-slate-100">🗂️ Workspace</span>
-          <span className="text-xs text-slate-600">{tabs.length} / 4 window{tabs.length !== 1 ? 's' : ''}</span>
+          <span className="text-sm font-semibold text-fg-0">🗂️ Workspace</span>
+          <span className="text-xs text-fg-2">{tabs.length} / 4 window{tabs.length !== 1 ? 's' : ''}</span>
         </div>
         <button
           onClick={addTab}
@@ -306,8 +306,8 @@ export default function MultiChat() {
           className={cn(
             'flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-colors duration-150',
             tabs.length >= 4
-              ? 'text-slate-700 border-slate-800 cursor-not-allowed opacity-50'
-              : 'text-slate-400 border-slate-700 hover:text-yellow-400 hover:border-yellow-400/30 hover:bg-yellow-400/5'
+              ? 'text-fg-3 border-border-0 cursor-not-allowed opacity-50'
+              : 'text-fg-1 border-border-0 hover:text-hero hover:border-hero/30 hover:bg-hero/5'
           )}
         >
           <Plus size={12} />
@@ -316,7 +316,7 @@ export default function MultiChat() {
       </div>
 
       {/* Grid of chat panels */}
-      <div className={cn('flex-1 min-h-0 grid gap-px bg-slate-800/60', gridClass)}>
+      <div className={cn('flex-1 min-h-0 grid gap-px bg-bg-2/60', gridClass)}>
         {tabs.map(tab => (
           <TabContent
             key={tab.id}
@@ -366,19 +366,19 @@ function TabContent({
   }
 
   return (
-    <div className="flex flex-col bg-slate-950 overflow-hidden">
+    <div className="flex flex-col bg-bg-0 overflow-hidden">
       {/* ── Panel Header ──────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-slate-800 bg-slate-900 shrink-0 gap-2">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-border-0 bg-bg-1 shrink-0 gap-2">
         <div className="flex items-center gap-2 min-w-0">
           {channel ? (
             <>
               <span className="text-base shrink-0">{channel.flag}</span>
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="font-medium text-slate-100 text-xs truncate">{channel.shortName}</span>
+                  <span className="font-medium text-fg-0 text-xs truncate">{channel.shortName}</span>
                   <span className={cn(
                     'text-xs px-1 py-0.5 rounded font-medium shrink-0',
-                    channel.type === 'CHAT' ? 'bg-green-500/20 text-green-400' : 'bg-blue-500/20 text-blue-400'
+                    channel.type === 'CHAT' ? 'bg-ok/20 text-ok' : 'bg-info/20 text-info'
                   )}>{channel.type}</span>
                 </div>
               </div>
@@ -386,14 +386,14 @@ function TabContent({
           ) : (
             <div className="flex items-center gap-1.5">
               <span className="relative flex h-1.5 w-1.5 shrink-0">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-60" />
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-yellow-400/60" />
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-hero opacity-60" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-hero/60" />
               </span>
-              <span className="text-xs font-medium text-slate-400">New Chat</span>
+              <span className="text-xs font-medium text-fg-1">New Chat</span>
             </div>
           )}
           {hasContext && tab.context.issue && (
-            <span className="text-xs text-yellow-400/80 bg-yellow-400/10 px-1.5 py-0.5 rounded truncate max-w-[100px] hidden sm:block">
+            <span className="text-xs text-hero/80 bg-hero/10 px-1.5 py-0.5 rounded truncate max-w-[100px] hidden sm:block">
               {tab.context.issue}
             </span>
           )}
@@ -401,7 +401,7 @@ function TabContent({
 
         <div className="flex items-center gap-1 shrink-0">
           {tab.autoSaved && (
-            <span className="text-xs text-yellow-400 flex items-center gap-1 animate-pulse mr-1">
+            <span className="text-xs text-hero flex items-center gap-1 animate-pulse mr-1">
               <Brain size={10} /> {tab.autoSaved.count}
             </span>
           )}
@@ -412,8 +412,8 @@ function TabContent({
             className={cn(
               'flex items-center gap-0.5 text-xs px-1.5 py-1 rounded-lg border transition-all duration-150',
               hasContext
-                ? 'bg-yellow-400/15 border-yellow-400/30 text-yellow-400'
-                : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'
+                ? 'bg-hero/15 border-hero/30 text-hero'
+                : 'bg-bg-2 border-border-0 text-fg-2 hover:text-fg-1'
             )}
             title="Set case context"
             aria-label="Set case context"
@@ -427,20 +427,20 @@ function TabContent({
             className={cn(
               'flex items-center gap-0.5 text-xs px-1.5 py-1 rounded-lg border transition-all duration-150',
               tab.autoMemory
-                ? 'bg-yellow-400/15 border-yellow-400/30 text-yellow-400'
-                : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'
+                ? 'bg-hero/15 border-hero/30 text-hero'
+                : 'bg-bg-2 border-border-0 text-fg-2 hover:text-fg-1'
             )}
             title={tab.autoMemory ? 'Auto-memory on' : 'Auto-memory off'}
             aria-label={tab.autoMemory ? 'Auto-memory on' : 'Auto-memory off'}
           >
-            <Zap size={11} className={tab.autoMemory ? 'fill-yellow-400' : ''} />
+            <Zap size={11} className={tab.autoMemory ? 'fill-hero' : ''} />
           </button>
 
           {/* Close case */}
           {channel && (
             <button
               onClick={() => updateTab(tab.id, { closingCase: true, showContext: false })}
-              className="flex items-center gap-0.5 text-xs px-1.5 py-1 rounded-lg border bg-slate-800 border-slate-700 text-slate-500 hover:text-red-400 hover:border-red-400/30 transition-all duration-150"
+              className="flex items-center gap-0.5 text-xs px-1.5 py-1 rounded-lg border bg-bg-2 border-border-0 text-fg-2 hover:text-crit hover:border-crit/30 transition-all duration-150"
               title="Close case"
               aria-label="Close case"
             >
@@ -452,7 +452,7 @@ function TabContent({
           {tab.messages.length > 0 && (
             <button
               onClick={() => clearTabHistory(tab.id)}
-              className="text-slate-600 hover:text-red-400 transition-colors duration-150 p-1 rounded-lg hover:bg-slate-800"
+              className="text-fg-2 hover:text-crit transition-colors duration-150 p-1 rounded-lg hover:bg-bg-2"
               title="Clear conversation"
               aria-label="Clear conversation"
             >
@@ -464,7 +464,7 @@ function TabContent({
           {canClose && (
             <button
               onClick={() => closeTab(tab.id)}
-              className="text-slate-700 hover:text-red-400 transition-colors duration-150 p-1 rounded-lg hover:bg-slate-800 ml-0.5"
+              className="text-fg-3 hover:text-crit transition-colors duration-150 p-1 rounded-lg hover:bg-bg-2 ml-0.5"
               title="Close this window"
               aria-label="Close this window"
             >
@@ -484,12 +484,12 @@ function TabContent({
             transition={{ duration: 0.18, ease: 'easeInOut' }}
             className="overflow-hidden shrink-0"
           >
-            <div className="bg-slate-900 border-b border-slate-800 px-4 py-3 space-y-2">
+            <div className="bg-bg-1 border-b border-border-0 px-4 py-3 space-y-2">
               <div className="flex gap-2">
                 <select
                   value={tab.context.caseType}
                   onChange={e => updateTab(tab.id, { context: { ...tab.context, caseType: e.target.value } })}
-                  className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-100 outline-none focus:border-yellow-400/50 appearance-none"
+                  className="flex-1 bg-bg-2 border border-border-0 rounded-lg px-2 py-1.5 text-xs text-fg-0 outline-none focus:border-hero/50 appearance-none"
                   aria-label="Case type"
                 >
                   <option value="">Case type…</option>
@@ -501,7 +501,7 @@ function TabContent({
                   value={tab.context.issue}
                   onChange={e => updateTab(tab.id, { context: { ...tab.context, issue: e.target.value } })}
                   placeholder="Customer issue…"
-                  className="flex-[2] bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-100 placeholder-slate-500 outline-none focus:border-yellow-400/50"
+                  className="flex-[2] bg-bg-2 border border-border-0 rounded-lg px-2 py-1.5 text-xs text-fg-0 placeholder-fg-2 outline-none focus:border-hero/50"
                   aria-label="Customer issue"
                 />
               </div>
@@ -510,20 +510,20 @@ function TabContent({
                 onChange={e => updateTab(tab.id, { context: { ...tab.context, notes: e.target.value } })}
                 placeholder="TXIDs, order IDs, notes…"
                 rows={2}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-100 placeholder-slate-500 outline-none focus:border-yellow-400/50 resize-none"
+                className="w-full bg-bg-2 border border-border-0 rounded-lg px-2 py-1.5 text-xs text-fg-0 placeholder-fg-2 outline-none focus:border-hero/50 resize-none"
                 aria-label="Additional notes"
               />
               <div className="flex gap-2">
                 <button
                   onClick={() => updateTab(tab.id, { showContext: false })}
-                  className="text-xs bg-yellow-400/20 text-yellow-400 hover:bg-yellow-400/30 px-3 py-1.5 rounded-lg transition-colors duration-150 font-medium"
+                  className="text-xs bg-hero/20 text-hero hover:bg-hero/30 px-3 py-1.5 rounded-lg transition-colors duration-150 font-medium"
                 >
                   Set Context
                 </button>
                 {hasContext && (
                   <button
                     onClick={() => updateTab(tab.id, { context: { caseType: '', issue: '', notes: '' }, showContext: false })}
-                    className="text-xs text-slate-500 hover:text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700 hover:border-slate-600 transition-colors duration-150"
+                    className="text-xs text-fg-2 hover:text-fg-1 px-3 py-1.5 rounded-lg border border-border-0 hover:border-border-1 transition-colors duration-150"
                   >
                     Clear
                   </button>
@@ -540,21 +540,21 @@ function TabContent({
         {!channel && (
           <div className="flex flex-col items-center justify-center min-h-full text-center gap-4 py-6">
             <div>
-              <p className="text-slate-300 font-semibold text-sm">Select a channel</p>
-              <p className="text-xs text-slate-600 mt-1">Which channel is this case for?</p>
+              <p className="text-fg-1 font-semibold text-sm">Select a channel</p>
+              <p className="text-xs text-fg-2 mt-1">Which channel is this case for?</p>
             </div>
             <div className="grid grid-cols-2 gap-2 max-w-xs w-full mx-auto">
               {CHANNELS.map(ch => (
                 <button
                   key={ch.id}
                   onClick={() => updateTab(tab.id, { channelId: ch.id })}
-                  className="bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-yellow-400/30 rounded-xl p-3 flex flex-col items-center gap-1.5 text-center transition-all group"
+                  className="bg-bg-1 hover:bg-bg-2 border border-border-0 hover:border-hero/30 rounded-xl p-3 flex flex-col items-center gap-1.5 text-center transition-all group"
                 >
                   <span className="text-xl">{ch.flag}</span>
-                  <p className="text-xs font-medium text-slate-300 group-hover:text-yellow-400 transition-colors leading-tight">{ch.name}</p>
+                  <p className="text-xs font-medium text-fg-1 group-hover:text-hero transition-colors leading-tight">{ch.name}</p>
                   <span className={cn(
                     'text-xs px-1.5 py-0.5 rounded font-medium',
-                    ch.type === 'CHAT' ? 'bg-green-500/20 text-green-400' : 'bg-blue-500/20 text-blue-400'
+                    ch.type === 'CHAT' ? 'bg-ok/20 text-ok' : 'bg-info/20 text-info'
                   )}>{ch.type}</span>
                 </button>
               ))}
@@ -567,15 +567,15 @@ function TabContent({
           <div className="flex flex-col items-center justify-center min-h-full text-center gap-3 py-6">
             <span className="text-4xl opacity-60">{channel.flag}</span>
             <div>
-              <p className="text-slate-400 font-medium text-sm">{channel.name}</p>
-              <p className="text-xs text-slate-600 mt-0.5">{channel.subtitle}</p>
+              <p className="text-fg-1 font-medium text-sm">{channel.name}</p>
+              <p className="text-xs text-fg-2 mt-0.5">{channel.subtitle}</p>
             </div>
             <div className="grid grid-cols-2 gap-1.5 mt-1 max-w-xs w-full">
               {prompts.map(p => (
                 <button
                   key={p}
                   onClick={() => useQuickPrompt(p)}
-                  className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 px-2 py-1.5 rounded-lg text-left transition-colors duration-150 border border-slate-700"
+                  className="text-xs bg-bg-2 hover:bg-bg-3 text-fg-1 hover:text-fg-0 px-2 py-1.5 rounded-lg text-left transition-colors duration-150 border border-border-0"
                 >
                   {p}
                 </button>
@@ -588,21 +588,21 @@ function TabContent({
         {channel && tab.messages.map((m, i) => (
           <div key={i} className={cn('flex gap-2', m.role === 'user' ? 'justify-end' : 'justify-start')}>
             {m.role === 'assistant' && (
-              <div className="w-6 h-6 rounded-full bg-yellow-400/20 flex items-center justify-center text-xs shrink-0 mt-0.5 select-none font-bold text-yellow-400">A</div>
+              <div className="w-6 h-6 rounded-full bg-hero/20 flex items-center justify-center text-xs shrink-0 mt-0.5 select-none font-bold text-hero">A</div>
             )}
             <div className="max-w-[82%] flex flex-col gap-1">
               <div className={cn(
                 'rounded-2xl px-3 py-2.5 text-xs relative group',
                 m.role === 'user'
-                  ? 'bg-slate-700/80 border border-slate-600/60 text-slate-100 rounded-tr-sm'
-                  : 'bg-slate-800/60 border border-slate-700/40 text-slate-200 rounded-tl-sm'
+                  ? 'bg-bg-3/80 border border-border-1/60 text-fg-0 rounded-tr-sm'
+                  : 'bg-bg-2/60 border border-border-0/40 text-fg-0 rounded-tl-sm'
               )}>
                 <p className="whitespace-pre-wrap leading-relaxed">{m.content}</p>
-                <div className="absolute -top-1.5 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-slate-900 border border-slate-700 rounded-lg px-1.5 py-1">
+                <div className="absolute -top-1.5 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-bg-1 border border-border-0 rounded-lg px-1.5 py-1">
                   {m.role === 'assistant' && (
                     <button
                       onClick={() => updateTab(tab.id, { savingMem: i, memTitle: '' })}
-                      className={cn('transition-colors duration-150', tab.memSaved === i ? 'text-yellow-400' : 'text-slate-500 hover:text-yellow-400')}
+                      className={cn('transition-colors duration-150', tab.memSaved === i ? 'text-hero' : 'text-fg-2 hover:text-hero')}
                       aria-label="Save to memory"
                     >
                       {tab.memSaved === i ? <Check size={11} /> : <Brain size={11} />}
@@ -610,18 +610,18 @@ function TabContent({
                   )}
                   <button
                     onClick={() => copyMsg(tab.id, m.content, i)}
-                    className="text-slate-500 hover:text-slate-300 transition-colors duration-150"
+                    className="text-fg-2 hover:text-fg-1 transition-colors duration-150"
                     aria-label="Copy message"
                   >
-                    {tab.copied === i ? <Check size={11} className="text-green-400" /> : <Copy size={11} />}
+                    {tab.copied === i ? <Check size={11} className="text-ok" /> : <Copy size={11} />}
                   </button>
                 </div>
               </div>
 
               {/* Save to memory form */}
               {tab.savingMem === i && (
-                <div className="bg-slate-900 border border-yellow-400/30 rounded-xl px-3 py-2.5 space-y-2">
-                  <p className="text-xs text-yellow-400 font-medium">Save to Knowledge Base</p>
+                <div className="bg-bg-1 border border-hero/30 rounded-xl px-3 py-2.5 space-y-2">
+                  <p className="text-xs text-hero font-medium">Save to Knowledge Base</p>
                   <input
                     autoFocus
                     value={tab.memTitle}
@@ -631,20 +631,20 @@ function TabContent({
                       if (e.key === 'Escape') updateTab(tab.id, { savingMem: null });
                     }}
                     placeholder="Title for this memory…"
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-100 placeholder-slate-500 outline-none focus:border-yellow-400/50"
+                    className="w-full bg-bg-2 border border-border-0 rounded-lg px-2 py-1.5 text-xs text-fg-0 placeholder-fg-2 outline-none focus:border-hero/50"
                     aria-label="Memory title"
                   />
                   <div className="flex gap-2">
                     <button
                       onClick={() => saveToMemory(tab.id, i)}
                       disabled={!tab.memTitle.trim()}
-                      className="text-xs bg-yellow-400/20 disabled:bg-slate-800 disabled:text-slate-600 text-yellow-400 hover:bg-yellow-400/30 px-3 py-1.5 rounded-lg transition-colors duration-150 flex items-center gap-1"
+                      className="text-xs bg-hero/20 disabled:bg-bg-2 disabled:text-fg-2 text-hero hover:bg-hero/30 px-3 py-1.5 rounded-lg transition-colors duration-150 flex items-center gap-1"
                     >
                       <Brain size={10} /> Save
                     </button>
                     <button
                       onClick={() => updateTab(tab.id, { savingMem: null })}
-                      className="text-xs text-slate-500 hover:text-slate-300 px-2 py-1.5 transition-colors duration-150 flex items-center gap-1"
+                      className="text-xs text-fg-2 hover:text-fg-1 px-2 py-1.5 transition-colors duration-150 flex items-center gap-1"
                     >
                       <X size={10} /> Cancel
                     </button>
@@ -653,7 +653,7 @@ function TabContent({
               )}
             </div>
             {m.role === 'user' && (
-              <div className="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-xs text-slate-400 shrink-0 mt-0.5 select-none font-medium">V</div>
+              <div className="w-6 h-6 rounded-full bg-bg-3 flex items-center justify-center text-xs text-fg-1 shrink-0 mt-0.5 select-none font-medium">V</div>
             )}
           </div>
         ))}
@@ -661,11 +661,11 @@ function TabContent({
         {/* Loading */}
         {tab.loading && (
           <div className="flex gap-2 justify-start">
-            <div className="w-6 h-6 rounded-full bg-yellow-400/20 flex items-center justify-center text-xs shrink-0 font-bold text-yellow-400">A</div>
-            <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl rounded-tl-sm px-3 py-2.5">
+            <div className="w-6 h-6 rounded-full bg-hero/20 flex items-center justify-center text-xs shrink-0 font-bold text-hero">A</div>
+            <div className="bg-bg-2/60 border border-border-0/50 rounded-2xl rounded-tl-sm px-3 py-2.5">
               <div className="flex gap-1 items-center">
                 {[0, 1, 2].map(i => (
-                  <div key={i} className="w-1 h-1 bg-yellow-400/50 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                  <div key={i} className="w-1 h-1 bg-hero/50 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
                 ))}
               </div>
             </div>
@@ -683,11 +683,11 @@ function TabContent({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 12 }}
             transition={{ duration: 0.18, ease: 'easeOut' }}
-            className="bg-slate-950 border-t-2 border-red-500/30 px-4 py-3 shrink-0 space-y-2"
+            className="bg-bg-0 border-t-2 border-crit/30 px-4 py-3 shrink-0 space-y-2"
           >
             <div>
-              <p className="text-xs font-semibold text-slate-100">Close this case</p>
-              <p className="text-xs text-slate-600 mt-0.5">Optionally save a summary to Knowledge Base before clearing.</p>
+              <p className="text-xs font-semibold text-fg-0">Close this case</p>
+              <p className="text-xs text-fg-2 mt-0.5">Optionally save a summary to Knowledge Base before clearing.</p>
             </div>
             <textarea
               autoFocus
@@ -695,13 +695,13 @@ function TabContent({
               onChange={e => updateTab(tab.id, { closeSummary: e.target.value })}
               placeholder="Case summary (optional)…"
               rows={2}
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 placeholder-slate-500 outline-none focus:border-red-400/40 resize-none"
+              className="w-full bg-bg-2 border border-border-0 rounded-xl px-3 py-2 text-xs text-fg-0 placeholder-fg-2 outline-none focus:border-crit/40 resize-none"
             />
             <div className="flex items-center gap-2">
               <button
                 onClick={() => closeCase(tab.id)}
                 disabled={tab.closeSaving}
-                className="text-xs bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-semibold px-3 py-1.5 rounded-lg transition-colors duration-150 disabled:opacity-60"
+                className="text-xs bg-hero hover:bg-hero text-[#021418] font-semibold px-3 py-1.5 rounded-lg transition-colors duration-150 disabled:opacity-60"
               >
                 {tab.closeSaving ? 'Saving…' : 'Save & clear'}
               </button>
@@ -710,13 +710,13 @@ function TabContent({
                   updateTab(tab.id, { messages: [], closingCase: false, closeSummary: '' });
                   localStorage.removeItem(`multitab_msgs_${tab.id}`);
                 }}
-                className="text-xs text-slate-400 hover:text-slate-100 px-3 py-1.5 rounded-lg border border-slate-700 hover:border-slate-600 transition-colors duration-150"
+                className="text-xs text-fg-1 hover:text-fg-0 px-3 py-1.5 rounded-lg border border-border-0 hover:border-border-1 transition-colors duration-150"
               >
                 Just clear
               </button>
               <button
                 onClick={() => updateTab(tab.id, { closingCase: false, closeSummary: '' })}
-                className="text-xs text-slate-600 hover:text-slate-400 px-2 py-1.5 transition-colors duration-150"
+                className="text-xs text-fg-2 hover:text-fg-1 px-2 py-1.5 transition-colors duration-150"
               >
                 Cancel
               </button>
@@ -727,8 +727,8 @@ function TabContent({
 
       {/* ── Input Bar ────────────────────────────────────────────────────── */}
       {channel && (
-        <div className="px-3 py-2.5 border-t border-slate-800 bg-slate-900 shrink-0">
-          <div className="flex gap-2 items-end bg-slate-800/60 border border-slate-700/50 focus-within:border-yellow-400/40 rounded-xl px-3 py-2 transition-colors duration-200">
+        <div className="px-3 py-2.5 border-t border-border-0 bg-bg-1 shrink-0">
+          <div className="flex gap-2 items-end bg-bg-2/60 border border-border-0/50 focus-within:border-hero/40 rounded-xl px-3 py-2 transition-colors duration-200">
             <textarea
               ref={textareaRef}
               value={tab.input}
@@ -736,14 +736,14 @@ function TabContent({
               onKeyDown={handleKey}
               placeholder="Ask Ace… (Enter to send)"
               rows={1}
-              className="flex-1 bg-transparent text-xs text-slate-100 placeholder-slate-500 resize-none outline-none min-h-[18px] max-h-[100px] leading-relaxed"
+              className="flex-1 bg-transparent text-xs text-fg-0 placeholder-fg-2 resize-none outline-none min-h-[18px] max-h-[100px] leading-relaxed"
               onInput={e => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }}
               aria-label="Message input"
             />
             <button
               onClick={() => send(tab.id)}
               disabled={!tab.input.trim() || tab.loading}
-              className="w-6 h-6 rounded-lg flex items-center justify-center bg-yellow-400 disabled:bg-slate-700 text-slate-900 disabled:text-slate-500 transition-colors duration-150 shrink-0"
+              className="w-6 h-6 rounded-lg flex items-center justify-center bg-hero disabled:bg-bg-3 text-[#021418] disabled:text-fg-2 transition-colors duration-150 shrink-0"
               aria-label="Send message"
             >
               <Send size={11} />

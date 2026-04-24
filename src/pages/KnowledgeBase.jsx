@@ -49,20 +49,20 @@ function EntryCard({ entry, onToggle, onDelete, onEdit }) {
 
   return (
     <div className={cn(
-      'bg-slate-900 border rounded-xl p-4 transition-colors duration-150',
-      entry.active === false ? 'border-slate-800 opacity-50' : 'border-slate-700'
+      'bg-bg-1 border rounded-xl p-4 transition-colors duration-150',
+      entry.active === false ? 'border-border-0 opacity-50' : 'border-border-0'
     )}>
       {editing ? (
         <div className="space-y-2">
           <input value={title} onChange={e => setTitle(e.target.value)}
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 outline-none focus:border-yellow-400/50" />
+            className="w-full bg-bg-2 border border-border-0 rounded-lg px-3 py-2 text-sm text-fg-0 outline-none focus:border-hero/50" />
           <textarea value={content} onChange={e => setContent(e.target.value)} rows={4}
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 outline-none resize-none focus:border-yellow-400/50" />
+            className="w-full bg-bg-2 border border-border-0 rounded-lg px-3 py-2 text-sm text-fg-0 outline-none resize-none focus:border-hero/50" />
           <div className="flex gap-2">
-            <button onClick={save} className="flex items-center gap-1 text-xs bg-yellow-400/20 text-yellow-400 hover:bg-yellow-400/30 px-3 py-1.5 rounded-lg transition-colors duration-150">
+            <button onClick={save} className="flex items-center gap-1 text-xs bg-hero/20 text-hero hover:bg-hero/30 px-3 py-1.5 rounded-lg transition-colors duration-150">
               <Check size={12} /> Save
             </button>
-            <button onClick={cancel} className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-300 px-3 py-1.5 transition-colors duration-150">
+            <button onClick={cancel} className="flex items-center gap-1 text-xs text-fg-2 hover:text-fg-1 px-3 py-1.5 transition-colors duration-150">
               <X size={12} /> Cancel
             </button>
           </div>
@@ -70,29 +70,29 @@ function EntryCard({ entry, onToggle, onDelete, onEdit }) {
       ) : (
         <div>
           <div className="flex items-start justify-between gap-2 mb-2">
-            <p className="font-medium text-slate-100 text-sm">{entry.title}</p>
+            <p className="font-medium text-fg-0 text-sm">{entry.title}</p>
             <div className="flex items-center gap-1 shrink-0">
               <button onClick={() => onToggle(entry.id)}
-                className="flex items-center justify-center w-8 h-8 rounded-lg text-slate-600 hover:text-yellow-400 hover:bg-slate-800 transition-colors duration-150 cursor-pointer"
+                className="flex items-center justify-center w-8 h-8 rounded-lg text-fg-2 hover:text-hero hover:bg-bg-2 transition-colors duration-150 cursor-pointer"
                 aria-label={entry.active === false ? 'Enable entry' : 'Disable entry'}>
                 {entry.active === false
                   ? <ToggleLeft size={18} />
-                  : <ToggleRight size={18} className="text-yellow-400" />}
+                  : <ToggleRight size={18} className="text-hero" />}
               </button>
               <button onClick={() => setEditing(true)}
-                className="flex items-center justify-center w-8 h-8 rounded-lg text-slate-600 hover:text-slate-300 hover:bg-slate-800 transition-colors duration-150 cursor-pointer"
+                className="flex items-center justify-center w-8 h-8 rounded-lg text-fg-2 hover:text-fg-1 hover:bg-bg-2 transition-colors duration-150 cursor-pointer"
                 aria-label="Edit entry">
                 <Edit3 size={14} />
               </button>
               <button onClick={() => onDelete(entry.id)}
-                className="flex items-center justify-center w-8 h-8 rounded-lg text-slate-600 hover:text-red-400 hover:bg-slate-800 transition-colors duration-150 cursor-pointer"
+                className="flex items-center justify-center w-8 h-8 rounded-lg text-fg-2 hover:text-crit hover:bg-bg-2 transition-colors duration-150 cursor-pointer"
                 aria-label="Delete entry">
                 <Trash2 size={14} />
               </button>
             </div>
           </div>
-          <p className="text-xs text-slate-400 leading-relaxed whitespace-pre-wrap">{entry.content}</p>
-          {entry.active === false && <p className="text-xs text-slate-600 mt-2">⏸ Disabled — not injected into AI</p>}
+          <p className="text-xs text-fg-1 leading-relaxed whitespace-pre-wrap">{entry.content}</p>
+          {entry.active === false && <p className="text-xs text-fg-2 mt-2">⏸ Disabled — not injected into AI</p>}
         </div>
       )}
     </div>
@@ -111,7 +111,7 @@ function DomainPill({ domain, active, onClick }) {
         'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors duration-150 cursor-pointer',
         active
           ? cn(colors.bg, colors.text, colors.border)
-          : 'bg-slate-900 text-slate-500 border-slate-800 hover:text-slate-300 hover:border-slate-700'
+          : 'bg-bg-1 text-fg-2 border-border-0 hover:text-fg-1 hover:border-border-0'
       )}
     >
       <span>{meta.icon}</span>
@@ -126,7 +126,7 @@ function ArticleCard({ article }) {
   const domainMeta = DOMAINS.find(d => d.id === article.domain);
 
   return (
-    <div className="bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl overflow-hidden transition-colors duration-150">
+    <div className="bg-bg-1 border border-border-0 hover:border-border-0 rounded-xl overflow-hidden transition-colors duration-150">
       {/* Header */}
       <button
         className="w-full flex items-start gap-3 p-4 text-left cursor-pointer"
@@ -140,26 +140,26 @@ function ArticleCard({ article }) {
               {article.domain}
             </span>
             {article.platform === 'eu' && (
-              <span className="text-xs px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20">EU only</span>
+              <span className="text-xs px-2 py-0.5 rounded-md bg-info/10 text-info border border-info/20">EU only</span>
             )}
           </div>
-          <p className="text-sm font-semibold text-slate-100 leading-snug">{article.title}</p>
-          <p className="text-xs text-slate-500 mt-0.5">{article.subtitle}</p>
+          <p className="text-sm font-semibold text-fg-0 leading-snug">{article.title}</p>
+          <p className="text-xs text-fg-2 mt-0.5">{article.subtitle}</p>
         </div>
-        <div className="shrink-0 text-slate-600 mt-1">
+        <div className="shrink-0 text-fg-2 mt-1">
           {expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
         </div>
       </button>
 
       {/* Expanded content */}
       {expanded && (
-        <div className="px-4 pb-4 space-y-4 border-t border-slate-800">
+        <div className="px-4 pb-4 space-y-4 border-t border-border-0">
           {/* Key points */}
           <div className="pt-4">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Key Points</p>
+            <p className="text-xs font-semibold text-fg-1 uppercase tracking-wider mb-2">Key Points</p>
             <ul className="space-y-2">
               {article.keyPoints.map((point, i) => (
-                <li key={i} className="flex items-start gap-2 text-xs text-slate-300 leading-relaxed">
+                <li key={i} className="flex items-start gap-2 text-xs text-fg-1 leading-relaxed">
                   <span className={cn('shrink-0 mt-0.5', colors.text)}>→</span>
                   <span>{point}</span>
                 </li>
@@ -169,10 +169,10 @@ function ArticleCard({ article }) {
 
           {/* Agent tips */}
           {article.agentTips?.length > 0 && (
-            <div className="bg-yellow-400/5 border border-yellow-400/15 rounded-lg p-3 space-y-1.5">
-              <p className="text-xs font-semibold text-yellow-400">Agent Tips</p>
+            <div className="bg-hero/5 border border-hero/15 rounded-lg p-3 space-y-1.5">
+              <p className="text-xs font-semibold text-hero">Agent Tips</p>
               {article.agentTips.map((tip, i) => (
-                <p key={i} className="text-xs text-yellow-400/80 flex items-start gap-1.5">
+                <p key={i} className="text-xs text-hero/80 flex items-start gap-1.5">
                   <span className="shrink-0">✦</span> {tip}
                 </p>
               ))}
@@ -180,22 +180,22 @@ function ArticleCard({ article }) {
           )}
 
           {/* Escalate path */}
-          <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg px-3 py-2.5 flex items-start gap-2">
-            <AlertTriangle size={13} className="text-orange-400 shrink-0 mt-0.5" />
+          <div className="bg-bg-2/60 border border-border-0/50 rounded-lg px-3 py-2.5 flex items-start gap-2">
+            <AlertTriangle size={13} className="text-warn shrink-0 mt-0.5" />
             <div>
-              <p className="text-xs font-medium text-orange-400 mb-0.5">Escalation path</p>
-              <p className="text-xs text-slate-400">{article.escalatePath}</p>
+              <p className="text-xs font-medium text-warn mb-0.5">Escalation path</p>
+              <p className="text-xs text-fg-1">{article.escalatePath}</p>
             </div>
           </div>
 
           {/* Footer */}
           <div className="flex items-center justify-between pt-1">
-            <p className="text-xs text-slate-700">Updated {article.lastUpdated}</p>
+            <p className="text-xs text-fg-3">Updated {article.lastUpdated}</p>
             <a
               href={article.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 text-xs text-slate-500 hover:text-yellow-400 transition-colors duration-150"
+              className="flex items-center gap-1 text-xs text-fg-2 hover:text-hero transition-colors duration-150"
               onClick={e => e.stopPropagation()}
             >
               Bybit Help Center <ExternalLink size={11} />
@@ -210,30 +210,30 @@ function ArticleCard({ article }) {
 function EscalationMatrix() {
   return (
     <div className="space-y-3">
-      <div className="bg-slate-900/50 border border-slate-800 rounded-xl overflow-hidden">
-        <div className="px-4 py-3 border-b border-slate-800">
-          <p className="text-sm font-semibold text-slate-100">Escalation Decision Matrix</p>
-          <p className="text-xs text-slate-500 mt-0.5">Quick reference: what you can resolve vs. what needs a ticket</p>
+      <div className="bg-bg-1/50 border border-border-0 rounded-xl overflow-hidden">
+        <div className="px-4 py-3 border-b border-border-0">
+          <p className="text-sm font-semibold text-fg-0">Escalation Decision Matrix</p>
+          <p className="text-xs text-fg-2 mt-0.5">Quick reference: what you can resolve vs. what needs a ticket</p>
         </div>
-        <div className="divide-y divide-slate-800/60">
+        <div className="divide-y divide-border-0/60">
           {ESCALATION_TABLE.map((row, i) => (
-            <div key={i} className="flex items-start gap-3 px-4 py-3 hover:bg-slate-800/30 transition-colors duration-150">
+            <div key={i} className="flex items-start gap-3 px-4 py-3 hover:bg-bg-2/30 transition-colors duration-150">
               <div className="shrink-0 mt-0.5">
-                {row.selfService === true && <CheckCircle2 size={14} className="text-green-400" />}
-                {row.selfService === false && <X size={14} className="text-red-400" />}
-                {row.selfService === 'partial' && <Minus size={14} className="text-yellow-400" />}
+                {row.selfService === true && <CheckCircle2 size={14} className="text-ok" />}
+                {row.selfService === false && <X size={14} className="text-crit" />}
+                {row.selfService === 'partial' && <Minus size={14} className="text-hero" />}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-slate-200">{row.situation}</p>
-                <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{row.agentAction}</p>
+                <p className="text-xs font-medium text-fg-0">{row.situation}</p>
+                <p className="text-xs text-fg-2 mt-0.5 leading-relaxed">{row.agentAction}</p>
               </div>
             </div>
           ))}
         </div>
-        <div className="px-4 py-3 border-t border-slate-800 flex items-center gap-4 text-xs text-slate-600">
-          <span className="flex items-center gap-1"><CheckCircle2 size={11} className="text-green-400" /> Self-service available</span>
-          <span className="flex items-center gap-1"><Minus size={11} className="text-yellow-400" /> Partial</span>
-          <span className="flex items-center gap-1"><X size={11} className="text-red-400" /> Submit a Case required</span>
+        <div className="px-4 py-3 border-t border-border-0 flex items-center gap-4 text-xs text-fg-2">
+          <span className="flex items-center gap-1"><CheckCircle2 size={11} className="text-ok" /> Self-service available</span>
+          <span className="flex items-center gap-1"><Minus size={11} className="text-hero" /> Partial</span>
+          <span className="flex items-center gap-1"><X size={11} className="text-crit" /> Submit a Case required</span>
         </div>
       </div>
     </div>
@@ -258,8 +258,8 @@ function BybitOfficialTab() {
             className={cn(
               'text-xs px-3 py-1.5 rounded-lg border transition-colors duration-150',
               view === 'articles'
-                ? 'bg-yellow-400/15 text-yellow-400 border-yellow-400/30'
-                : 'text-slate-500 border-slate-800 hover:text-slate-300'
+                ? 'bg-hero/15 text-hero border-hero/30'
+                : 'text-fg-2 border-border-0 hover:text-fg-1'
             )}
           >
             15 Articles
@@ -269,15 +269,15 @@ function BybitOfficialTab() {
             className={cn(
               'text-xs px-3 py-1.5 rounded-lg border transition-colors duration-150',
               view === 'matrix'
-                ? 'bg-yellow-400/15 text-yellow-400 border-yellow-400/30'
-                : 'text-slate-500 border-slate-800 hover:text-slate-300'
+                ? 'bg-hero/15 text-hero border-hero/30'
+                : 'text-fg-2 border-border-0 hover:text-fg-1'
             )}
           >
             Escalation Matrix
           </button>
         </div>
         {view === 'articles' && (
-          <p className="text-xs text-slate-600">{filtered.length} article{filtered.length !== 1 ? 's' : ''}</p>
+          <p className="text-xs text-fg-2">{filtered.length} article{filtered.length !== 1 ? 's' : ''}</p>
         )}
       </div>
 
@@ -292,8 +292,8 @@ function BybitOfficialTab() {
               className={cn(
                 'text-xs px-3 py-1.5 rounded-lg border transition-colors duration-150',
                 !activeDomain
-                  ? 'bg-slate-700 text-slate-100 border-slate-600'
-                  : 'bg-slate-900 text-slate-500 border-slate-800 hover:text-slate-300'
+                  ? 'bg-bg-3 text-fg-0 border-border-1'
+                  : 'bg-bg-1 text-fg-2 border-border-0 hover:text-fg-1'
               )}
             >
               All
@@ -309,11 +309,11 @@ function BybitOfficialTab() {
           </div>
 
           {/* Info banner */}
-          <div className="bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-3 flex items-start gap-3">
+          <div className="bg-bg-1/50 border border-border-0 rounded-xl px-4 py-3 flex items-start gap-3">
             <span className="text-lg shrink-0">🌐</span>
             <div>
-              <p className="text-xs font-medium text-slate-300">Bybit Official Help Center</p>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs font-medium text-fg-1">Bybit Official Help Center</p>
+              <p className="text-xs text-fg-2 mt-0.5">
                 15 critical articles for live-chat. Key points and agent tips extracted. Click any article to expand.
               </p>
             </div>
@@ -447,25 +447,25 @@ export default function KnowledgeBase() {
       {/* Page header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-100">Knowledge Base</h1>
-          <p className="text-sm text-slate-500">Ace memory + Bybit official articles in one place</p>
+          <h1 className="text-xl font-bold text-fg-0">Knowledge Base</h1>
+          <p className="text-sm text-fg-2">Ace memory + Bybit official articles in one place</p>
         </div>
       </div>
 
       {/* Tab switcher */}
-      <div className="flex gap-1 bg-slate-900 border border-slate-800 rounded-xl p-1 w-fit">
+      <div className="flex gap-1 bg-bg-1 border border-border-0 rounded-xl p-1 w-fit">
         <button
           onClick={() => setTab('ace')}
           className={cn(
             'flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-150',
             tab === 'ace'
-              ? 'bg-yellow-400/15 text-yellow-400'
-              : 'text-slate-500 hover:text-slate-300'
+              ? 'bg-hero/15 text-hero'
+              : 'text-fg-2 hover:text-fg-1'
           )}
         >
           🧠 Ace Memory
           {memoryActiveCount > 0 && (
-            <span className="text-xs bg-yellow-400/20 text-yellow-400 px-1.5 py-0.5 rounded-md">{memoryActiveCount}</span>
+            <span className="text-xs bg-hero/20 text-hero px-1.5 py-0.5 rounded-md">{memoryActiveCount}</span>
           )}
         </button>
         <button
@@ -473,12 +473,12 @@ export default function KnowledgeBase() {
           className={cn(
             'flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-150',
             tab === 'bybit'
-              ? 'bg-yellow-400/15 text-yellow-400'
-              : 'text-slate-500 hover:text-slate-300'
+              ? 'bg-hero/15 text-hero'
+              : 'text-fg-2 hover:text-fg-1'
           )}
         >
           🌐 Bybit Official
-          <span className="text-xs bg-slate-800 text-slate-500 px-1.5 py-0.5 rounded-md">{BYBIT_KB.length}{officialCount > 0 ? ` + ${officialCount} seeded` : ''}</span>
+          <span className="text-xs bg-bg-2 text-fg-2 px-1.5 py-0.5 rounded-md">{BYBIT_KB.length}{officialCount > 0 ? ` + ${officialCount} seeded` : ''}</span>
         </button>
       </div>
 
@@ -490,20 +490,20 @@ export default function KnowledgeBase() {
             <input ref={fileRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
             <button
               onClick={() => fileRef.current?.click()}
-              className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-yellow-400 bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-2 rounded-lg transition-colors duration-150"
+              className="flex items-center gap-1.5 text-xs text-fg-1 hover:text-hero bg-bg-2 hover:bg-bg-3 border border-border-0 px-3 py-2 rounded-lg transition-colors duration-150"
             >
               <Upload size={13} /> Import
             </button>
             <button
               onClick={exportKnowledge}
               disabled={entries.length === 0}
-              className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-yellow-400 bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-2 rounded-lg transition-colors duration-150 disabled:opacity-40"
+              className="flex items-center gap-1.5 text-xs text-fg-1 hover:text-hero bg-bg-2 hover:bg-bg-3 border border-border-0 px-3 py-2 rounded-lg transition-colors duration-150 disabled:opacity-40"
             >
               <Download size={13} /> Export
             </button>
             <button
               onClick={() => setShowAdd(!showAdd)}
-              className="flex items-center gap-1.5 bg-yellow-400/20 hover:bg-yellow-400/30 text-yellow-400 text-xs px-3 py-2 rounded-lg transition-colors duration-150"
+              className="flex items-center gap-1.5 bg-hero/20 hover:bg-hero/30 text-hero text-xs px-3 py-2 rounded-lg transition-colors duration-150"
             >
               <Plus size={13} /> Add entry
             </button>
@@ -512,7 +512,7 @@ export default function KnowledgeBase() {
           {importMsg && (
             <div className={cn(
               'rounded-xl px-4 py-2.5 text-sm border',
-              importMsg.startsWith('✓') ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-400'
+              importMsg.startsWith('✓') ? 'bg-ok/10 border-ok/20 text-ok' : 'bg-crit/10 border-crit/20 text-crit'
             )}>
               {importMsg}
             </div>
@@ -522,8 +522,8 @@ export default function KnowledgeBase() {
           <div className={cn(
             'rounded-xl px-4 py-3 text-sm border',
             memoryActiveCount > 0
-              ? 'bg-green-500/10 border-green-500/20 text-green-400'
-              : 'bg-slate-800 border-slate-700 text-slate-500'
+              ? 'bg-ok/10 border-ok/20 text-ok'
+              : 'bg-bg-2 border-border-0 text-fg-2'
           )}>
             {memoryActiveCount > 0
               ? `✦ ${memoryActiveCount} memory entr${memoryActiveCount === 1 ? 'y' : 'ies'} active${officialCount > 0 ? ` · ${officialCount} Bybit KB articles loaded separately` : ''}`
@@ -533,22 +533,22 @@ export default function KnowledgeBase() {
 
           {/* Add form */}
           {showAdd && (
-            <div className="bg-slate-900 border border-yellow-400/20 rounded-xl p-5 space-y-3">
-              <p className="text-sm font-medium text-slate-300">New memory entry</p>
+            <div className="bg-bg-1 border border-hero/20 rounded-xl p-5 space-y-3">
+              <p className="text-sm font-medium text-fg-1">New memory entry</p>
               <input value={newTitle} onChange={e => setNewTitle(e.target.value)}
                 placeholder="Title (e.g. My Role, Escalation Rule, EU Policy note...)"
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-yellow-400/50" />
+                className="w-full bg-bg-2 border border-border-0 rounded-lg px-3 py-2.5 text-sm text-fg-0 placeholder-fg-2 outline-none focus:border-hero/50" />
               <textarea value={newContent} onChange={e => setNewContent(e.target.value)}
                 placeholder="What should Ace always know and remember..."
                 rows={4}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 outline-none resize-none focus:border-yellow-400/50" />
+                className="w-full bg-bg-2 border border-border-0 rounded-lg px-3 py-2.5 text-sm text-fg-0 placeholder-fg-2 outline-none resize-none focus:border-hero/50" />
               <div className="flex gap-2">
                 <button onClick={() => addEntry(newTitle, newContent)}
                   disabled={!newTitle.trim() || !newContent.trim()}
-                  className="bg-yellow-400 disabled:bg-slate-700 disabled:text-slate-500 text-slate-900 font-medium text-sm px-5 py-2 rounded-lg hover:bg-yellow-300 transition-colors duration-150">
+                  className="bg-hero disabled:bg-bg-3 disabled:text-fg-2 text-[#021418] font-medium text-sm px-5 py-2 rounded-lg hover:bg-hero transition-colors duration-150">
                   Save to memory
                 </button>
-                <button onClick={() => setShowAdd(false)} className="text-slate-500 text-sm px-4 py-2">Cancel</button>
+                <button onClick={() => setShowAdd(false)} className="text-fg-2 text-sm px-4 py-2">Cancel</button>
               </div>
             </div>
           )}
@@ -561,7 +561,7 @@ export default function KnowledgeBase() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-slate-600 space-y-1">
+            <div className="text-center py-8 text-fg-2 space-y-1">
               <p className="text-3xl">🧠</p>
               <p>No memory entries yet</p>
               <p className="text-sm">Add entries or import a backup</p>
@@ -571,32 +571,32 @@ export default function KnowledgeBase() {
           {/* Suggested starters */}
           {memoryEntries.length === 0 && (
             <div className="space-y-3">
-              <p className="text-xs text-slate-500 uppercase tracking-wider">Quick starters</p>
+              <p className="text-xs text-fg-2 uppercase tracking-wider">Quick starters</p>
               <div className="grid gap-2">
                 {SUGGESTED.map((s, i) => (
                   <button key={i} onClick={() => addEntry(s.title, s.content)}
-                    className="flex items-center justify-between bg-slate-900 border border-slate-800 hover:border-yellow-400/30 rounded-xl px-4 py-3 text-left transition-colors duration-150 group cursor-pointer">
+                    className="flex items-center justify-between bg-bg-1 border border-border-0 hover:border-hero/30 rounded-xl px-4 py-3 text-left transition-colors duration-150 group cursor-pointer">
                     <div>
-                      <p className="text-sm font-medium text-slate-300 group-hover:text-yellow-400 transition-colors duration-150">{s.title}</p>
-                      <p className="text-xs text-slate-600 mt-0.5 truncate">{s.content}</p>
+                      <p className="text-sm font-medium text-fg-1 group-hover:text-hero transition-colors duration-150">{s.title}</p>
+                      <p className="text-xs text-fg-2 mt-0.5 truncate">{s.content}</p>
                     </div>
-                    <Plus size={15} className="text-slate-600 group-hover:text-yellow-400 shrink-0 ml-3 transition-colors duration-150" />
+                    <Plus size={15} className="text-fg-2 group-hover:text-hero shrink-0 ml-3 transition-colors duration-150" />
                   </button>
                 ))}
               </div>
             </div>
           )}
 
-          <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-4 space-y-2">
-            <p className="text-xs font-medium text-slate-400">Tips</p>
+          <div className="bg-bg-1/50 border border-border-0 rounded-xl p-4 space-y-2">
+            <p className="text-xs font-medium text-fg-1">Tips</p>
             {[
               'In any chat, type "remember: [title] — [content]" and Ace saves it automatically',
               'Hover over any Ace reply in chat and click 🧠 to save it directly to memory',
               'Export regularly as a backup — import it back any time to restore',
               'Disable entries temporarily without deleting them using the toggle',
             ].map((t, i) => (
-              <p key={i} className="text-xs text-slate-600 flex items-start gap-1.5">
-                <span className="text-yellow-400/50 shrink-0">→</span> {t}
+              <p key={i} className="text-xs text-fg-2 flex items-start gap-1.5">
+                <span className="text-hero/50 shrink-0">→</span> {t}
               </p>
             ))}
           </div>

@@ -148,10 +148,10 @@ export default function FollowUp() {
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}
         className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-100">📬 Follow-up Tool</h1>
-          <p className="text-sm text-slate-500">Write freely — ACE structures it into a follow-up email</p>
+          <h1 className="text-xl font-bold text-fg-0">📬 Follow-up Tool</h1>
+          <p className="text-sm text-fg-2">Write freely — ACE structures it into a follow-up email</p>
         </div>
-        <button onClick={reset} className="flex items-center gap-1 text-xs text-slate-500 hover:text-red-400 transition-colors cursor-pointer"
+        <button onClick={reset} className="flex items-center gap-1 text-xs text-fg-2 hover:text-crit transition-colors cursor-pointer"
           aria-label="Reset follow-up form">
           <RotateCcw size={13} /> Reset
         </button>
@@ -168,21 +168,21 @@ export default function FollowUp() {
             className={cn(
               'rounded-xl p-4 text-left border transition-all duration-200 cursor-pointer',
               templateType === t.key
-                ? 'bg-yellow-400/10 border-yellow-400/40 shadow-lg shadow-yellow-400/5'
-                : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                ? 'bg-hero/10 border-hero/40 shadow-lg shadow-hero/5'
+                : 'bg-bg-1 border-border-0 hover:border-border-0'
             )}>
             <p className="text-lg mb-1">{t.icon}</p>
-            <p className={cn('font-medium text-sm', templateType === t.key ? 'text-yellow-400' : 'text-slate-200')}>{t.label}</p>
-            <p className="text-xs text-slate-500 mt-0.5">{t.desc}</p>
+            <p className={cn('font-medium text-sm', templateType === t.key ? 'text-hero' : 'text-fg-0')}>{t.label}</p>
+            <p className="text-xs text-fg-2 mt-0.5">{t.desc}</p>
           </motion.button>
         ))}
       </div>
 
       {/* Free-form notes */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
+      <div className="bg-bg-1 border border-border-0 rounded-xl p-5 space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-300">Your case notes</h2>
-          <span className="text-xs text-slate-600">{notes.length > 0 ? `${notes.length} chars` : 'Write anything'}</span>
+          <h2 className="text-sm font-semibold text-fg-1">Your case notes</h2>
+          <span className="text-xs text-fg-2">{notes.length > 0 ? `${notes.length} chars` : 'Write anything'}</span>
         </div>
         <textarea
           ref={textareaRef}
@@ -192,26 +192,26 @@ export default function FollowUp() {
             ? "Dump your notes here — e.g.:\n\nchat dropped due to inactivity, user cant apply for bybit card, they already have active virtual card which blocks new application. need to check if they mean physical card. ask for screenshot..."
             : "Any context about the chat — e.g.:\n\nuser joined but didnt say anything, chat timed out after 3 mins. no idea what they needed..."}
           rows={6}
-          className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-4 py-3 text-sm text-slate-100 placeholder-slate-600 outline-none resize-y transition-colors leading-relaxed"
+          className="w-full bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-4 py-3 text-sm text-fg-0 placeholder-fg-3 outline-none resize-y transition-colors leading-relaxed"
         />
         <div className="flex items-center gap-3">
           <button
             onClick={structureWithAce}
             disabled={loading || !notes.trim()}
-            className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 disabled:bg-slate-700 disabled:text-slate-500 text-slate-900 font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors duration-150 cursor-pointer"
+            className="flex items-center gap-2 bg-hero hover:bg-hero disabled:bg-bg-3 disabled:text-fg-2 text-[#021418] font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors duration-150 cursor-pointer"
             aria-label="Structure notes into email with ACE"
           >
             {loading
               ? <><Loader2 size={15} className="animate-spin" /> Structuring...</>
               : <><Sparkles size={15} /> ACE, structure this</>}
           </button>
-          {error && <p className="text-xs text-red-400">{error}</p>}
+          {error && <p className="text-xs text-crit">{error}</p>}
         </div>
       </div>
 
       {/* Additional info toggles */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
-        <h2 className="text-sm font-semibold text-slate-300">Request additional info from customer</h2>
+      <div className="bg-bg-1 border border-border-0 rounded-xl p-5 space-y-3">
+        <h2 className="text-sm font-semibold text-fg-1">Request additional info from customer</h2>
         <div className="space-y-2">
           {EXTRA_OPTIONS.map(item => (
             <motion.button key={item.key} whileTap={{ scale: 0.98 }}
@@ -220,18 +220,18 @@ export default function FollowUp() {
               className={cn(
                 'w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all duration-150 cursor-pointer',
                 extras[item.key]
-                  ? 'bg-yellow-400/10 border-yellow-400/30 shadow-md shadow-yellow-400/5'
-                  : 'bg-slate-800 border-slate-700 hover:border-slate-600'
+                  ? 'bg-hero/10 border-hero/30 shadow-md shadow-hero/5'
+                  : 'bg-bg-2 border-border-0 hover:border-border-1'
               )}>
               <span className="text-lg">{item.icon}</span>
               <div className="flex-1">
-                <p className={cn('text-sm font-medium', extras[item.key] ? 'text-yellow-400' : 'text-slate-200')}>{item.label}</p>
-                <p className="text-xs text-slate-500">{item.desc}</p>
+                <p className={cn('text-sm font-medium', extras[item.key] ? 'text-hero' : 'text-fg-0')}>{item.label}</p>
+                <p className="text-xs text-fg-2">{item.desc}</p>
               </div>
               <motion.div animate={{ scale: extras[item.key] ? 1 : 0.8, backgroundColor: extras[item.key] ? 'rgb(250 204 21)' : 'transparent' }}
                 transition={{ duration: 0.15 }}
-                className="w-5 h-5 rounded-full border-2 border-slate-600 flex items-center justify-center shrink-0">
-                {extras[item.key] && <Check size={10} className="text-slate-900" />}
+                className="w-5 h-5 rounded-full border-2 border-border-1 flex items-center justify-center shrink-0">
+                {extras[item.key] && <Check size={10} className="text-[#021418]" />}
               </motion.div>
             </motion.button>
           ))}
@@ -244,24 +244,24 @@ export default function FollowUp() {
           <motion.div
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
             layout
-            className="bg-slate-900 border border-yellow-400/20 rounded-xl overflow-hidden shadow-lg shadow-yellow-400/5"
+            className="bg-bg-1 border border-hero/20 rounded-xl overflow-hidden shadow-lg shadow-hero/5"
           >
-            <div className="flex items-center justify-between px-5 py-3 border-b border-slate-800">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-border-0">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
-                <h2 className="text-sm font-semibold text-yellow-400">Email preview</h2>
+                <span className="w-2 h-2 rounded-full bg-hero animate-pulse" />
+                <h2 className="text-sm font-semibold text-hero">Email preview</h2>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={structureWithAce}
                   disabled={loading}
-                  className="flex items-center gap-1 text-xs text-slate-500 hover:text-yellow-400 transition-colors cursor-pointer"
+                  className="flex items-center gap-1 text-xs text-fg-2 hover:text-hero transition-colors cursor-pointer"
                   aria-label="Regenerate email"
                 >
                   <RotateCcw size={11} /> Redo
                 </button>
                 <motion.button whileTap={{ scale: 0.95 }} onClick={copy}
-                  className="flex items-center gap-1.5 text-xs bg-yellow-400/20 hover:bg-yellow-400/30 active:bg-yellow-400/40 text-yellow-400 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 text-xs bg-hero/20 hover:bg-hero/30 active:bg-hero/40 text-hero px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
                   aria-label="Copy email to clipboard"
                 >
                   <AnimatePresence mode="wait" initial={false}>
@@ -273,16 +273,16 @@ export default function FollowUp() {
                 </motion.button>
               </div>
             </div>
-            <pre className="text-xs text-slate-300 whitespace-pre-wrap leading-relaxed font-mono p-5 max-h-96 overflow-y-auto">{email}</pre>
+            <pre className="text-xs text-fg-1 whitespace-pre-wrap leading-relaxed font-mono p-5 max-h-96 overflow-y-auto">{email}</pre>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Loading state */}
       {loading && !email && (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 flex items-center justify-center gap-3">
-          <Loader2 size={18} className="animate-spin text-yellow-400" />
-          <p className="text-sm text-slate-400">ACE is structuring your email...</p>
+        <div className="bg-bg-1 border border-border-0 rounded-xl p-8 flex items-center justify-center gap-3">
+          <Loader2 size={18} className="animate-spin text-hero" />
+          <p className="text-sm text-fg-1">ACE is structuring your email...</p>
         </div>
       )}
     </div>

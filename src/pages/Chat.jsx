@@ -27,7 +27,7 @@ function InlineText({ text }) {
         if (/^\*{2}.\*{2}$/.test(part))
           return <strong key={i} className="font-semibold text-white">{part.slice(2, -2)}</strong>;
         if (/^\*[^*]/.test(part) && part.endsWith('*') && !part.endsWith('**'))
-          return <em key={i} className="italic text-slate-300">{part.slice(1, -1)}</em>;
+          return <em key={i} className="italic text-fg-1">{part.slice(1, -1)}</em>;
         return <span key={i}>{part}</span>;
       })}
     </>
@@ -40,24 +40,24 @@ function MarkdownMessage({ content }) {
     <div className="space-y-0.5 leading-relaxed text-sm">
       {lines.map((line, i) => {
         if (!line.trim()) return <div key={i} className="h-1.5" />;
-        if (line.startsWith('### ')) return <p key={i} className="font-semibold text-slate-200 mt-2 first:mt-0 text-sm"><InlineText text={line.slice(4)} /></p>;
-        if (line.startsWith('## ')) return <p key={i} className="font-bold text-slate-100 mt-3 first:mt-0 text-sm border-b border-slate-700 pb-1"><InlineText text={line.slice(3)} /></p>;
-        if (line.startsWith('# ')) return <p key={i} className="font-bold text-slate-100 mt-3 first:mt-0"><InlineText text={line.slice(2)} /></p>;
+        if (line.startsWith('### ')) return <p key={i} className="font-semibold text-fg-0 mt-2 first:mt-0 text-sm"><InlineText text={line.slice(4)} /></p>;
+        if (line.startsWith('## ')) return <p key={i} className="font-bold text-fg-0 mt-3 first:mt-0 text-sm border-b border-border-0 pb-1"><InlineText text={line.slice(3)} /></p>;
+        if (line.startsWith('# ')) return <p key={i} className="font-bold text-fg-0 mt-3 first:mt-0"><InlineText text={line.slice(2)} /></p>;
         const bullet = line.match(/^[-•*]\s+(.+)/);
         if (bullet) return (
           <div key={i} className="flex gap-2 items-start">
-            <span className="text-yellow-400/50 mt-1 shrink-0" style={{ fontSize: 8 }}>▸</span>
-            <span className="text-slate-300"><InlineText text={bullet[1]} /></span>
+            <span className="text-hero/50 mt-1 shrink-0" style={{ fontSize: 8 }}>▸</span>
+            <span className="text-fg-1"><InlineText text={bullet[1]} /></span>
           </div>
         );
         const num = line.match(/^(\d+)\.\s+(.+)/);
         if (num) return (
           <div key={i} className="flex gap-2 items-start">
-            <span className="text-yellow-400/60 shrink-0 text-xs font-mono w-4">{num[1]}.</span>
-            <span className="text-slate-300"><InlineText text={num[2]} /></span>
+            <span className="text-hero/60 shrink-0 text-xs font-mono w-4">{num[1]}.</span>
+            <span className="text-fg-1"><InlineText text={num[2]} /></span>
           </div>
         );
-        return <p key={i} className="text-slate-200"><InlineText text={line} /></p>;
+        return <p key={i} className="text-fg-0"><InlineText text={line} /></p>;
       })}
     </div>
   );
@@ -69,7 +69,7 @@ function getNBAButtonStyle(priority, vipLevel) {
   const isCritical = priority === 'critical' || vipLevel >= 3;
   if (!isCritical) {
     return {
-      className: 'bg-slate-800 border-slate-600 text-slate-300 hover:text-slate-100 hover:border-slate-500',
+      className: 'bg-bg-2 border-border-1 text-fg-1 hover:text-fg-0 hover:border-border-1',
       glowStyle: {},
       pulse: false,
     };
@@ -78,7 +78,7 @@ function getNBAButtonStyle(priority, vipLevel) {
   const glowIntensity = vipLevel >= 5 ? '0.8' : vipLevel >= 4 ? '0.6' : '0.5';
   const glowSize = vipLevel >= 5 ? '25px' : '20px';
   return {
-    className: 'bg-yellow-400/10 border-yellow-400/60 text-yellow-300 hover:bg-yellow-400/20',
+    className: 'bg-hero/10 border-hero/60 text-hero hover:bg-hero/20',
     glowStyle: { boxShadow: `0 0 ${glowSize} rgba(250, 204, 21, ${glowIntensity})` },
     pulse: vipLevel >= 4,
   };
@@ -111,11 +111,11 @@ function PlanPanel({ plan }) {
           }}
         >
           <span style={{ color: '#facc15', fontSize: 10 }}>&#9670;</span>
-          <span className="text-yellow-400/80 font-medium tracking-wide" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+          <span className="text-hero/80 font-medium tracking-wide" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
             Ace Logic
           </span>
           {passCount > 0 && (
-            <span className="text-yellow-400/50 font-normal" style={{ fontSize: 9 }}>
+            <span className="text-hero/50 font-normal" style={{ fontSize: 9 }}>
               {passCount}-pass
             </span>
           )}
@@ -126,7 +126,7 @@ function PlanPanel({ plan }) {
             <span className="w-1.5 h-1.5 rounded-full bg-orange-400 shrink-0" />
           )}
         </span>
-        {open ? <ChevronUp size={10} className="text-yellow-400/40" /> : <ChevronDown size={10} className="text-slate-600 group-hover:text-yellow-400/40" />}
+        {open ? <ChevronUp size={10} className="text-hero/40" /> : <ChevronDown size={10} className="text-fg-2 group-hover:text-hero/40" />}
       </button>
       <AnimatePresence>
         {open && (
@@ -147,7 +147,7 @@ function PlanPanel({ plan }) {
             >
               {lines.map((line, i) => {
                 const sep = line.indexOf(':');
-                if (sep === -1) return <p key={i} className="text-xs text-slate-600">{line}</p>;
+                if (sep === -1) return <p key={i} className="text-xs text-fg-2">{line}</p>;
                 const key = line.slice(0, sep).trim();
                 const val = line.slice(sep + 1).trim();
                 const hasCheck = val.includes('✓');
@@ -156,10 +156,10 @@ function PlanPanel({ plan }) {
                 const isCite = val.startsWith('CITE:') || key.includes('CITATION');
                 return (
                   <div key={i} className="flex items-start gap-2 text-xs">
-                    <span className={cn('shrink-0 w-28 text-right font-medium', isCite ? 'text-cyan-400/70' : isPass ? 'text-yellow-400/60' : 'text-slate-600')}>{key}</span>
+                    <span className={cn('shrink-0 w-28 text-right font-medium', isCite ? 'text-cyan-400/70' : isPass ? 'text-hero/60' : 'text-fg-2')}>{key}</span>
                     <span className={cn(
                       'flex-1',
-                      isCite ? 'text-cyan-300/90 font-medium' : hasX ? 'text-orange-400' : hasCheck ? 'text-emerald-400/80' : 'text-slate-400'
+                      isCite ? 'text-cyan-300/90 font-medium' : hasX ? 'text-warn' : hasCheck ? 'text-emerald-400/80' : 'text-fg-1'
                     )}>{val}</span>
                   </div>
                 );
@@ -183,8 +183,8 @@ function NBAButtons({ actions, vipLevel, onAction }) {
       transition={{ type: 'spring', stiffness: 400, damping: 30 }}
       className="flex flex-wrap gap-2 mt-2"
     >
-      <p className="w-full text-xs text-slate-600 flex items-center gap-1">
-        <span className="text-yellow-400/50">⚡</span> Next best action
+      <p className="w-full text-xs text-fg-2 flex items-center gap-1">
+        <span className="text-hero/50">⚡</span> Next best action
       </p>
       {actions.map((action, i) => {
         const { className, glowStyle, pulse } = getNBAButtonStyle(action.priority, vipLevel);
@@ -206,7 +206,7 @@ function NBAButtons({ actions, vipLevel, onAction }) {
             <span>{action.icon}</span>
             {action.label}
             {isCritical && (
-              <span className="text-xs bg-yellow-400/20 text-yellow-400 border border-yellow-400/30 px-1.5 py-0.5 rounded font-bold ml-1">
+              <span className="text-xs bg-hero/20 text-hero border border-hero/30 px-1.5 py-0.5 rounded font-bold ml-1">
                 CRITICAL
                 {vipLevel >= 3 ? ` VIP ${vipLevel}` : ''}
               </span>
@@ -235,7 +235,7 @@ function VIPSelector({ vipLevel, setVipLevel, vipColorClass, vipLabel }) {
       title="Click to cycle VIP level (0–5)"
       aria-label={`Current VIP level: ${vipLabel}. Click to change.`}
     >
-      {vipLevel >= 3 && <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse shrink-0" />}
+      {vipLevel >= 3 && <span className="w-1.5 h-1.5 rounded-full bg-hero animate-pulse shrink-0" />}
       {vipLabel}
     </button>
   );
@@ -278,8 +278,8 @@ const TONES = [
     color: 'slate',
     instruction: 'TONE: Defensive — factual, policy-first. Lead with the rule or policy, cite specific clauses where possible. Be firm but professional. Avoid over-apologising. The goal is to protect both the company and the customer by being precise and transparent about what can and cannot be done.',
     classes: {
-      active: 'bg-slate-400/15 border-slate-400/30 text-slate-300',
-      dot: 'bg-slate-400',
+      active: 'bg-fg-3/15 border-border-1/30 text-fg-1',
+      dot: 'bg-fg-3',
     },
   },
   {
@@ -298,8 +298,8 @@ const TONES = [
     color: 'yellow',
     instruction: 'TONE: Concierge — premium, white-glove service. Treat this customer as a VIP. Be exceptionally polished, proactive, and thorough. Offer to go above and beyond. Use language like "I\'d be happy to personally ensure", "Allow me to take care of this for you", "I\'ve taken the liberty of checking". Make them feel like the most important person in the room.',
     classes: {
-      active: 'bg-yellow-400/15 border-yellow-400/30 text-yellow-300',
-      dot: 'bg-yellow-400',
+      active: 'bg-hero/15 border-hero/30 text-hero',
+      dot: 'bg-hero',
     },
   },
 ];
@@ -315,12 +315,12 @@ function ToneSlider({ tone, setTone }) {
             'flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border font-medium transition-all duration-200 cursor-pointer',
             tone === t.id
               ? t.classes.active
-              : 'bg-slate-800/60 border-slate-700/50 text-slate-600 hover:text-slate-400 hover:border-slate-600'
+              : 'bg-bg-2/60 border-border-0/50 text-fg-2 hover:text-fg-1 hover:border-border-1'
           )}
           title={`${t.label} tone`}
           aria-label={`Set tone to ${t.label}`}
         >
-          <span className={cn('w-1.5 h-1.5 rounded-full shrink-0 transition-all duration-200', tone === t.id ? t.classes.dot : 'bg-slate-600')} />
+          <span className={cn('w-1.5 h-1.5 rounded-full shrink-0 transition-all duration-200', tone === t.id ? t.classes.dot : 'bg-fg-2')} />
           {t.label}
         </button>
       ))}
@@ -343,12 +343,12 @@ function analyzeSentiment(text) {
 function SentimentMeter({ score }) {
   // score: 0-100 where 50 is neutral, <25 is danger
   const clamped = Math.max(0, Math.min(100, score));
-  const color = clamped >= 60 ? 'bg-emerald-400' : clamped >= 35 ? 'bg-yellow-400' : 'bg-red-400';
+  const color = clamped >= 60 ? 'bg-emerald-400' : clamped >= 35 ? 'bg-hero' : 'bg-crit';
   const label = clamped >= 60 ? 'Positive' : clamped >= 35 ? 'Neutral' : 'Friction';
-  const textColor = clamped >= 60 ? 'text-emerald-400/70' : clamped >= 35 ? 'text-yellow-400/70' : 'text-red-400/70';
+  const textColor = clamped >= 60 ? 'text-emerald-400/70' : clamped >= 35 ? 'text-hero/70' : 'text-crit/70';
   return (
     <div className="flex items-center gap-2" title={`Customer sentiment: ${label} (${clamped})`}>
-      <div className="w-16 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+      <div className="w-16 h-1.5 bg-bg-2 rounded-full overflow-hidden">
         <div
           className={cn('h-full rounded-full transition-all duration-500', color)}
           style={{ width: `${clamped}%` }}
@@ -746,10 +746,10 @@ export default function Chat({ channel }) {
   const platform = getPlatform(channel.id);
 
   const accent = channel.id.includes('eu')
-    ? 'from-yellow-400/50 to-transparent'
+    ? 'from-hero/50 to-transparent'
     : channel.id.includes('global')
     ? 'from-green-400/50 to-transparent'
-    : 'from-slate-500/30 to-transparent';
+    : 'from-fg-3/30 to-transparent';
 
   const TOOLBAR = [
     { label: '⚡ Lookup', action: () => navigate('/quick-lookup') },
@@ -781,7 +781,7 @@ export default function Chat({ channel }) {
       </AnimatePresence>
 
       {/* Header */}
-      <div className="shrink-0 bg-slate-900 border-b border-slate-800" style={vipGlowStyle}>
+      <div className="shrink-0 bg-bg-1 border-b border-border-0" style={vipGlowStyle}>
         <div className={cn('h-px bg-gradient-to-r', accent)} />
 
         <div className="flex items-center justify-between px-5 py-3">
@@ -789,13 +789,13 @@ export default function Chat({ channel }) {
             <span className="text-xl">{channel.flag}</span>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="font-semibold text-slate-100 text-sm">{channel.name}</h1>
+                <h1 className="font-semibold text-fg-0 text-sm">{channel.name}</h1>
                 <span className={cn(
                   'text-xs px-1.5 py-0.5 rounded font-medium',
-                  channel.type === 'CHAT' ? 'bg-green-500/20 text-green-400' : 'bg-blue-500/20 text-blue-400'
+                  channel.type === 'CHAT' ? 'bg-ok/20 text-ok' : 'bg-info/20 text-info'
                 )}>{channel.type}</span>
               </div>
-              <p className="text-xs text-slate-600">{channel.subtitle}</p>
+              <p className="text-xs text-fg-2">{channel.subtitle}</p>
             </div>
           </div>
 
@@ -803,7 +803,7 @@ export default function Chat({ channel }) {
             {autoSaved && (
               <motion.span
                 initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
-                className="text-xs text-yellow-400 flex items-center gap-1"
+                className="text-xs text-hero flex items-center gap-1"
               >
                 <Brain size={11} /> {autoSaved.count} saved
               </motion.span>
@@ -831,7 +831,7 @@ export default function Chat({ channel }) {
                 'flex items-center gap-1.5 text-xs px-2 py-1 rounded-lg border transition-colors duration-150',
                 deepMode
                   ? 'bg-purple-500/15 border-purple-500/30 text-purple-300'
-                  : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'
+                  : 'bg-bg-2 border-border-0 text-fg-2 hover:text-fg-1'
               )}
               title={deepMode ? 'Deep mode: 3-pass policy audit' : 'Flash mode: instant response'}
               aria-label={deepMode ? 'Deep reasoning mode active' : 'Flash mode active'}
@@ -849,19 +849,19 @@ export default function Chat({ channel }) {
               className={cn(
                 'flex items-center gap-1.5 text-xs px-2 py-1 rounded-lg border transition-colors duration-150',
                 autoMemory
-                  ? 'bg-yellow-400/15 border-yellow-400/30 text-yellow-400'
-                  : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'
+                  ? 'bg-hero/15 border-hero/30 text-hero'
+                  : 'bg-bg-2 border-border-0 text-fg-2 hover:text-fg-1'
               )}
             >
-              <Zap size={10} className={autoMemory ? 'fill-yellow-400' : ''} />
+              <Zap size={10} className={autoMemory ? 'fill-hero' : ''} />
               {autoMemory ? 'Auto' : 'Off'}
             </button>
             {messages.length > 0 && (
               <>
-                <span className="text-xs text-slate-700">{messages.length}</span>
+                <span className="text-xs text-fg-3">{messages.length}</span>
                 <button
                   onClick={() => { setClosingCase(true); }}
-                  className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-lg border bg-slate-800 border-slate-700 text-slate-500 hover:text-red-400 hover:border-red-400/30 transition-all duration-150 cursor-pointer"
+                  className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-lg border bg-bg-2 border-border-0 text-fg-2 hover:text-crit hover:border-crit/30 transition-all duration-150 cursor-pointer"
                   title="Close case"
                   aria-label="Close case"
                 >
@@ -872,7 +872,7 @@ export default function Chat({ channel }) {
             )}
             <button
               onClick={clearHistory}
-              className="text-slate-600 hover:text-red-400 transition-colors duration-150 flex items-center justify-center w-7 h-7 rounded-lg hover:bg-slate-800"
+              className="text-fg-2 hover:text-crit transition-colors duration-150 flex items-center justify-center w-7 h-7 rounded-lg hover:bg-bg-2"
               aria-label="Clear conversation"
             >
               <Trash2 size={14} />
@@ -890,8 +890,8 @@ export default function Chat({ channel }) {
               className={cn(
                 'text-xs px-2.5 py-1 rounded-lg border font-medium transition-colors duration-150',
                 item.highlight
-                  ? 'bg-red-500/15 border-red-500/30 text-red-400 hover:bg-red-500/25'
-                  : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200 hover:border-slate-600'
+                  ? 'bg-crit/15 border-crit/30 text-crit hover:bg-crit/25'
+                  : 'bg-bg-2 border-border-0 text-fg-1 hover:text-fg-0 hover:border-border-1'
               )}
             >
               {item.label}
@@ -900,7 +900,7 @@ export default function Chat({ channel }) {
           {/* Tone Alchemist — email channels only */}
           {isEmail && (
             <>
-              <div className="w-px h-4 bg-slate-700/50 mx-1" />
+              <div className="w-px h-4 bg-bg-3/50 mx-1" />
               <ToneSlider tone={tone} setTone={setTone} />
               {pairedChatChannel && (
                 <motion.button
@@ -927,19 +927,19 @@ export default function Chat({ channel }) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="shrink-0 mx-4 mt-2 bg-yellow-400/10 border border-yellow-400/30 rounded-xl px-4 py-2.5 flex items-center gap-3"
+            className="shrink-0 mx-4 mt-2 bg-hero/10 border border-hero/30 rounded-xl px-4 py-2.5 flex items-center gap-3"
           >
-            <span className="text-yellow-400 text-sm shrink-0">⚡</span>
+            <span className="text-hero text-sm shrink-0">⚡</span>
             <div className="flex-1 flex items-center gap-2 flex-wrap min-w-0">
-              <span className="text-xs font-medium text-yellow-400">Bybit signals detected</span>
-              {pasteDetected.uid && <span className="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-mono">UID {pasteDetected.uid}</span>}
-              {pasteDetected.orderId && <span className="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-mono">{pasteDetected.orderId}</span>}
-              {pasteDetected.coin && <span className="text-xs bg-slate-800 text-yellow-400 px-2 py-0.5 rounded font-medium">{pasteDetected.coin}</span>}
-              {pasteDetected.txHash && <span className="text-xs bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono">{pasteDetected.txHash.slice(0, 12)}…</span>}
-              {pasteDetected.errorCode && <span className="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded font-mono">{pasteDetected.errorCode}</span>}
-              <span className="text-xs text-slate-500">— routing NBA…</span>
+              <span className="text-xs font-medium text-hero">Bybit signals detected</span>
+              {pasteDetected.uid && <span className="text-xs bg-bg-2 text-fg-1 px-2 py-0.5 rounded font-mono">UID {pasteDetected.uid}</span>}
+              {pasteDetected.orderId && <span className="text-xs bg-bg-2 text-fg-1 px-2 py-0.5 rounded font-mono">{pasteDetected.orderId}</span>}
+              {pasteDetected.coin && <span className="text-xs bg-bg-2 text-hero px-2 py-0.5 rounded font-medium">{pasteDetected.coin}</span>}
+              {pasteDetected.txHash && <span className="text-xs bg-bg-2 text-fg-1 px-2 py-0.5 rounded font-mono">{pasteDetected.txHash.slice(0, 12)}…</span>}
+              {pasteDetected.errorCode && <span className="text-xs bg-crit/20 text-crit px-2 py-0.5 rounded font-mono">{pasteDetected.errorCode}</span>}
+              <span className="text-xs text-fg-2">— routing NBA…</span>
             </div>
-            <button onClick={() => setPasteDetected(null)} className="text-slate-600 hover:text-slate-400 shrink-0 transition-colors duration-150" aria-label="Dismiss">
+            <button onClick={() => setPasteDetected(null)} className="text-fg-2 hover:text-fg-1 shrink-0 transition-colors duration-150" aria-label="Dismiss">
               <X size={13} />
             </button>
           </motion.div>
@@ -952,8 +952,8 @@ export default function Chat({ channel }) {
           <div className="flex flex-col items-center justify-center flex-1 text-center gap-4">
             <span className="text-5xl opacity-60">{channel.flag}</span>
             <div>
-              <p className="text-slate-400 font-medium text-sm">{channel.name}</p>
-              <p className="text-xs text-slate-600 mt-0.5">{channel.subtitle}</p>
+              <p className="text-fg-1 font-medium text-sm">{channel.name}</p>
+              <p className="text-xs text-fg-2 mt-0.5">{channel.subtitle}</p>
             </div>
             <div className="grid grid-cols-2 gap-2 mt-2 max-w-sm w-full">
               {prompts.map(p => (
@@ -961,7 +961,7 @@ export default function Chat({ channel }) {
                   key={p}
                   whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                   onClick={() => injectPrompt(p)}
-                  className="text-xs bg-slate-800/80 hover:bg-slate-800 text-slate-500 hover:text-slate-200 px-3 py-2 rounded-lg text-left transition-colors duration-150 border border-slate-700/50 hover:border-slate-600"
+                  className="text-xs bg-bg-2/80 hover:bg-bg-2 text-fg-2 hover:text-fg-0 px-3 py-2 rounded-lg text-left transition-colors duration-150 border border-border-0/50 hover:border-border-1"
                 >
                   {p}
                 </motion.button>
@@ -986,7 +986,7 @@ export default function Chat({ channel }) {
             >
               {m.role === 'assistant' && (
                 <div
-                  className="w-7 h-7 rounded-xl bg-gradient-to-br from-yellow-400/25 to-amber-500/15 border border-yellow-400/20 backdrop-blur-sm flex items-center justify-center text-xs shrink-0 mt-1 select-none font-bold text-yellow-400"
+                  className="w-7 h-7 rounded-xl bg-gradient-to-br from-hero/25 to-hero/15 border border-hero/20 backdrop-blur-sm flex items-center justify-center text-xs shrink-0 mt-1 select-none font-bold text-hero"
                   style={{ boxShadow: '0 0 12px rgba(250,204,21,0.08)' }}
                 >A</div>
               )}
@@ -995,8 +995,8 @@ export default function Chat({ channel }) {
                   className={cn(
                     'rounded-2xl px-4 py-3 relative group transition-all duration-200',
                     m.role === 'user'
-                      ? 'bg-blue-500/8 backdrop-blur-md border border-blue-400/15 text-slate-100 rounded-tr-sm'
-                      : 'bg-white/[0.04] backdrop-blur-lg border border-white/[0.08] text-slate-200 rounded-tl-sm'
+                      ? 'bg-info/8 backdrop-blur-md border border-info/15 text-fg-0 rounded-tr-sm'
+                      : 'bg-white/[0.04] backdrop-blur-lg border border-white/[0.08] text-fg-0 rounded-tl-sm'
                   )}
                   style={m.role === 'user'
                     ? { boxShadow: '0 2px 16px rgba(59,130,246,0.06), inset 0 1px 0 rgba(255,255,255,0.03)' }
@@ -1004,7 +1004,7 @@ export default function Chat({ channel }) {
                   }
                 >
                   {m.hasImage && (
-                    <div className="flex items-center gap-1.5 mb-1.5 text-xs text-yellow-400/60">
+                    <div className="flex items-center gap-1.5 mb-1.5 text-xs text-hero/60">
                       <ImagePlus size={11} />
                       <span>Screenshot attached — Visual Audit</span>
                     </div>
@@ -1012,28 +1012,28 @@ export default function Chat({ channel }) {
                   <MarkdownMessage content={m.content} />
                   {m.streaming && !m.content && (
                     <div className="flex gap-1 items-center py-0.5">
-                      <span className="w-1.5 h-1.5 bg-yellow-400/70 rounded-full typing-dot" />
-                      <span className="w-1.5 h-1.5 bg-yellow-400/70 rounded-full typing-dot" />
-                      <span className="w-1.5 h-1.5 bg-yellow-400/70 rounded-full typing-dot" />
+                      <span className="w-1.5 h-1.5 bg-hero/70 rounded-full typing-dot" />
+                      <span className="w-1.5 h-1.5 bg-hero/70 rounded-full typing-dot" />
+                      <span className="w-1.5 h-1.5 bg-hero/70 rounded-full typing-dot" />
                     </div>
                   )}
                   {m.streaming && m.content && (
-                    <span className="inline-block w-0.5 h-3.5 rounded-sm bg-yellow-400/70 ml-0.5 align-middle animate-pulse" />
+                    <span className="inline-block w-0.5 h-3.5 rounded-sm bg-hero/70 ml-0.5 align-middle animate-pulse" />
                   )}
 
                   {/* Action buttons on hover */}
-                  <div className="absolute -top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1.5 bg-slate-900/90 backdrop-blur-md border border-white/10 rounded-xl px-2 py-1.5 shadow-lg">
+                  <div className="absolute -top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1.5 bg-bg-1/90 backdrop-blur-md border border-white/10 rounded-xl px-2 py-1.5 shadow-lg">
                     {m.role === 'assistant' && (
                       <button
                         onClick={() => { setSavingMem(i); setMemTitle(''); }}
-                        className={cn('transition-colors duration-150', memSaved === i ? 'text-yellow-400' : 'text-slate-500 hover:text-yellow-400')}
+                        className={cn('transition-colors duration-150', memSaved === i ? 'text-hero' : 'text-fg-2 hover:text-hero')}
                         aria-label="Save to memory"
                       >
                         {memSaved === i ? <Check size={11} /> : <Brain size={11} />}
                       </button>
                     )}
-                    <button onClick={() => copyMsg(m.content, i)} className="text-slate-500 hover:text-slate-300 transition-colors duration-150" aria-label="Copy message">
-                      {copied === i ? <Check size={11} className="text-green-400" /> : <Copy size={11} />}
+                    <button onClick={() => copyMsg(m.content, i)} className="text-fg-2 hover:text-fg-1 transition-colors duration-150" aria-label="Copy message">
+                      {copied === i ? <Check size={11} className="text-ok" /> : <Copy size={11} />}
                     </button>
                   </div>
                 </div>
@@ -1042,12 +1042,12 @@ export default function Chat({ channel }) {
                 {m.role === 'assistant' && csatScores[i] && (
                   <div className="flex items-center gap-1.5 px-1">
                     <span className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded',
-                      csatScores[i].grade === 'A' ? 'bg-green-500/20 text-green-400' :
-                      csatScores[i].grade === 'B' ? 'bg-blue-500/20 text-blue-400' :
-                      csatScores[i].grade === 'C' ? 'bg-yellow-500/20 text-yellow-400' :
-                      'bg-red-500/20 text-red-400'
+                      csatScores[i].grade === 'A' ? 'bg-ok/20 text-ok' :
+                      csatScores[i].grade === 'B' ? 'bg-info/20 text-info' :
+                      csatScores[i].grade === 'C' ? 'bg-hero-soft/20 text-hero' :
+                      'bg-crit/20 text-crit'
                     )}>{csatScores[i].grade}</span>
-                    <span className="text-[10px] text-slate-600">{csatScores[i].score}/100</span>
+                    <span className="text-[10px] text-fg-2">{csatScores[i].score}/100</span>
                   </div>
                 )}
 
@@ -1061,22 +1061,22 @@ export default function Chat({ channel }) {
                   <motion.div
                     initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                    className="bg-slate-900 border border-yellow-400/30 rounded-xl px-3 py-3 space-y-2"
+                    className="bg-bg-1 border border-hero/30 rounded-xl px-3 py-3 space-y-2"
                   >
-                    <p className="text-xs text-yellow-400 font-medium">Save to Knowledge Base</p>
+                    <p className="text-xs text-hero font-medium">Save to Knowledge Base</p>
                     <input
                       autoFocus value={memTitle}
                       onChange={e => setMemTitle(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') saveToMemory(i); if (e.key === 'Escape') setSavingMem(null); }}
                       placeholder="Title for this memory…"
-                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-500 outline-none focus:border-yellow-400/50"
+                      className="w-full bg-bg-2 border border-border-0 rounded-lg px-3 py-2 text-xs text-fg-0 placeholder-fg-2 outline-none focus:border-hero/50"
                     />
                     <div className="flex gap-2">
                       <button onClick={() => saveToMemory(i)} disabled={!memTitle.trim()}
-                        className="text-xs bg-yellow-400/20 disabled:bg-slate-800 disabled:text-slate-600 text-yellow-400 hover:bg-yellow-400/30 px-3 py-1.5 rounded-lg transition-colors duration-150 flex items-center gap-1">
+                        className="text-xs bg-hero/20 disabled:bg-bg-2 disabled:text-fg-2 text-hero hover:bg-hero/30 px-3 py-1.5 rounded-lg transition-colors duration-150 flex items-center gap-1">
                         <Brain size={11} /> Save
                       </button>
-                      <button onClick={() => setSavingMem(null)} className="text-xs text-slate-500 hover:text-slate-300 px-2 py-1.5 transition-colors duration-150 flex items-center gap-1">
+                      <button onClick={() => setSavingMem(null)} className="text-xs text-fg-2 hover:text-fg-1 px-2 py-1.5 transition-colors duration-150 flex items-center gap-1">
                         <X size={11} /> Cancel
                       </button>
                     </div>
@@ -1094,7 +1094,7 @@ export default function Chat({ channel }) {
               </div>
 
               {m.role === 'user' && (
-                <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/10 border border-blue-400/15 backdrop-blur-sm flex items-center justify-center text-xs text-blue-300 shrink-0 mt-1 select-none font-medium">V</div>
+                <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/10 border border-info/15 backdrop-blur-sm flex items-center justify-center text-xs text-info shrink-0 mt-1 select-none font-medium">V</div>
               )}
             </motion.div>
           );
@@ -1104,7 +1104,7 @@ export default function Chat({ channel }) {
         {loading && !messages.some(m => m.streaming) && (
           <div className="flex gap-2.5 justify-start">
             <div
-              className="w-7 h-7 rounded-xl bg-gradient-to-br from-yellow-400/25 to-amber-500/15 border border-yellow-400/20 backdrop-blur-sm flex items-center justify-center text-xs shrink-0 mt-1 font-bold text-yellow-400"
+              className="w-7 h-7 rounded-xl bg-gradient-to-br from-hero/25 to-hero/15 border border-hero/20 backdrop-blur-sm flex items-center justify-center text-xs shrink-0 mt-1 font-bold text-hero"
               style={{ boxShadow: '0 0 12px rgba(250,204,21,0.08)' }}
             >A</div>
             <div
@@ -1112,9 +1112,9 @@ export default function Chat({ channel }) {
               style={{ boxShadow: '0 2px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.04)' }}
             >
               <div className="flex gap-1 items-center">
-                <span className="w-1.5 h-1.5 bg-yellow-400/70 rounded-full typing-dot" />
-                <span className="w-1.5 h-1.5 bg-yellow-400/70 rounded-full typing-dot" />
-                <span className="w-1.5 h-1.5 bg-yellow-400/70 rounded-full typing-dot" />
+                <span className="w-1.5 h-1.5 bg-hero/70 rounded-full typing-dot" />
+                <span className="w-1.5 h-1.5 bg-hero/70 rounded-full typing-dot" />
+                <span className="w-1.5 h-1.5 bg-hero/70 rounded-full typing-dot" />
               </div>
             </div>
           </div>
@@ -1126,8 +1126,8 @@ export default function Chat({ channel }) {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="flex items-center gap-2 pl-9"
           >
-            <div className="w-1.5 h-1.5 bg-yellow-400/40 rounded-full animate-pulse" />
-            <span className="text-xs text-slate-700">Analyzing next action…</span>
+            <div className="w-1.5 h-1.5 bg-hero/40 rounded-full animate-pulse" />
+            <span className="text-xs text-fg-3">Analyzing next action…</span>
           </motion.div>
         )}
 
@@ -1143,11 +1143,11 @@ export default function Chat({ channel }) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 12 }}
             transition={{ duration: 0.18, ease: 'easeOut' }}
-            className="shrink-0 bg-slate-900 border-t-2 border-red-500/30 px-5 py-4 space-y-3"
+            className="shrink-0 bg-bg-1 border-t-2 border-crit/30 px-5 py-4 space-y-3"
           >
             <div>
-              <p className="text-sm font-semibold text-slate-100">Close this case</p>
-              <p className="text-xs text-slate-500 mt-0.5">Save a case summary to Knowledge Base before clearing.</p>
+              <p className="text-sm font-semibold text-fg-0">Close this case</p>
+              <p className="text-xs text-fg-2 mt-0.5">Save a case summary to Knowledge Base before clearing.</p>
             </div>
             <textarea
               autoFocus
@@ -1155,13 +1155,13 @@ export default function Chat({ channel }) {
               onChange={e => setCloseSummary(e.target.value)}
               placeholder="Case summary (optional) — what happened, resolution, follow-up needed..."
               rows={3}
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-red-400/40 resize-none transition-colors duration-200"
+              className="w-full bg-bg-2 border border-border-0 rounded-xl px-4 py-3 text-sm text-fg-0 placeholder-fg-2 outline-none focus:border-crit/40 resize-none transition-colors duration-200"
             />
             <div className="flex items-center gap-2">
               <button
                 onClick={closeCase}
                 disabled={closeSaving}
-                className="flex items-center gap-1.5 text-xs bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-semibold px-4 py-2 rounded-lg transition-colors duration-150 disabled:opacity-60 cursor-pointer"
+                className="flex items-center gap-1.5 text-xs bg-hero hover:bg-hero text-[#021418] font-semibold px-4 py-2 rounded-lg transition-colors duration-150 disabled:opacity-60 cursor-pointer"
               >
                 {closeSaving ? 'Saving...' : 'Save & Close'}
               </button>
@@ -1173,13 +1173,13 @@ export default function Chat({ channel }) {
                   setClosingCase(false);
                   setCloseSummary('');
                 }}
-                className="text-xs text-slate-400 hover:text-slate-100 px-4 py-2 rounded-lg border border-slate-700 hover:border-slate-600 transition-colors duration-150 cursor-pointer"
+                className="text-xs text-fg-1 hover:text-fg-0 px-4 py-2 rounded-lg border border-border-0 hover:border-border-1 transition-colors duration-150 cursor-pointer"
               >
                 Just Clear
               </button>
               <button
                 onClick={() => { setClosingCase(false); setCloseSummary(''); }}
-                className="text-xs text-slate-600 hover:text-slate-400 px-3 py-2 transition-colors duration-150 cursor-pointer"
+                className="text-xs text-fg-2 hover:text-fg-1 px-3 py-2 transition-colors duration-150 cursor-pointer"
               >
                 Cancel
               </button>
@@ -1189,7 +1189,7 @@ export default function Chat({ channel }) {
       </AnimatePresence>
 
       {/* Bottom — chips + input, unified glass panel */}
-      <div className="shrink-0 border-t border-white/[0.06] bg-slate-900/60 backdrop-blur-xl relative">
+      <div className="shrink-0 border-t border-white/[0.06] bg-bg-1/60 backdrop-blur-xl relative">
         {/* Quick Replies panel */}
         <QuickReplies
           open={showQuickReplies}
@@ -1205,14 +1205,14 @@ export default function Chat({ channel }) {
                 const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant');
                 if (lastAssistant) { navigator.clipboard.writeText(lastAssistant.content); }
               }}
-              className="text-xs whitespace-nowrap px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-400 hover:text-slate-200 hover:border-slate-600 transition-colors duration-150 shrink-0 flex items-center gap-1 cursor-pointer"
+              className="text-xs whitespace-nowrap px-2.5 py-1.5 rounded-lg bg-bg-2 border border-border-0 text-fg-1 hover:text-fg-0 hover:border-border-1 transition-colors duration-150 shrink-0 flex items-center gap-1 cursor-pointer"
               aria-label="Copy last AI response"
             >
               <Copy size={10} /> Copy Last
             </button>
             <button
               onClick={() => setShowEscalation(true)}
-              className="text-xs whitespace-nowrap px-2.5 py-1.5 rounded-lg bg-red-500/10 border border-red-500/25 text-red-400 hover:bg-red-500/20 transition-colors duration-150 shrink-0 flex items-center gap-1 cursor-pointer"
+              className="text-xs whitespace-nowrap px-2.5 py-1.5 rounded-lg bg-crit/10 border border-crit/25 text-crit hover:bg-crit/20 transition-colors duration-150 shrink-0 flex items-center gap-1 cursor-pointer"
               aria-label="Open escalation builder"
             >
               📤 Escalate
@@ -1226,7 +1226,7 @@ export default function Chat({ channel }) {
                   setMemTitle('');
                 }
               }}
-              className="text-xs whitespace-nowrap px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-400 hover:text-yellow-400 hover:border-yellow-400/30 transition-colors duration-150 shrink-0 flex items-center gap-1 cursor-pointer"
+              className="text-xs whitespace-nowrap px-2.5 py-1.5 rounded-lg bg-bg-2 border border-border-0 text-fg-1 hover:text-hero hover:border-hero/30 transition-colors duration-150 shrink-0 flex items-center gap-1 cursor-pointer"
               aria-label="Save to memory"
             >
               <Brain size={10} /> Save Memory
@@ -1236,8 +1236,8 @@ export default function Chat({ channel }) {
               className={cn(
                 'text-xs whitespace-nowrap px-2.5 py-1.5 rounded-lg border transition-colors duration-150 shrink-0 flex items-center gap-1 cursor-pointer',
                 showQuickReplies
-                  ? 'bg-yellow-400/15 border-yellow-400/30 text-yellow-400'
-                  : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200 hover:border-slate-600'
+                  ? 'bg-hero/15 border-hero/30 text-hero'
+                  : 'bg-bg-2 border-border-0 text-fg-1 hover:text-fg-0 hover:border-border-1'
               )}
               aria-label="Toggle quick replies"
             >
@@ -1252,8 +1252,8 @@ export default function Chat({ channel }) {
               className={cn(
                 'text-xs whitespace-nowrap px-2.5 py-1.5 rounded-lg border transition-colors duration-150 shrink-0 flex items-center gap-1 cursor-pointer',
                 autoCsat
-                  ? 'bg-green-500/15 border-green-500/30 text-green-400'
-                  : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200 hover:border-slate-600'
+                  ? 'bg-ok/15 border-ok/30 text-ok'
+                  : 'bg-bg-2 border-border-0 text-fg-1 hover:text-fg-0 hover:border-border-1'
               )}
               aria-label="Toggle auto quality scoring"
             >
@@ -1269,7 +1269,7 @@ export default function Chat({ channel }) {
               key={chip.label}
               whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
               onClick={() => injectChip(chip.text)}
-              className="text-xs whitespace-nowrap px-3 py-1.5 rounded-full bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-sm border border-white/[0.06] hover:border-white/[0.12] text-slate-500 hover:text-slate-200 transition-all duration-200 shrink-0"
+              className="text-xs whitespace-nowrap px-3 py-1.5 rounded-full bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-sm border border-white/[0.06] hover:border-white/[0.12] text-fg-2 hover:text-fg-0 transition-all duration-200 shrink-0"
             >
               {chip.label}
             </motion.button>
@@ -1285,15 +1285,15 @@ export default function Chat({ channel }) {
               exit={{ opacity: 0, height: 0 }}
               className="px-4 pt-2 overflow-hidden"
             >
-              <div className="inline-flex items-center gap-2 bg-slate-800/80 border border-slate-700 rounded-xl px-3 py-2">
+              <div className="inline-flex items-center gap-2 bg-bg-2/80 border border-border-0 rounded-xl px-3 py-2">
                 <img src={imageAttachment.preview} alt="Attachment preview" className="w-10 h-10 rounded-lg object-cover" />
                 <div className="min-w-0">
-                  <p className="text-xs text-slate-300 truncate max-w-[160px]">{imageAttachment.name}</p>
-                  <p className="text-[10px] text-yellow-400/70">Visual Audit will run</p>
+                  <p className="text-xs text-fg-1 truncate max-w-[160px]">{imageAttachment.name}</p>
+                  <p className="text-[10px] text-hero/70">Visual Audit will run</p>
                 </div>
                 <button
                   onClick={() => setImageAttachment(null)}
-                  className="text-slate-600 hover:text-red-400 transition-colors duration-150 shrink-0 cursor-pointer"
+                  className="text-fg-2 hover:text-crit transition-colors duration-150 shrink-0 cursor-pointer"
                   aria-label="Remove image"
                 >
                   <X size={13} />
@@ -1306,7 +1306,7 @@ export default function Chat({ channel }) {
         {/* Input */}
         <div className="px-4 py-3">
           <div
-            className="flex gap-3 items-end bg-white/[0.03] backdrop-blur-lg border border-white/[0.08] focus-within:border-yellow-400/30 rounded-2xl px-4 py-3 transition-all duration-200"
+            className="flex gap-3 items-end bg-white/[0.03] backdrop-blur-lg border border-white/[0.08] focus-within:border-hero/30 rounded-2xl px-4 py-3 transition-all duration-200"
             style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.04)' }}
           >
             {/* Image attach button */}
@@ -1316,8 +1316,8 @@ export default function Chat({ channel }) {
               className={cn(
                 'w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-200 shrink-0 mb-0.5 cursor-pointer',
                 imageAttachment
-                  ? 'bg-yellow-400/15 text-yellow-400 border border-yellow-400/30'
-                  : 'bg-slate-800/60 text-slate-500 hover:text-slate-300 border border-slate-700/50 hover:border-slate-600'
+                  ? 'bg-hero/15 text-hero border border-hero/30'
+                  : 'bg-bg-2/60 text-fg-2 hover:text-fg-1 border border-border-0/50 hover:border-border-1'
               )}
               title="Attach screenshot for Visual Audit"
               aria-label="Attach image for Visual Audit"
@@ -1331,7 +1331,7 @@ export default function Chat({ channel }) {
               onKeyDown={handleKey}
               placeholder={imageAttachment ? "Describe what you need from this screenshot…" : "Ask Ace anything… (Enter to send, Shift+Enter for new line)"}
               rows={1}
-              className="flex-1 bg-transparent text-sm text-slate-100 placeholder-slate-500 resize-none outline-none min-h-[20px] max-h-[120px] leading-relaxed"
+              className="flex-1 bg-transparent text-sm text-fg-0 placeholder-fg-2 resize-none outline-none min-h-[20px] max-h-[120px] leading-relaxed"
               onInput={e => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }}
             />
             <motion.button
@@ -1339,7 +1339,7 @@ export default function Chat({ channel }) {
               disabled={(!input.trim() && !imageAttachment) || loading}
               whileHover={(input.trim() || imageAttachment) && !loading ? { scale: 1.1 } : {}}
               whileTap={(input.trim() || imageAttachment) && !loading ? { scale: 0.92 } : {}}
-              className="w-8 h-8 rounded-xl flex items-center justify-center bg-gradient-to-br from-yellow-400 to-amber-500 disabled:from-slate-700 disabled:to-slate-700 text-slate-900 disabled:text-slate-500 transition-all duration-200 shrink-0 mb-0.5"
+              className="w-8 h-8 rounded-xl flex items-center justify-center bg-gradient-to-br from-hero to-hero disabled:from-bg-3 disabled:to-bg-3 text-[#021418] disabled:text-fg-2 transition-all duration-200 shrink-0 mb-0.5"
               style={(input.trim() || imageAttachment) && !loading ? { boxShadow: '0 0 16px rgba(250,204,21,0.25)' } : {}}
               aria-label="Send message"
             >

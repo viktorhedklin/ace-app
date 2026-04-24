@@ -8,9 +8,9 @@ import { getAllCases } from '@/lib/caseMemory';
 
 function Section({ title, children }) {
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-      <div className="px-5 py-4 border-b border-slate-800">
-        <h2 className="font-semibold text-slate-100 text-sm">{title}</h2>
+    <div className="bg-bg-1 border border-border-0 rounded-xl overflow-hidden">
+      <div className="px-5 py-4 border-b border-border-0">
+        <h2 className="font-semibold text-fg-0 text-sm">{title}</h2>
       </div>
       <div className="p-5">{children}</div>
     </div>
@@ -120,13 +120,13 @@ function AutoVault() {
   return (
     <Section title="🔐 Auto-Vault">
       <div className="space-y-3">
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-fg-2">
           Automatically saves an AES-256 encrypted session snapshot to a local folder every 15 minutes.
           No cloud. Data never leaves your machine.
         </p>
 
         {!isSupported ? (
-          <p className="text-xs text-yellow-400/80 bg-yellow-400/5 border border-yellow-400/20 rounded-lg px-3 py-2">
+          <p className="text-xs text-hero/80 bg-hero/5 border border-hero/20 rounded-lg px-3 py-2">
             File System Access API not supported in this browser. Use Chrome or Edge.
           </p>
         ) : dirHandle ? (
@@ -135,21 +135,21 @@ function AutoVault() {
               <ShieldCheck size={14} className="text-emerald-400 shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-emerald-400 font-medium">Auto-Vault active</p>
-                <p className="text-[10px] text-slate-500">
+                <p className="text-[10px] text-fg-2">
                   {saving ? 'Saving...' : lastSave ? `Last saved: ${lastSave.toLocaleTimeString()}` : 'Waiting for first save...'}
                 </p>
               </div>
               <button
                 onClick={() => saveSnapshot(dirHandle)}
                 disabled={saving}
-                className="text-xs text-slate-500 hover:text-slate-300 transition-colors cursor-pointer disabled:opacity-50"
+                className="text-xs text-fg-2 hover:text-fg-1 transition-colors cursor-pointer disabled:opacity-50"
               >
                 {saving ? <Loader2 size={12} className="animate-spin" /> : 'Save now'}
               </button>
             </div>
             <button
               onClick={disableVault}
-              className="text-xs text-slate-600 hover:text-red-400 transition-colors cursor-pointer"
+              className="text-xs text-fg-2 hover:text-crit transition-colors cursor-pointer"
             >
               Disable Auto-Vault
             </button>
@@ -157,16 +157,16 @@ function AutoVault() {
         ) : (
           <button
             onClick={enableVault}
-            className="flex items-center gap-2 text-xs bg-slate-800 hover:bg-yellow-400/15 border border-slate-700 hover:border-yellow-400/30 text-slate-300 hover:text-yellow-400 px-4 py-2.5 rounded-lg transition-colors duration-150 cursor-pointer"
+            className="flex items-center gap-2 text-xs bg-bg-2 hover:bg-hero/15 border border-border-0 hover:border-hero/30 text-fg-1 hover:text-hero px-4 py-2.5 rounded-lg transition-colors duration-150 cursor-pointer"
           >
             <FolderOpen size={14} />
             Select vault folder
           </button>
         )}
 
-        {error && <p className="text-xs text-red-400">{error}</p>}
+        {error && <p className="text-xs text-crit">{error}</p>}
 
-        <p className="text-[10px] text-slate-700">
+        <p className="text-[10px] text-fg-3">
           Encrypted with AES-256-GCM. Key derived from Terminal Gate hash via PBKDF2 (100k iterations).
         </p>
       </div>
@@ -180,7 +180,7 @@ const COST_MODES = [
     label: 'Performance',
     icon: Zap,
     desc: 'Opus everywhere — best quality, highest cost',
-    color: 'text-orange-400',
+    color: 'text-warn',
     bg: 'bg-orange-400/10 border-orange-400/30',
   },
   {
@@ -188,8 +188,8 @@ const COST_MODES = [
     label: 'Balanced',
     icon: Scale,
     desc: 'Opus for chat, Sonnet for tools + routing',
-    color: 'text-yellow-400',
-    bg: 'bg-yellow-400/10 border-yellow-400/30',
+    color: 'text-hero',
+    bg: 'bg-hero/10 border-hero/30',
   },
   {
     key: 'economy',
@@ -212,7 +212,7 @@ function CostModeSection() {
   return (
     <Section title="💰 Cost Mode">
       <div className="space-y-3">
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-fg-2">
           Controls which Claude model each feature uses. Prompt caching is always on — repeated system prompts cost 90% less automatically.
         </p>
         <div className="space-y-2">
@@ -225,24 +225,24 @@ function CostModeSection() {
                 onClick={() => pick(m.key)}
                 aria-label={`Select ${m.label} cost mode`}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all duration-150 cursor-pointer ${
-                  active ? m.bg : 'bg-slate-800 border-slate-700 hover:border-slate-600'
+                  active ? m.bg : 'bg-bg-2 border-border-0 hover:border-border-1'
                 }`}
               >
-                <Icon size={16} className={active ? m.color : 'text-slate-500'} />
+                <Icon size={16} className={active ? m.color : 'text-fg-2'} />
                 <div className="flex-1">
-                  <p className={`text-sm font-medium ${active ? m.color : 'text-slate-200'}`}>{m.label}</p>
-                  <p className="text-xs text-slate-500">{m.desc}</p>
+                  <p className={`text-sm font-medium ${active ? m.color : 'text-fg-0'}`}>{m.label}</p>
+                  <p className="text-xs text-fg-2">{m.desc}</p>
                 </div>
                 {active && (
-                  <div className="w-5 h-5 rounded-full bg-yellow-400 flex items-center justify-center shrink-0">
-                    <Check size={10} className="text-slate-900" />
+                  <div className="w-5 h-5 rounded-full bg-hero flex items-center justify-center shrink-0">
+                    <Check size={10} className="text-[#021418]" />
                   </div>
                 )}
               </button>
             );
           })}
         </div>
-        <p className="text-[10px] text-slate-700">
+        <p className="text-[10px] text-fg-3">
           Balanced saves ~60-70% vs Performance with minimal quality difference on utility tools.
         </p>
       </div>
@@ -355,24 +355,24 @@ export default function Settings() {
   return (
     <div className="p-6 max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-slate-100">⚙️ Settings</h1>
-        <p className="text-sm text-slate-500">API key, data management and app preferences</p>
+        <h1 className="text-xl font-bold text-fg-0">⚙️ Settings</h1>
+        <p className="text-sm text-fg-2">API key, data management and app preferences</p>
       </div>
 
       {/* API Key */}
       <Section title="🔑 Anthropic API Key">
         <div className="space-y-4">
-          <div className="flex items-center justify-between bg-slate-800 rounded-lg px-4 py-3">
+          <div className="flex items-center justify-between bg-bg-2 rounded-lg px-4 py-3">
             <div>
-              <p className="text-xs text-slate-500 mb-0.5">Current key</p>
-              <p className="text-sm font-mono text-slate-300">{showKey ? apiKey : maskedKey}</p>
+              <p className="text-xs text-fg-2 mb-0.5">Current key</p>
+              <p className="text-sm font-mono text-fg-1">{showKey ? apiKey : maskedKey}</p>
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={() => setShowKey(!showKey)} className="text-slate-500 hover:text-slate-300 transition-colors">
+              <button onClick={() => setShowKey(!showKey)} className="text-fg-2 hover:text-fg-1 transition-colors">
                 {showKey ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
               {apiKey && (
-                <button onClick={removeKey} className="text-slate-500 hover:text-red-400 transition-colors">
+                <button onClick={removeKey} className="text-fg-2 hover:text-crit transition-colors">
                   <Trash2 size={15} />
                 </button>
               )}
@@ -380,46 +380,46 @@ export default function Settings() {
           </div>
 
           <div>
-            <label className="text-xs text-slate-500 mb-1.5 block">Replace key</label>
+            <label className="text-xs text-fg-2 mb-1.5 block">Replace key</label>
             <div className="flex gap-2">
               <input
                 type="password"
                 value={newKey}
                 onChange={e => { setNewKey(e.target.value); setKeyError(''); }}
                 placeholder="sk-ant-..."
-                className="flex-1 bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none font-mono"
+                className="flex-1 bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-sm text-fg-0 placeholder-fg-3 outline-none font-mono"
               />
               <button
                 onClick={saveKey}
                 disabled={!newKey.trim()}
-                className="bg-yellow-400 disabled:bg-slate-700 disabled:text-slate-500 text-slate-900 font-medium text-sm px-4 rounded-lg hover:bg-yellow-300 transition-colors flex items-center gap-1"
+                className="bg-hero disabled:bg-bg-3 disabled:text-fg-2 text-[#021418] font-medium text-sm px-4 rounded-lg hover:bg-hero transition-colors flex items-center gap-1"
               >
                 {saved ? <><Check size={13} /> Saved</> : 'Save'}
               </button>
             </div>
-            {keyError && <p className="text-xs text-red-400 mt-1">{keyError}</p>}
+            {keyError && <p className="text-xs text-crit mt-1">{keyError}</p>}
           </div>
 
-          <p className="text-xs text-slate-600">Key is stored only in your browser's localStorage. Never sent anywhere except Anthropic's API.</p>
+          <p className="text-xs text-fg-2">Key is stored only in your browser's localStorage. Never sent anywhere except Anthropic's API.</p>
         </div>
       </Section>
 
       {/* SerpAPI Key */}
       <Section title="🌐 SerpAPI Key (Web Search)">
         <div className="space-y-4">
-          <p className="text-xs text-slate-500">Powers live web search in Campaign lookup and other tools. Get a key at serpapi.com.</p>
-          <div className="flex items-center justify-between bg-slate-800 rounded-lg px-4 py-3">
+          <p className="text-xs text-fg-2">Powers live web search in Campaign lookup and other tools. Get a key at serpapi.com.</p>
+          <div className="flex items-center justify-between bg-bg-2 rounded-lg px-4 py-3">
             <div>
-              <p className="text-xs text-slate-500 mb-0.5">Current key</p>
-              <p className="text-sm font-mono text-slate-300">{serpKey ? (showSerpKey ? serpKey : `...${serpKey.slice(-6)}`) : 'Not set'}</p>
+              <p className="text-xs text-fg-2 mb-0.5">Current key</p>
+              <p className="text-sm font-mono text-fg-1">{serpKey ? (showSerpKey ? serpKey : `...${serpKey.slice(-6)}`) : 'Not set'}</p>
             </div>
             <div className="flex items-center gap-2">
               {serpKey && (
                 <>
-                  <button onClick={() => setShowSerpKey(!showSerpKey)} className="text-slate-500 hover:text-slate-300 transition-colors cursor-pointer" aria-label={showSerpKey ? 'Hide SerpAPI key' : 'Show SerpAPI key'}>
+                  <button onClick={() => setShowSerpKey(!showSerpKey)} className="text-fg-2 hover:text-fg-1 transition-colors cursor-pointer" aria-label={showSerpKey ? 'Hide SerpAPI key' : 'Show SerpAPI key'}>
                     {showSerpKey ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
-                  <button onClick={removeSerpKey} className="text-slate-500 hover:text-red-400 transition-colors cursor-pointer" aria-label="Remove SerpAPI key">
+                  <button onClick={removeSerpKey} className="text-fg-2 hover:text-crit transition-colors cursor-pointer" aria-label="Remove SerpAPI key">
                     <Trash2 size={15} />
                   </button>
                 </>
@@ -427,7 +427,7 @@ export default function Settings() {
             </div>
           </div>
           <div>
-            <label htmlFor="serp-key-input" className="text-xs text-slate-500 mb-1.5 block">{serpKey ? 'Replace key' : 'Add key'}</label>
+            <label htmlFor="serp-key-input" className="text-xs text-fg-2 mb-1.5 block">{serpKey ? 'Replace key' : 'Add key'}</label>
             <div className="flex gap-2">
               <input
                 id="serp-key-input"
@@ -436,18 +436,18 @@ export default function Settings() {
                 onChange={e => { setNewSerpKey(e.target.value); setSerpError(''); }}
                 onKeyDown={e => e.key === 'Enter' && saveSerpKey()}
                 placeholder="Paste SerpAPI key..."
-                className="flex-1 bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none font-mono"
+                className="flex-1 bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-sm text-fg-0 placeholder-fg-3 outline-none font-mono"
               />
               <button
                 onClick={saveSerpKey}
                 disabled={!newSerpKey.trim()}
-                className="bg-yellow-400 disabled:bg-slate-700 disabled:text-slate-500 text-slate-900 font-medium text-sm px-4 rounded-lg hover:bg-yellow-300 transition-colors flex items-center gap-1 cursor-pointer"
+                className="bg-hero disabled:bg-bg-3 disabled:text-fg-2 text-[#021418] font-medium text-sm px-4 rounded-lg hover:bg-hero transition-colors flex items-center gap-1 cursor-pointer"
                 aria-label="Save SerpAPI key"
               >
                 {serpSaved ? <><Check size={13} /> Saved</> : 'Save'}
               </button>
             </div>
-            {serpError && <p className="text-xs text-red-400 mt-1">{serpError}</p>}
+            {serpError && <p className="text-xs text-crit mt-1">{serpError}</p>}
           </div>
         </div>
       </Section>
@@ -455,19 +455,19 @@ export default function Settings() {
       {/* OpenAI API Key */}
       <Section title="🟢 OpenAI API Key">
         <div className="space-y-4">
-          <p className="text-xs text-slate-500">Enables GPT-5.4, GPT-5.4 Mini and GPT-4.1 as model options. Switch provider in Models & Usage page.</p>
-          <div className="flex items-center justify-between bg-slate-800 rounded-lg px-4 py-3">
+          <p className="text-xs text-fg-2">Enables GPT-5.4, GPT-5.4 Mini and GPT-4.1 as model options. Switch provider in Models & Usage page.</p>
+          <div className="flex items-center justify-between bg-bg-2 rounded-lg px-4 py-3">
             <div>
-              <p className="text-xs text-slate-500 mb-0.5">Current key</p>
-              <p className="text-sm font-mono text-slate-300">{oaiKey ? (showOaiKey ? oaiKey : `sk-...${oaiKey.slice(-6)}`) : 'Not set'}</p>
+              <p className="text-xs text-fg-2 mb-0.5">Current key</p>
+              <p className="text-sm font-mono text-fg-1">{oaiKey ? (showOaiKey ? oaiKey : `sk-...${oaiKey.slice(-6)}`) : 'Not set'}</p>
             </div>
             <div className="flex items-center gap-2">
               {oaiKey && (
                 <>
-                  <button onClick={() => setShowOaiKey(!showOaiKey)} className="text-slate-500 hover:text-slate-300 transition-colors cursor-pointer" aria-label={showOaiKey ? 'Hide OpenAI key' : 'Show OpenAI key'}>
+                  <button onClick={() => setShowOaiKey(!showOaiKey)} className="text-fg-2 hover:text-fg-1 transition-colors cursor-pointer" aria-label={showOaiKey ? 'Hide OpenAI key' : 'Show OpenAI key'}>
                     {showOaiKey ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
-                  <button onClick={removeOaiKey} className="text-slate-500 hover:text-red-400 transition-colors cursor-pointer" aria-label="Remove OpenAI key">
+                  <button onClick={removeOaiKey} className="text-fg-2 hover:text-crit transition-colors cursor-pointer" aria-label="Remove OpenAI key">
                     <Trash2 size={15} />
                   </button>
                 </>
@@ -475,7 +475,7 @@ export default function Settings() {
             </div>
           </div>
           <div>
-            <label htmlFor="oai-key-input" className="text-xs text-slate-500 mb-1.5 block">{oaiKey ? 'Replace key' : 'Add key'}</label>
+            <label htmlFor="oai-key-input" className="text-xs text-fg-2 mb-1.5 block">{oaiKey ? 'Replace key' : 'Add key'}</label>
             <div className="flex gap-2">
               <input
                 id="oai-key-input"
@@ -484,18 +484,18 @@ export default function Settings() {
                 onChange={e => { setNewOaiKey(e.target.value); setOaiError(''); }}
                 onKeyDown={e => e.key === 'Enter' && saveOaiKey()}
                 placeholder="sk-..."
-                className="flex-1 bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none font-mono"
+                className="flex-1 bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-sm text-fg-0 placeholder-fg-3 outline-none font-mono"
               />
               <button
                 onClick={saveOaiKey}
                 disabled={!newOaiKey.trim()}
-                className="bg-yellow-400 disabled:bg-slate-700 disabled:text-slate-500 text-slate-900 font-medium text-sm px-4 rounded-lg hover:bg-yellow-300 transition-colors flex items-center gap-1 cursor-pointer"
+                className="bg-hero disabled:bg-bg-3 disabled:text-fg-2 text-[#021418] font-medium text-sm px-4 rounded-lg hover:bg-hero transition-colors flex items-center gap-1 cursor-pointer"
                 aria-label="Save OpenAI key"
               >
                 {oaiSaved ? <><Check size={13} /> Saved</> : 'Save'}
               </button>
             </div>
-            {oaiError && <p className="text-xs text-red-400 mt-1">{oaiError}</p>}
+            {oaiError && <p className="text-xs text-crit mt-1">{oaiError}</p>}
           </div>
         </div>
       </Section>
@@ -510,10 +510,10 @@ export default function Settings() {
       <Section title="🗄️ Data Management">
         <div className="space-y-3">
           {DATA_STORES.map((store, i) => (
-            <div key={i} className="flex items-center justify-between py-2 border-b border-slate-800 last:border-0">
+            <div key={i} className="flex items-center justify-between py-2 border-b border-border-0 last:border-0">
               <div>
-                <p className="text-sm text-slate-200">{store.label}</p>
-                <p className="text-xs text-slate-500">{store.desc}</p>
+                <p className="text-sm text-fg-0">{store.label}</p>
+                <p className="text-xs text-fg-2">{store.desc}</p>
               </div>
               <button
                 onClick={() => {
@@ -525,7 +525,7 @@ export default function Settings() {
                     clearData(store.key, store.label);
                   }
                 }}
-                className="text-xs text-slate-600 hover:text-red-400 transition-colors shrink-0 ml-4"
+                className="text-xs text-fg-2 hover:text-crit transition-colors shrink-0 ml-4"
               >
                 Clear
               </button>
@@ -533,10 +533,10 @@ export default function Settings() {
           ))}
 
           {chatHistoryKeys.length > 0 && (
-            <div className="flex items-center justify-between py-2 border-b border-slate-800">
+            <div className="flex items-center justify-between py-2 border-b border-border-0">
               <div>
-                <p className="text-sm text-slate-200">Chat histories</p>
-                <p className="text-xs text-slate-500">{chatHistoryKeys.length} conversation{chatHistoryKeys.length !== 1 ? 's' : ''} stored</p>
+                <p className="text-sm text-fg-0">Chat histories</p>
+                <p className="text-xs text-fg-2">{chatHistoryKeys.length} conversation{chatHistoryKeys.length !== 1 ? 's' : ''} stored</p>
               </div>
               <button
                 onClick={() => {
@@ -544,7 +544,7 @@ export default function Settings() {
                   chatHistoryKeys.forEach(k => localStorage.removeItem(k));
                   window.location.reload();
                 }}
-                className="text-xs text-slate-600 hover:text-red-400 transition-colors shrink-0 ml-4"
+                className="text-xs text-fg-2 hover:text-crit transition-colors shrink-0 ml-4"
               >
                 Clear
               </button>
@@ -557,15 +557,15 @@ export default function Settings() {
       <AutoVault />
 
       {/* Danger zone */}
-      <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-5 space-y-3">
+      <div className="bg-crit/5 border border-crit/20 rounded-xl p-5 space-y-3">
         <div className="flex items-center gap-2">
-          <AlertTriangle size={15} className="text-red-400" />
-          <h2 className="font-semibold text-red-400 text-sm">Danger Zone</h2>
+          <AlertTriangle size={15} className="text-crit" />
+          <h2 className="font-semibold text-crit text-sm">Danger Zone</h2>
         </div>
-        <p className="text-xs text-slate-500">This will wipe all app data — shift logs, cases, knowledge base, templates, chat history. Your API key will be preserved.</p>
+        <p className="text-xs text-fg-2">This will wipe all app data — shift logs, cases, knowledge base, templates, chat history. Your API key will be preserved.</p>
         <button
           onClick={clearAllData}
-          className="text-xs bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 px-4 py-2 rounded-lg transition-colors"
+          className="text-xs bg-crit/10 hover:bg-crit/20 border border-crit/30 text-crit px-4 py-2 rounded-lg transition-colors"
         >
           Clear all app data
         </button>
@@ -573,8 +573,8 @@ export default function Settings() {
 
       {/* App info */}
       <div className="text-center space-y-1 pt-2">
-        <p className="text-xs text-slate-700">ACE Super Agent v1.0</p>
-        <p className="text-xs text-slate-700">Running locally · Powered by Claude (Sonnet 4.6 / Opus 4.6)</p>
+        <p className="text-xs text-fg-3">ACE Super Agent v1.0</p>
+        <p className="text-xs text-fg-3">Running locally · Powered by Claude (Sonnet 4.6 / Opus 4.6)</p>
       </div>
     </div>
   );

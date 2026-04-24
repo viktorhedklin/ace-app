@@ -208,7 +208,7 @@ function CopyBtn({ text }) {
   const [ok, setOk] = useState(false);
   return (
     <button onClick={() => { navigator.clipboard.writeText(text); setOk(true); setTimeout(() => setOk(false), 2000); }}
-      className="text-slate-500 hover:text-yellow-400 transition-colors cursor-pointer" aria-label="Copy">
+      className="text-fg-2 hover:text-hero transition-colors cursor-pointer" aria-label="Copy">
       {ok ? <Check size={13} /> : <Copy size={13} />}
     </button>
   );
@@ -217,41 +217,41 @@ function CopyBtn({ text }) {
 function TemplateCard({ et }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="bg-slate-800/50 rounded-lg overflow-hidden">
+    <div className="bg-bg-2/50 rounded-lg overflow-hidden">
       <button onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-slate-800 transition-colors cursor-pointer">
-        <span className="text-xs font-medium text-slate-300"><span className="text-yellow-400/80 mr-1.5">{et.code}</span>{et.title}</span>
+        className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-bg-2 transition-colors cursor-pointer">
+        <span className="text-xs font-medium text-fg-1"><span className="text-hero/80 mr-1.5">{et.code}</span>{et.title}</span>
         <div className="flex items-center gap-2">
           <CopyBtn text={et.body} />
-          {open ? <ChevronUp size={12} className="text-slate-600" /> : <ChevronDown size={12} className="text-slate-600" />}
+          {open ? <ChevronUp size={12} className="text-fg-2" /> : <ChevronDown size={12} className="text-fg-2" />}
         </div>
       </button>
-      {open && <pre className="px-3 pb-3 text-xs text-slate-400 whitespace-pre-wrap leading-relaxed border-t border-slate-700/50 pt-2">{et.body}</pre>}
+      {open && <pre className="px-3 pb-3 text-xs text-fg-1 whitespace-pre-wrap leading-relaxed border-t border-border-0/50 pt-2">{et.body}</pre>}
     </div>
   );
 }
 
 function StepCard({ title, steps, caseType, escalation, template, children }) {
   return (
-    <div className="bg-slate-800/40 border border-slate-700/50 rounded-xl p-4 space-y-3">
-      {title && <h4 className="text-sm font-semibold text-slate-100">{title}</h4>}
+    <div className="bg-bg-2/40 border border-border-0/50 rounded-xl p-4 space-y-3">
+      {title && <h4 className="text-sm font-semibold text-fg-0">{title}</h4>}
       {steps && (
-        <ol className="space-y-1.5 text-xs text-slate-300 leading-relaxed">
-          {steps.map((s, i) => <li key={i} className="flex gap-2"><span className="text-yellow-400/70 shrink-0">{i + 1}.</span><span>{s}</span></li>)}
+        <ol className="space-y-1.5 text-xs text-fg-1 leading-relaxed">
+          {steps.map((s, i) => <li key={i} className="flex gap-2"><span className="text-hero/70 shrink-0">{i + 1}.</span><span>{s}</span></li>)}
         </ol>
       )}
       {caseType && (
         <div className="flex items-center gap-2 text-xs">
-          <ClipboardList size={12} className="text-blue-400 shrink-0" />
-          <span className="text-slate-500">Case type:</span>
-          <span className="text-blue-300 font-mono text-xs">{caseType}</span>
+          <ClipboardList size={12} className="text-info shrink-0" />
+          <span className="text-fg-2">Case type:</span>
+          <span className="text-info font-mono text-xs">{caseType}</span>
           <CopyBtn text={caseType} />
         </div>
       )}
       {escalation && (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 space-y-2">
-          <p className="text-xs font-medium text-red-400">Escalation Required</p>
-          <pre className="text-xs text-slate-400 whitespace-pre-wrap">{escalation}</pre>
+        <div className="bg-crit/10 border border-crit/20 rounded-lg p-3 space-y-2">
+          <p className="text-xs font-medium text-crit">Escalation Required</p>
+          <pre className="text-xs text-fg-1 whitespace-pre-wrap">{escalation}</pre>
           <CopyBtn text={escalation} />
         </div>
       )}
@@ -263,7 +263,7 @@ function StepCard({ title, steps, caseType, escalation, template, children }) {
 
 function BackBtn({ onClick }) {
   return (
-    <button onClick={onClick} className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-yellow-400 transition-colors mb-4 cursor-pointer">
+    <button onClick={onClick} className="flex items-center gap-1.5 text-xs text-fg-2 hover:text-hero transition-colors mb-4 cursor-pointer">
       <ArrowLeft size={13} /> Back to scenarios
     </button>
   );
@@ -287,13 +287,13 @@ function PaymentFlow({ onBack }) {
   return (
     <div>
       <BackBtn onClick={onBack} />
-      <h3 className="text-sm font-bold text-slate-100 mb-3">💳 Payment Method Issues</h3>
+      <h3 className="text-sm font-bold text-fg-0 mb-3">💳 Payment Method Issues</h3>
 
       {!sub && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {subs.map(s => (
             <button key={s.id} onClick={() => setSub(s.id)}
-              className="text-left bg-slate-800/50 border border-slate-700/50 hover:border-yellow-400/30 rounded-lg px-3 py-2.5 text-xs text-slate-300 hover:text-slate-100 transition-all cursor-pointer">
+              className="text-left bg-bg-2/50 border border-border-0/50 hover:border-hero/30 rounded-lg px-3 py-2.5 text-xs text-fg-1 hover:text-fg-0 transition-all cursor-pointer">
               {s.label}
             </button>
           ))}
@@ -331,7 +331,7 @@ function PaymentFlow({ onBack }) {
           caseType={CASE_TYPES.payment} template={ET.G2404} />
       )}
 
-      {sub && <button onClick={() => setSub(null)} className="mt-3 text-xs text-slate-600 hover:text-slate-400 transition-colors cursor-pointer">← Back to payment issues</button>}
+      {sub && <button onClick={() => setSub(null)} className="mt-3 text-xs text-fg-2 hover:text-fg-1 transition-colors cursor-pointer">← Back to payment issues</button>}
     </div>
   );
 }
@@ -341,12 +341,12 @@ function NicknameFlow({ onBack }) {
   return (
     <div>
       <BackBtn onClick={onBack} />
-      <h3 className="text-sm font-bold text-slate-100 mb-3">✏️ Set / Change Nickname</h3>
+      <h3 className="text-sm font-bold text-fg-0 mb-3">✏️ Set / Change Nickname</h3>
 
       {!sub && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <button onClick={() => setSub('set')} className="text-left bg-slate-800/50 border border-slate-700/50 hover:border-yellow-400/30 rounded-lg px-3 py-2.5 text-xs text-slate-300 hover:text-slate-100 transition-all cursor-pointer">Set nickname (first time)</button>
-          <button onClick={() => setSub('change')} className="text-left bg-slate-800/50 border border-slate-700/50 hover:border-yellow-400/30 rounded-lg px-3 py-2.5 text-xs text-slate-300 hover:text-slate-100 transition-all cursor-pointer">Change existing nickname</button>
+          <button onClick={() => setSub('set')} className="text-left bg-bg-2/50 border border-border-0/50 hover:border-hero/30 rounded-lg px-3 py-2.5 text-xs text-fg-1 hover:text-fg-0 transition-all cursor-pointer">Set nickname (first time)</button>
+          <button onClick={() => setSub('change')} className="text-left bg-bg-2/50 border border-border-0/50 hover:border-hero/30 rounded-lg px-3 py-2.5 text-xs text-fg-1 hover:text-fg-0 transition-all cursor-pointer">Change existing nickname</button>
         </div>
       )}
 
@@ -361,15 +361,15 @@ function NicknameFlow({ onBack }) {
           caseType={CASE_TYPES.nickname}
           escalation={ESCALATION_NOTE('', '', 'User requests P2P nickname change', 'Preferred nicknames: [1] ___ [2] ___ [3] ___')}
           template={ET.G2101}>
-          <div className="bg-yellow-400/10 border border-yellow-400/20 rounded-lg p-3 mt-2">
-            <p className="text-xs text-yellow-300 font-medium mb-1">Quicktext — Follow-up</p>
-            <p className="text-xs text-slate-400">{QT_FOLLOWUP}</p>
+          <div className="bg-hero/10 border border-hero/20 rounded-lg p-3 mt-2">
+            <p className="text-xs text-hero font-medium mb-1">Quicktext — Follow-up</p>
+            <p className="text-xs text-fg-1">{QT_FOLLOWUP}</p>
             <div className="mt-1.5"><CopyBtn text={QT_FOLLOWUP} /></div>
           </div>
         </StepCard>
       )}
 
-      {sub && <button onClick={() => setSub(null)} className="mt-3 text-xs text-slate-600 hover:text-slate-400 transition-colors cursor-pointer">← Back</button>}
+      {sub && <button onClick={() => setSub(null)} className="mt-3 text-xs text-fg-2 hover:text-fg-1 transition-colors cursor-pointer">← Back</button>}
     </div>
   );
 }
@@ -379,7 +379,7 @@ function ReviewFlow({ onBack }) {
   return (
     <div>
       <BackBtn onClick={onBack} />
-      <h3 className="text-sm font-bold text-slate-100 mb-3">⭐ Review Management</h3>
+      <h3 className="text-sm font-bold text-fg-0 mb-3">⭐ Review Management</h3>
 
       {!sub && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -389,7 +389,7 @@ function ReviewFlow({ onBack }) {
             { id: 'remove', label: 'Request removal of negative review' },
           ].map(s => (
             <button key={s.id} onClick={() => setSub(s.id)}
-              className="text-left bg-slate-800/50 border border-slate-700/50 hover:border-yellow-400/30 rounded-lg px-3 py-2.5 text-xs text-slate-300 hover:text-slate-100 transition-all cursor-pointer">
+              className="text-left bg-bg-2/50 border border-border-0/50 hover:border-hero/30 rounded-lg px-3 py-2.5 text-xs text-fg-1 hover:text-fg-0 transition-all cursor-pointer">
               {s.label}
             </button>
           ))}
@@ -412,15 +412,15 @@ function ReviewFlow({ onBack }) {
           caseType={CASE_TYPES.reviews}
           escalation={ESCALATION_NOTE('', '[ORDER ID]', 'User requests removal of negative P2P review', 'Screenshots/Supporting materials: [attach]')}
           template={ET.G2201}>
-          <div className="bg-yellow-400/10 border border-yellow-400/20 rounded-lg p-3 mt-2">
-            <p className="text-xs text-yellow-300 font-medium mb-1">Quicktext — Follow-up</p>
-            <p className="text-xs text-slate-400">{QT_FOLLOWUP}</p>
+          <div className="bg-hero/10 border border-hero/20 rounded-lg p-3 mt-2">
+            <p className="text-xs text-hero font-medium mb-1">Quicktext — Follow-up</p>
+            <p className="text-xs text-fg-1">{QT_FOLLOWUP}</p>
             <div className="mt-1.5"><CopyBtn text={QT_FOLLOWUP} /></div>
           </div>
         </StepCard>
       )}
 
-      {sub && <button onClick={() => setSub(null)} className="mt-3 text-xs text-slate-600 hover:text-slate-400 transition-colors cursor-pointer">← Back</button>}
+      {sub && <button onClick={() => setSub(null)} className="mt-3 text-xs text-fg-2 hover:text-fg-1 transition-colors cursor-pointer">← Back</button>}
     </div>
   );
 }
@@ -430,12 +430,12 @@ function HistoryFlow({ onBack }) {
   return (
     <div>
       <BackBtn onClick={onBack} />
-      <h3 className="text-sm font-bold text-slate-100 mb-3">📋 Export Order History</h3>
+      <h3 className="text-sm font-bold text-fg-0 mb-3">📋 Export Order History</h3>
 
       {!sub && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <button onClick={() => setSub('guide')} className="text-left bg-slate-800/50 border border-slate-700/50 hover:border-yellow-400/30 rounded-lg px-3 py-2.5 text-xs text-slate-300 hover:text-slate-100 transition-all cursor-pointer">General guide (self-service)</button>
-          <button onClick={() => setSub('banned')} className="text-left bg-slate-800/50 border border-slate-700/50 hover:border-yellow-400/30 rounded-lg px-3 py-2.5 text-xs text-slate-300 hover:text-slate-100 transition-all cursor-pointer">Login banned / restricted user</button>
+          <button onClick={() => setSub('guide')} className="text-left bg-bg-2/50 border border-border-0/50 hover:border-hero/30 rounded-lg px-3 py-2.5 text-xs text-fg-1 hover:text-fg-0 transition-all cursor-pointer">General guide (self-service)</button>
+          <button onClick={() => setSub('banned')} className="text-left bg-bg-2/50 border border-border-0/50 hover:border-hero/30 rounded-lg px-3 py-2.5 text-xs text-fg-1 hover:text-fg-0 transition-all cursor-pointer">Login banned / restricted user</button>
         </div>
       )}
 
@@ -449,15 +449,15 @@ function HistoryFlow({ onBack }) {
           steps={['User cannot self-export due to account restriction', 'Collect: exact timeframe of order history needed', 'Escalate to Pool 2 for manual export']}
           caseType={CASE_TYPES.history}
           escalation={ESCALATION_NOTE('', '', 'Login banned/restricted user requests P2P order history export', 'Timeframe: [requested period]')}>
-          <div className="bg-yellow-400/10 border border-yellow-400/20 rounded-lg p-3 mt-2">
-            <p className="text-xs text-yellow-300 font-medium mb-1">Quicktext — Follow-up</p>
-            <p className="text-xs text-slate-400">{QT_FOLLOWUP}</p>
+          <div className="bg-hero/10 border border-hero/20 rounded-lg p-3 mt-2">
+            <p className="text-xs text-hero font-medium mb-1">Quicktext — Follow-up</p>
+            <p className="text-xs text-fg-1">{QT_FOLLOWUP}</p>
             <div className="mt-1.5"><CopyBtn text={QT_FOLLOWUP} /></div>
           </div>
         </StepCard>
       )}
 
-      {sub && <button onClick={() => setSub(null)} className="mt-3 text-xs text-slate-600 hover:text-slate-400 transition-colors cursor-pointer">← Back</button>}
+      {sub && <button onClick={() => setSub(null)} className="mt-3 text-xs text-fg-2 hover:text-fg-1 transition-colors cursor-pointer">← Back</button>}
     </div>
   );
 }
@@ -467,13 +467,13 @@ function ChatDataFlow({ onBack }) {
   return (
     <div>
       <BackBtn onClick={onBack} />
-      <h3 className="text-sm font-bold text-slate-100 mb-3">💬 Export Chat Data</h3>
-      <p className="text-xs text-slate-500 mb-3">Users can access chats for orders created within the last 180 days via app or website.</p>
+      <h3 className="text-sm font-bold text-fg-0 mb-3">💬 Export Chat Data</h3>
+      <p className="text-xs text-fg-2 mb-3">Users can access chats for orders created within the last 180 days via app or website.</p>
 
       {!sub && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <button onClick={() => setSub('guide')} className="text-left bg-slate-800/50 border border-slate-700/50 hover:border-yellow-400/30 rounded-lg px-3 py-2.5 text-xs text-slate-300 hover:text-slate-100 transition-all cursor-pointer">Within 180 days (self-service)</button>
-          <button onClick={() => setSub('old')} className="text-left bg-slate-800/50 border border-slate-700/50 hover:border-yellow-400/30 rounded-lg px-3 py-2.5 text-xs text-slate-300 hover:text-slate-100 transition-all cursor-pointer">Order older than 180 days</button>
+          <button onClick={() => setSub('guide')} className="text-left bg-bg-2/50 border border-border-0/50 hover:border-hero/30 rounded-lg px-3 py-2.5 text-xs text-fg-1 hover:text-fg-0 transition-all cursor-pointer">Within 180 days (self-service)</button>
+          <button onClick={() => setSub('old')} className="text-left bg-bg-2/50 border border-border-0/50 hover:border-hero/30 rounded-lg px-3 py-2.5 text-xs text-fg-1 hover:text-fg-0 transition-all cursor-pointer">Order older than 180 days</button>
         </div>
       )}
 
@@ -487,15 +487,15 @@ function ChatDataFlow({ onBack }) {
           steps={['Chat data no longer accessible by user', 'Collect: Order ID', 'Escalate to Pool 2 for retrieval']}
           caseType={CASE_TYPES.chatdata}
           escalation={ESCALATION_NOTE('', '[ORDER ID]', 'User requests P2P chat data for order older than 180 days')}>
-          <div className="bg-yellow-400/10 border border-yellow-400/20 rounded-lg p-3 mt-2">
-            <p className="text-xs text-yellow-300 font-medium mb-1">Quicktext — Follow-up</p>
-            <p className="text-xs text-slate-400">{QT_FOLLOWUP}</p>
+          <div className="bg-hero/10 border border-hero/20 rounded-lg p-3 mt-2">
+            <p className="text-xs text-hero font-medium mb-1">Quicktext — Follow-up</p>
+            <p className="text-xs text-fg-1">{QT_FOLLOWUP}</p>
             <div className="mt-1.5"><CopyBtn text={QT_FOLLOWUP} /></div>
           </div>
         </StepCard>
       )}
 
-      {sub && <button onClick={() => setSub(null)} className="mt-3 text-xs text-slate-600 hover:text-slate-400 transition-colors cursor-pointer">← Back</button>}
+      {sub && <button onClick={() => setSub(null)} className="mt-3 text-xs text-fg-2 hover:text-fg-1 transition-colors cursor-pointer">← Back</button>}
     </div>
   );
 }
@@ -504,7 +504,7 @@ function ReceiptFlow({ onBack }) {
   return (
     <div>
       <BackBtn onClick={onBack} />
-      <h3 className="text-sm font-bold text-slate-100 mb-3">🧾 Download Order Receipt</h3>
+      <h3 className="text-sm font-bold text-fg-0 mb-3">🧾 Download Order Receipt</h3>
       <StepCard title="Self-Service Guide"
         steps={[
           'Go to P2P Order history → All → filter "Completed"',
@@ -580,9 +580,9 @@ function AdvertiserFlow({ onBack }) {
           steps={['Level is based on cumulative counterparties + last 30-day trading volume', 'Upgrade is automatic when requirements are met', 'Downgrade is automatic when requirements are no longer met', 'If user confirms they meet requirements → collect screenshot for investigation']}
           caseType={CASE_TYPES.advertiser} template={ET.G3111} />
 
-        <div className="bg-slate-800/40 border border-slate-700/50 rounded-xl p-4">
-          <h4 className="text-sm font-semibold text-yellow-400 mb-3">Requirement Checker</h4>
-          <p className="text-xs text-slate-500 mb-3">Input the user's data from their P2P User Center screenshot:</p>
+        <div className="bg-bg-2/40 border border-border-0/50 rounded-xl p-4">
+          <h4 className="text-sm font-semibold text-hero mb-3">Requirement Checker</h4>
+          <p className="text-xs text-fg-2 mb-3">Input the user's data from their P2P User Center screenshot:</p>
           <div className="space-y-2">
             {GENERAL_REQ.map(r => (
               <div key={r.key} className="flex items-center gap-3">
@@ -590,15 +590,15 @@ function AdvertiserFlow({ onBack }) {
                   <>
                     <input type="number" placeholder={r.label} value={reqData[r.key]}
                       onChange={e => setReqData(p => ({ ...p, [r.key]: e.target.value }))}
-                      className="flex-1 bg-slate-900 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-1.5 text-xs text-slate-100 outline-none transition-colors" />
-                    <span className="text-xs text-slate-600 w-12">{r.suffix}</span>
+                      className="flex-1 bg-bg-1 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-1.5 text-xs text-fg-0 outline-none transition-colors" />
+                    <span className="text-xs text-fg-2 w-12">{r.suffix}</span>
                   </>
                 ) : (
                   <label className="flex items-center gap-2 flex-1 cursor-pointer">
                     <input type="checkbox" checked={reqData[r.key]}
                       onChange={e => setReqData(p => ({ ...p, [r.key]: e.target.checked }))}
-                      className="rounded border-slate-600 bg-slate-900 text-yellow-400 focus:ring-yellow-400/50" />
-                    <span className="text-xs text-slate-300">{r.label}</span>
+                      className="rounded border-border-1 bg-bg-1 text-hero focus:ring-hero/50" />
+                    <span className="text-xs text-fg-1">{r.label}</span>
                   </label>
                 )}
               </div>
@@ -607,26 +607,26 @@ function AdvertiserFlow({ onBack }) {
 
           {reqResults && reqResults.some(r => r.value !== '' || r.met) && (
             <div className="mt-4 space-y-1.5">
-              <p className="text-xs font-medium text-slate-400 mb-2">Assessment:</p>
+              <p className="text-xs font-medium text-fg-1 mb-2">Assessment:</p>
               {reqResults.map(r => (
                 <div key={r.key} className="flex items-center gap-2 text-xs">
                   {r.met
-                    ? <CheckCircle2 size={13} className="text-green-400 shrink-0" />
-                    : <AlertTriangle size={13} className="text-red-400 shrink-0" />}
-                  <span className={r.met ? 'text-green-300' : 'text-red-300'}>
+                    ? <CheckCircle2 size={13} className="text-ok shrink-0" />
+                    : <AlertTriangle size={13} className="text-crit shrink-0" />}
+                  <span className={r.met ? 'text-ok' : 'text-crit'}>
                     {r.label} {r.input && r.value ? `— ${r.value}${r.suffix}` : ''}
                     {!r.met && r.input && r.value ? ` (need ≥ ${r.min})` : ''}
                   </span>
                 </div>
               ))}
               {reqResults.every(r => r.met) && (
-                <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2 mt-2">
-                  <p className="text-xs text-green-300">All requirements met — if user is still not upgraded, escalate to Pool 2 with screenshot.</p>
+                <div className="bg-ok/10 border border-ok/20 rounded-lg p-2 mt-2">
+                  <p className="text-xs text-ok">All requirements met — if user is still not upgraded, escalate to Pool 2 with screenshot.</p>
                 </div>
               )}
               {reqResults.some(r => !r.met) && reqResults.some(r => r.value !== '' || r.met) && (
-                <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-2 mt-2">
-                  <p className="text-xs text-red-300">User does not meet all requirements. Inform them which criteria are not fulfilled.</p>
+                <div className="bg-crit/10 border border-crit/20 rounded-lg p-2 mt-2">
+                  <p className="text-xs text-crit">User does not meet all requirements. Inform them which criteria are not fulfilled.</p>
                 </div>
               )}
             </div>
@@ -663,10 +663,10 @@ function AdvertiserFlow({ onBack }) {
       <StepCard title="Chasing Verified Advertiser Application"
         steps={['Standard review: up to 15 business days (= 21 calendar days)', 'If applied within 21 days: inform still under review, wait for email', 'If applied > 21 days ago: escalate to Pool 2']}
         caseType={CASE_TYPES.advertiser} template={ET.G3210}>
-        <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3 mt-2">
-          <p className="text-xs text-orange-300 font-medium">Check: When did the user apply?</p>
-          <p className="text-xs text-slate-400 mt-1">Within 21 days → Send ET G3210 (under review)</p>
-          <p className="text-xs text-slate-400">Over 21 days → Escalate to Pool 2</p>
+        <div className="bg-warn/10 border border-warn/20 rounded-lg p-3 mt-2">
+          <p className="text-xs text-warn font-medium">Check: When did the user apply?</p>
+          <p className="text-xs text-fg-1 mt-1">Within 21 days → Send ET G3210 (under review)</p>
+          <p className="text-xs text-fg-1">Over 21 days → Escalate to Pool 2</p>
         </div>
       </StepCard>
     );
@@ -718,17 +718,17 @@ function AdvertiserFlow({ onBack }) {
   return (
     <div>
       <BackBtn onClick={onBack} />
-      <h3 className="text-sm font-bold text-slate-100 mb-3">🏆 Advertiser Status</h3>
+      <h3 className="text-sm font-bold text-fg-0 mb-3">🏆 Advertiser Status</h3>
 
       {/* Level 1: Advertiser type */}
       {!type && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {types.map(t => (
             <button key={t.id} onClick={() => { setType(t.id); setSub(null); }}
-              className="text-left bg-slate-800/50 border border-slate-700/50 hover:border-yellow-400/30 rounded-xl p-4 transition-all cursor-pointer">
-              <h4 className="text-sm font-semibold text-slate-100">{t.label}</h4>
-              <p className="text-xs text-slate-500 mt-1">{t.desc}</p>
-              <p className="text-xs text-slate-600 mt-2">Deposit: {t.deposit}</p>
+              className="text-left bg-bg-2/50 border border-border-0/50 hover:border-hero/30 rounded-xl p-4 transition-all cursor-pointer">
+              <h4 className="text-sm font-semibold text-fg-0">{t.label}</h4>
+              <p className="text-xs text-fg-2 mt-1">{t.desc}</p>
+              <p className="text-xs text-fg-2 mt-2">Deposit: {t.deposit}</p>
             </button>
           ))}
         </div>
@@ -737,13 +737,13 @@ function AdvertiserFlow({ onBack }) {
       {/* Level 2: Sub-scenario */}
       {type && !sub && (
         <div>
-          <button onClick={() => setType(null)} className="text-xs text-slate-600 hover:text-slate-400 transition-colors mb-3 cursor-pointer">
+          <button onClick={() => setType(null)} className="text-xs text-fg-2 hover:text-fg-1 transition-colors mb-3 cursor-pointer">
             ← Back to advertiser types
           </button>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {(type === 'general' ? generalSubs : type === 'verified' ? verifiedSubs : blockSubs).map(s => (
               <button key={s.id} onClick={() => setSub(s.id)}
-                className="text-left bg-slate-800/50 border border-slate-700/50 hover:border-yellow-400/30 rounded-lg px-3 py-2.5 text-xs text-slate-300 hover:text-slate-100 transition-all cursor-pointer">
+                className="text-left bg-bg-2/50 border border-border-0/50 hover:border-hero/30 rounded-lg px-3 py-2.5 text-xs text-fg-1 hover:text-fg-0 transition-all cursor-pointer">
                 {s.label}
               </button>
             ))}
@@ -754,7 +754,7 @@ function AdvertiserFlow({ onBack }) {
       {/* Level 3: Content */}
       {type && sub && (
         <div>
-          <button onClick={() => setSub(null)} className="text-xs text-slate-600 hover:text-slate-400 transition-colors mb-3 cursor-pointer">
+          <button onClick={() => setSub(null)} className="text-xs text-fg-2 hover:text-fg-1 transition-colors mb-3 cursor-pointer">
             ← Back to {type === 'general' ? 'General' : type === 'verified' ? 'Verified' : 'Block'} scenarios
           </button>
           {type === 'general' && renderGeneralSub()}
@@ -802,8 +802,8 @@ INSTRUCTIONS: Answer concisely (2-4 sentences). If the agent asks for a draft re
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-5">
       <div>
-        <h1 className="text-xl font-bold text-slate-100">🤝 P2P Trading & Advertise</h1>
-        <p className="text-sm text-slate-500 mt-0.5">SOP-driven workflow · 7 scenarios · Integrated ACE chat</p>
+        <h1 className="text-xl font-bold text-fg-0">🤝 P2P Trading & Advertise</h1>
+        <p className="text-sm text-fg-2 mt-0.5">SOP-driven workflow · 7 scenarios · Integrated ACE chat</p>
       </div>
 
       {/* Scenario selector */}
@@ -811,10 +811,10 @@ INSTRUCTIONS: Answer concisely (2-4 sentences). If the agent asks for a draft re
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {SCENARIOS.map(s => (
             <button key={s.id} onClick={() => setScenario(s.id)}
-              className="group text-left bg-slate-900 border border-slate-800 hover:border-yellow-400/30 rounded-xl p-3.5 transition-all cursor-pointer">
+              className="group text-left bg-bg-1 border border-border-0 hover:border-hero/30 rounded-xl p-3.5 transition-all cursor-pointer">
               <span className="text-xl">{s.icon}</span>
-              <h3 className="text-sm font-semibold text-slate-100 mt-2 group-hover:text-yellow-400 transition-colors">{s.name}</h3>
-              <p className="text-xs text-slate-500 mt-1 leading-relaxed">{s.desc}</p>
+              <h3 className="text-sm font-semibold text-fg-0 mt-2 group-hover:text-hero transition-colors">{s.name}</h3>
+              <p className="text-xs text-fg-2 mt-1 leading-relaxed">{s.desc}</p>
             </button>
           ))}
         </div>
@@ -840,11 +840,11 @@ INSTRUCTIONS: Answer concisely (2-4 sentences). If the agent asks for a draft re
       )}
 
       {/* Collapsible: All Email Templates */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+      <div className="bg-bg-1 border border-border-0 rounded-xl overflow-hidden">
         <button onClick={() => setShowTemplates(o => !o)}
-          className="w-full flex items-center justify-between px-5 py-3 hover:bg-slate-800/50 transition-colors cursor-pointer">
-          <span className="text-sm font-semibold text-slate-100">📨 Email Templates ({Object.keys(ET).length})</span>
-          {showTemplates ? <ChevronUp size={14} className="text-slate-500" /> : <ChevronDown size={14} className="text-slate-500" />}
+          className="w-full flex items-center justify-between px-5 py-3 hover:bg-bg-2/50 transition-colors cursor-pointer">
+          <span className="text-sm font-semibold text-fg-0">📨 Email Templates ({Object.keys(ET).length})</span>
+          {showTemplates ? <ChevronUp size={14} className="text-fg-2" /> : <ChevronDown size={14} className="text-fg-2" />}
         </button>
         {showTemplates && (
           <div className="px-4 pb-4 space-y-2">
@@ -854,17 +854,17 @@ INSTRUCTIONS: Answer concisely (2-4 sentences). If the agent asks for a draft re
       </div>
 
       {/* Collapsible: Help Center Links */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+      <div className="bg-bg-1 border border-border-0 rounded-xl overflow-hidden">
         <button onClick={() => setShowLinks(o => !o)}
-          className="w-full flex items-center justify-between px-5 py-3 hover:bg-slate-800/50 transition-colors cursor-pointer">
-          <span className="text-sm font-semibold text-slate-100">🔗 Help Center Articles ({HC_LINKS.length})</span>
-          {showLinks ? <ChevronUp size={14} className="text-slate-500" /> : <ChevronDown size={14} className="text-slate-500" />}
+          className="w-full flex items-center justify-between px-5 py-3 hover:bg-bg-2/50 transition-colors cursor-pointer">
+          <span className="text-sm font-semibold text-fg-0">🔗 Help Center Articles ({HC_LINKS.length})</span>
+          {showLinks ? <ChevronUp size={14} className="text-fg-2" /> : <ChevronDown size={14} className="text-fg-2" />}
         </button>
         {showLinks && (
           <div className="px-5 pb-4 space-y-1.5">
             {HC_LINKS.map((l, i) => (
               <a key={i} href={l.url} target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 transition-colors py-1">
+                className="flex items-center gap-2 text-xs text-info hover:text-info transition-colors py-1">
                 <ExternalLink size={11} className="shrink-0" /> {l.label}
               </a>
             ))}
@@ -873,9 +873,9 @@ INSTRUCTIONS: Answer concisely (2-4 sentences). If the agent asks for a draft re
       </div>
 
       {/* Escalation reminder */}
-      <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-4">
-        <h4 className="text-xs font-semibold text-orange-400 mb-1.5">Escalation Protocol</h4>
-        <ul className="text-xs text-slate-400 space-y-1">
+      <div className="bg-warn/10 border border-warn/20 rounded-xl p-4">
+        <h4 className="text-xs font-semibold text-warn mb-1.5">Escalation Protocol</h4>
+        <ul className="text-xs text-fg-1 space-y-1">
           <li>P2P escalations → designated P2P Lark group only</li>
           <li>Use Case Expedition Form in Lark group for urgent cases</li>
           <li>Do NOT tag in shift groups — P2P team won't respond there</li>

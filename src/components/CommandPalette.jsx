@@ -121,29 +121,29 @@ export default function CommandPalette({ open, onClose }) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.93, y: -8 }}
         transition={ASSEMBLE_SPRING}
-        className="relative w-full max-w-lg bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden"
+        className="relative w-full max-w-lg bg-bg-1 border border-border-0 rounded-2xl shadow-2xl overflow-hidden"
         style={{ boxShadow: '0 0 0 1px rgba(250,204,21,0.08), 0 25px 50px rgba(0,0,0,0.6)' }}
         onClick={e => e.stopPropagation()}
       >
         <Command className="flex flex-col" shouldFilter={true}>
           {/* Input */}
-          <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-800">
-            <span className="text-slate-500 text-base">⌘</span>
+          <div className="flex items-center gap-3 px-4 py-3 border-b border-border-0">
+            <span className="text-fg-2 text-base">⌘</span>
             <Command.Input
               value={search}
               onValueChange={setSearch}
               placeholder="Jump to any tool, channel, or Bybit guide…"
-              className="flex-1 bg-transparent text-sm text-slate-100 placeholder-slate-500 outline-none"
+              className="flex-1 bg-transparent text-sm text-fg-0 placeholder-fg-2 outline-none"
               autoFocus
             />
-            <kbd className="text-xs text-slate-600 bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">ESC</kbd>
+            <kbd className="text-xs text-fg-2 bg-bg-2 px-1.5 py-0.5 rounded border border-border-0">ESC</kbd>
           </div>
 
           {/* Results — layout-animated so panel height shifts smoothly as search filters */}
           <LayoutGroup>
           <motion.div layout transition={LIST_SPRING}>
           <Command.List className="max-h-[420px] overflow-y-auto p-2 space-y-1">
-            <Command.Empty className="py-8 text-center text-sm text-slate-600">
+            <Command.Empty className="py-8 text-center text-sm text-fg-2">
               No results for &ldquo;{search}&rdquo;
             </Command.Empty>
 
@@ -152,7 +152,7 @@ export default function CommandPalette({ open, onClose }) {
               const items = NAV_ITEMS.filter(i => i.group === group);
               return (
                 <Command.Group key={group} heading={group}
-                  className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-slate-600 [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider"
+                  className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-fg-2 [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider"
                 >
                   {items.map(item => (
                     <Command.Item
@@ -161,9 +161,9 @@ export default function CommandPalette({ open, onClose }) {
                       onSelect={() => handleSelect(item)}
                       className={cn(
                         'flex items-center gap-3 px-3 py-2 rounded-lg text-sm cursor-pointer transition-colors duration-100',
-                        'text-slate-400 hover:text-slate-100',
-                        'aria-selected:bg-yellow-400/10 aria-selected:text-yellow-400',
-                        'data-[selected=true]:bg-yellow-400/10 data-[selected=true]:text-yellow-400'
+                        'text-fg-1 hover:text-fg-0',
+                        'aria-selected:bg-hero/10 aria-selected:text-hero',
+                        'data-[selected=true]:bg-hero/10 data-[selected=true]:text-hero'
                       )}
                     >
                       <span className="text-base w-5 text-center shrink-0">{item.icon}</span>
@@ -171,7 +171,7 @@ export default function CommandPalette({ open, onClose }) {
                       {item.badge && (
                         <span className={cn(
                           'text-xs px-1.5 py-0.5 rounded font-medium shrink-0',
-                          item.badge === 'CHAT' ? 'bg-green-500/20 text-green-400' : 'bg-blue-500/20 text-blue-400'
+                          item.badge === 'CHAT' ? 'bg-ok/20 text-ok' : 'bg-info/20 text-info'
                         )}>{item.badge}</span>
                       )}
                     </Command.Item>
@@ -182,7 +182,7 @@ export default function CommandPalette({ open, onClose }) {
 
             {/* Bybit KB articles */}
             <Command.Group heading="Bybit KB"
-              className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-slate-600 [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider"
+              className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-fg-2 [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider"
             >
               {KB_ITEMS.map(item => {
                 const colors = DOMAIN_COLORS[item.domainColor];
@@ -193,14 +193,14 @@ export default function CommandPalette({ open, onClose }) {
                     onSelect={() => handleSelect(item)}
                     className={cn(
                       'flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors duration-100',
-                      'aria-selected:bg-yellow-400/10',
-                      'data-[selected=true]:bg-yellow-400/10'
+                      'aria-selected:bg-hero/10',
+                      'data-[selected=true]:bg-hero/10'
                     )}
                   >
                     <span className="text-base w-5 text-center shrink-0">{item.icon}</span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-slate-300 leading-snug truncate aria-selected:text-yellow-400">{item.label}</p>
-                      <p className="text-xs text-slate-600 truncate">{item.subtitle}</p>
+                      <p className="text-sm text-fg-1 leading-snug truncate aria-selected:text-hero">{item.label}</p>
+                      <p className="text-xs text-fg-2 truncate">{item.subtitle}</p>
                     </div>
                     <span className={cn('text-xs px-1.5 py-0.5 rounded border shrink-0', colors.bg, colors.text, colors.border)}>
                       {item.domain}
@@ -216,18 +216,18 @@ export default function CommandPalette({ open, onClose }) {
               if (!macros.length) return null;
               return (
                 <Command.Group heading="Macros (Alt+1–9)"
-                  className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-slate-600 [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider"
+                  className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-fg-2 [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider"
                 >
                   {macros.map(m => (
                     <Command.Item
                       key={m.id}
                       value={`macro ${m.name} ${m.key}`}
                       onSelect={() => { onClose(); handleSelect({ path: m.actions[0]?.path || '/' }); }}
-                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm cursor-pointer transition-colors duration-100 text-slate-400 hover:text-slate-100 aria-selected:bg-yellow-400/10 aria-selected:text-yellow-400 data-[selected=true]:bg-yellow-400/10 data-[selected=true]:text-yellow-400"
+                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm cursor-pointer transition-colors duration-100 text-fg-1 hover:text-fg-0 aria-selected:bg-hero/10 aria-selected:text-hero data-[selected=true]:bg-hero/10 data-[selected=true]:text-hero"
                     >
                       <span className="text-base w-5 text-center shrink-0">{m.icon}</span>
                       <span className="flex-1">{m.name}</span>
-                      <kbd className="text-xs text-slate-600 bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">Alt+{m.key}</kbd>
+                      <kbd className="text-xs text-fg-2 bg-bg-2 px-1.5 py-0.5 rounded border border-border-0">Alt+{m.key}</kbd>
                     </Command.Item>
                   ))}
                 </Command.Group>
@@ -237,7 +237,7 @@ export default function CommandPalette({ open, onClose }) {
             {/* Snippets — type "/" to focus, auto-personalizes [USER_ID] */}
             {snippets.length > 0 && (
               <Command.Group heading="Snippets (type /)"
-                className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-slate-600 [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider"
+                className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-fg-2 [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider"
               >
                 {snippets.map(s => (
                   <Command.Item
@@ -246,9 +246,9 @@ export default function CommandPalette({ open, onClose }) {
                     onSelect={() => handleSelect({ isSnippet: true, id: s.id, content: s.content })}
                     className={cn(
                       'flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors duration-100',
-                      'text-slate-400 hover:text-slate-100',
-                      'aria-selected:bg-yellow-400/10 aria-selected:text-yellow-400',
-                      'data-[selected=true]:bg-yellow-400/10 data-[selected=true]:text-yellow-400'
+                      'text-fg-1 hover:text-fg-0',
+                      'aria-selected:bg-hero/10 aria-selected:text-hero',
+                      'data-[selected=true]:bg-hero/10 data-[selected=true]:text-hero'
                     )}
                   >
                     <span className="text-base w-5 text-center shrink-0">
@@ -256,10 +256,10 @@ export default function CommandPalette({ open, onClose }) {
                     </span>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm leading-snug truncate">{s.title}</p>
-                      <p className="text-xs text-slate-600 truncate">{s.content?.slice(0, 80)}</p>
+                      <p className="text-xs text-fg-2 truncate">{s.content?.slice(0, 80)}</p>
                     </div>
                     {copiedSnippet === s.id && (
-                      <span className="text-xs text-green-400 font-medium shrink-0">Copied!</span>
+                      <span className="text-xs text-ok font-medium shrink-0">Copied!</span>
                     )}
                   </Command.Item>
                 ))}
@@ -270,14 +270,14 @@ export default function CommandPalette({ open, onClose }) {
           </LayoutGroup>
 
           {/* Footer hint */}
-          <div className="px-4 py-2.5 border-t border-slate-800 flex items-center justify-between">
-            <p className="text-xs text-slate-700">
-              <kbd className="bg-slate-800 px-1 py-0.5 rounded border border-slate-700 text-slate-600">↑↓</kbd> navigate &nbsp;
-              <kbd className="bg-slate-800 px-1 py-0.5 rounded border border-slate-700 text-slate-600">↵</kbd> open &nbsp;
-              <kbd className="bg-slate-800 px-1 py-0.5 rounded border border-slate-700 text-slate-600">/</kbd> snippets &nbsp;
-              <kbd className="bg-slate-800 px-1 py-0.5 rounded border border-slate-700 text-slate-600">Alt+1–9</kbd> macros
+          <div className="px-4 py-2.5 border-t border-border-0 flex items-center justify-between">
+            <p className="text-xs text-fg-3">
+              <kbd className="bg-bg-2 px-1 py-0.5 rounded border border-border-0 text-fg-2">↑↓</kbd> navigate &nbsp;
+              <kbd className="bg-bg-2 px-1 py-0.5 rounded border border-border-0 text-fg-2">↵</kbd> open &nbsp;
+              <kbd className="bg-bg-2 px-1 py-0.5 rounded border border-border-0 text-fg-2">/</kbd> snippets &nbsp;
+              <kbd className="bg-bg-2 px-1 py-0.5 rounded border border-border-0 text-fg-2">Alt+1–9</kbd> macros
             </p>
-            <p className="text-xs text-slate-700">{NAV_ITEMS.length + KB_ITEMS.length + snippets.length} items</p>
+            <p className="text-xs text-fg-3">{NAV_ITEMS.length + KB_ITEMS.length + snippets.length} items</p>
           </div>
         </Command>
       </motion.div>

@@ -37,12 +37,12 @@ function getKBForTopic(topicId) {
 
 // ─── Daily Focus Logic ───────────────────────────────────────────────────────
 function getDailyFocus(daysLeft) {
-  if (daysLeft >= 9) return { label: 'Plan', detail: 'Lock your date, confirm attendees, pick your 2 product topics.', color: 'text-green-400' };
-  if (daysLeft >= 7) return { label: 'Build', detail: 'Build your slides. Start with Self Intro — use real numbers. Screenshot your badge.', color: 'text-blue-400' };
-  if (daysLeft >= 5) return { label: 'Build', detail: 'Finish product walkthrough slides. Fill in Department section. Use "Coach Me" to get AI feedback.', color: 'text-blue-400' };
-  if (daysLeft >= 3) return { label: 'Polish', detail: 'Complete draft. Do a timed rehearsal. Run Q&A drill. Tweak based on coaching feedback.', color: 'text-yellow-400' };
-  if (daysLeft >= 1) return { label: 'Deliver', detail: 'Final rehearsal today. You know this. Stay calm, be specific, use real examples. You got this.', color: 'text-orange-400' };
-  return { label: 'OVERDUE', detail: 'Presentation deadline passed. Schedule immediately to avoid extension.', color: 'text-red-400' };
+  if (daysLeft >= 9) return { label: 'Plan', detail: 'Lock your date, confirm attendees, pick your 2 product topics.', color: 'text-ok' };
+  if (daysLeft >= 7) return { label: 'Build', detail: 'Build your slides. Start with Self Intro — use real numbers. Screenshot your badge.', color: 'text-info' };
+  if (daysLeft >= 5) return { label: 'Build', detail: 'Finish product walkthrough slides. Fill in Department section. Use "Coach Me" to get AI feedback.', color: 'text-info' };
+  if (daysLeft >= 3) return { label: 'Polish', detail: 'Complete draft. Do a timed rehearsal. Run Q&A drill. Tweak based on coaching feedback.', color: 'text-hero' };
+  if (daysLeft >= 1) return { label: 'Deliver', detail: 'Final rehearsal today. You know this. Stay calm, be specific, use real examples. You got this.', color: 'text-warn' };
+  return { label: 'OVERDUE', detail: 'Presentation deadline passed. Schedule immediately to avoid extension.', color: 'text-crit' };
 }
 
 // ─── Readiness Score ─────────────────────────────────────────────────────────
@@ -85,10 +85,10 @@ function calcReadiness(state) {
 }
 
 function readinessLabel(score) {
-  if (score >= 90) return { text: 'Ready to present', color: 'text-green-400', bg: 'bg-green-400' };
-  if (score >= 70) return { text: 'Almost there', color: 'text-yellow-400', bg: 'bg-yellow-400' };
-  if (score >= 40) return { text: 'In progress', color: 'text-orange-400', bg: 'bg-orange-400' };
-  return { text: 'Just getting started', color: 'text-red-400', bg: 'bg-red-400' };
+  if (score >= 90) return { text: 'Ready to present', color: 'text-ok', bg: 'bg-ok' };
+  if (score >= 70) return { text: 'Almost there', color: 'text-hero', bg: 'bg-hero' };
+  if (score >= 40) return { text: 'In progress', color: 'text-warn', bg: 'bg-orange-400' };
+  return { text: 'Just getting started', color: 'text-crit', bg: 'bg-crit' };
 }
 
 // ─── AI Coach ────────────────────────────────────────────────────────────────
@@ -124,15 +124,15 @@ function useAICoach() {
 function AIFeedback({ loading, result, error }) {
   if (!loading && !result && !error) return null;
   return (
-    <div className="mt-3 rounded-lg border border-yellow-400/20 bg-yellow-400/5 px-4 py-3">
+    <div className="mt-3 rounded-lg border border-hero/20 bg-hero/5 px-4 py-3">
       {loading && (
-        <div className="flex items-center gap-2 text-xs text-yellow-400">
+        <div className="flex items-center gap-2 text-xs text-hero">
           <Loader2 size={13} className="animate-spin" /> Ace is reviewing...
         </div>
       )}
-      {error && <p className="text-xs text-red-400">{error}</p>}
+      {error && <p className="text-xs text-crit">{error}</p>}
       {result && (
-        <div className="text-xs text-slate-300 whitespace-pre-wrap leading-relaxed">{result}</div>
+        <div className="text-xs text-fg-1 whitespace-pre-wrap leading-relaxed">{result}</div>
       )}
     </div>
   );
@@ -154,27 +154,27 @@ function RehearsalTimer() {
   const sec = seconds % 60;
   const pct = ((TOTAL - seconds) / TOTAL) * 100;
   const elapsed = TOTAL - seconds;
-  const zone = elapsed < 10 * 60 ? 'text-green-400' : elapsed < 15 * 60 ? 'text-blue-400' : elapsed < 25 * 60 ? 'text-yellow-400' : 'text-red-400';
-  const barColor = elapsed < 10 * 60 ? 'bg-green-400' : elapsed < 15 * 60 ? 'bg-blue-400' : elapsed < 25 * 60 ? 'bg-yellow-400' : 'bg-red-400';
+  const zone = elapsed < 10 * 60 ? 'text-ok' : elapsed < 15 * 60 ? 'text-info' : elapsed < 25 * 60 ? 'text-hero' : 'text-crit';
+  const barColor = elapsed < 10 * 60 ? 'bg-ok' : elapsed < 15 * 60 ? 'bg-info' : elapsed < 25 * 60 ? 'bg-hero' : 'bg-crit';
 
   // Section markers
   const markers = [
-    { at: 0, label: 'Start', color: 'text-slate-600' },
-    { at: 33, label: 'Self Intro done (10m)', color: 'text-blue-400/40' },
+    { at: 0, label: 'Start', color: 'text-fg-2' },
+    { at: 33, label: 'Self Intro done (10m)', color: 'text-info/40' },
     { at: 50, label: 'Dept done (15m)', color: 'text-purple-400/40' },
-    { at: 100, label: 'Product done (30m)', color: 'text-orange-400/40' },
+    { at: 100, label: 'Product done (30m)', color: 'text-warn/40' },
   ];
 
   return (
-    <div className="bg-slate-900/50 rounded-xl p-4 space-y-3">
+    <div className="bg-bg-1/50 rounded-xl p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-slate-300">Presentation Timer</span>
+        <span className="text-sm font-medium text-fg-1">Presentation Timer</span>
         <span className={cn('text-3xl font-mono font-bold tabular-nums', zone)}>
           {String(min).padStart(2, '0')}:{String(sec).padStart(2, '0')}
         </span>
       </div>
       <div className="relative">
-        <div className="h-2.5 bg-slate-800 rounded-full overflow-hidden">
+        <div className="h-2.5 bg-bg-2 rounded-full overflow-hidden">
           <div className={cn('h-full rounded-full transition-all duration-1000', barColor)} style={{ width: `${pct}%` }} />
         </div>
         {/* Section markers on the bar */}
@@ -193,8 +193,8 @@ function RehearsalTimer() {
           className={cn(
             'flex items-center gap-1.5 text-xs px-4 py-2.5 rounded-lg border font-medium transition-colors duration-150 cursor-pointer',
             running
-              ? 'bg-red-500/15 border-red-500/30 text-red-400 hover:bg-red-500/25'
-              : 'bg-green-500/15 border-green-500/30 text-green-400 hover:bg-green-500/25'
+              ? 'bg-crit/15 border-crit/30 text-crit hover:bg-crit/25'
+              : 'bg-ok/15 border-ok/30 text-ok hover:bg-ok/25'
           )}
           aria-label={running ? 'Pause timer' : 'Start timer'}
         >
@@ -203,7 +203,7 @@ function RehearsalTimer() {
         </button>
         <button
           onClick={() => { setRunning(false); setSeconds(TOTAL); }}
-          className="flex items-center gap-1.5 text-xs px-3 py-2.5 rounded-lg border border-slate-700 text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors duration-150 cursor-pointer"
+          className="flex items-center gap-1.5 text-xs px-3 py-2.5 rounded-lg border border-border-0 text-fg-1 hover:text-fg-0 hover:bg-bg-2 transition-colors duration-150 cursor-pointer"
           aria-label="Reset timer"
         >
           <RotateCcw size={12} /> Reset
@@ -244,25 +244,25 @@ function QADrill() {
           <Shuffle size={13} /> Start Q&A Drill
         </button>
       ) : (
-        <div className="bg-slate-900/50 rounded-xl p-4 space-y-3">
+        <div className="bg-bg-1/50 rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-cyan-400">Drill Mode</span>
             <button
               onClick={pickRandom}
-              className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-cyan-400 transition-colors duration-150 cursor-pointer"
+              className="flex items-center gap-1 text-[10px] text-fg-2 hover:text-cyan-400 transition-colors duration-150 cursor-pointer"
               aria-label="Next random question"
             >
               <Shuffle size={10} /> Next question
             </button>
           </div>
-          <p className="text-sm font-medium text-slate-200">{currentQ.q}</p>
+          <p className="text-sm font-medium text-fg-0">{currentQ.q}</p>
           <textarea
             value={answer}
             onChange={e => setAnswer(e.target.value)}
             placeholder="Type your answer as if you're in the meeting..."
             rows={4}
             autoFocus
-            className="w-full bg-slate-800 rounded-lg px-3 py-2 text-sm text-slate-300 outline-none placeholder-slate-600 border border-slate-700 focus:border-cyan-400/50 resize-none transition-colors duration-150"
+            className="w-full bg-bg-2 rounded-lg px-3 py-2 text-sm text-fg-1 outline-none placeholder-fg-3 border border-border-0 focus:border-cyan-400/50 resize-none transition-colors duration-150"
           />
           <div className="flex gap-2">
             <button
@@ -275,14 +275,14 @@ function QADrill() {
             </button>
             <button
               onClick={() => { setCurrentQ(null); setAnswer(''); coach.clear(); }}
-              className="text-xs text-slate-500 hover:text-slate-300 px-3 py-2 transition-colors duration-150 cursor-pointer"
+              className="text-xs text-fg-2 hover:text-fg-1 px-3 py-2 transition-colors duration-150 cursor-pointer"
             >
               End drill
             </button>
           </div>
           <AIFeedback loading={coach.loading} result={coach.result} error={coach.error} />
           {!coach.result && !coach.loading && (
-            <p className="text-[10px] text-slate-600">Tip: {currentQ.tip}</p>
+            <p className="text-[10px] text-fg-2">Tip: {currentQ.tip}</p>
           )}
         </div>
       )}
@@ -361,13 +361,13 @@ const QA_QUESTIONS = [
 
 // ─── Section Colors ──────────────────────────────────────────────────────────
 const sectionColors = {
-  deadline: 'border-red-500/30 bg-red-500/5',
-  checklist: 'border-yellow-500/30 bg-yellow-500/5',
-  self: 'border-blue-500/30 bg-blue-500/5',
+  deadline: 'border-crit/30 bg-crit/5',
+  checklist: 'border-hero/30 bg-hero-soft/5',
+  self: 'border-info/30 bg-info/5',
   dept: 'border-purple-500/30 bg-purple-500/5',
-  product: 'border-orange-500/30 bg-orange-500/5',
+  product: 'border-warn/30 bg-warn/5',
   qa: 'border-cyan-500/30 bg-cyan-500/5',
-  timer: 'border-green-500/30 bg-green-500/5',
+  timer: 'border-ok/30 bg-ok/5',
   script: 'border-pink-500/30 bg-pink-500/5',
 };
 
@@ -420,8 +420,8 @@ export default function ProbationPrep() {
   const criticalDone = PRE_CHECKLIST.filter(c => c.critical && checked[c.id]).length;
   const criticalTotal = PRE_CHECKLIST.filter(c => c.critical).length;
 
-  const urgencyColor = days <= 3 ? 'text-red-400' : days <= 7 ? 'text-yellow-400' : 'text-green-400';
-  const urgencyBg = days <= 3 ? 'bg-red-500/10 border-red-500/30' : days <= 7 ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-green-500/10 border-green-500/30';
+  const urgencyColor = days <= 3 ? 'text-crit' : days <= 7 ? 'text-hero' : 'text-ok';
+  const urgencyBg = days <= 3 ? 'bg-crit/10 border-crit/30' : days <= 7 ? 'bg-hero-soft/10 border-hero/30' : 'bg-ok/10 border-ok/30';
 
   // Coach section helper
   function coachSection(sectionName, pointsArray, prefix, coach) {
@@ -453,8 +453,8 @@ export default function ProbationPrep() {
     <div className="p-6 max-w-3xl mx-auto space-y-5">
       {/* Header */}
       <div>
-        <h1 className="text-xl font-bold text-slate-100">🎓 3-Month Presentation Prep</h1>
-        <p className="text-sm text-slate-500 mt-1">AI-powered coach, checklist, Q&A drill, and rehearsal timer</p>
+        <h1 className="text-xl font-bold text-fg-0">🎓 3-Month Presentation Prep</h1>
+        <p className="text-sm text-fg-2 mt-1">AI-powered coach, checklist, Q&A drill, and rehearsal timer</p>
       </div>
 
       {/* ── Readiness + Deadline + Daily Focus ─────────────────────────────── */}
@@ -463,7 +463,7 @@ export default function ProbationPrep() {
         <div className="flex items-center gap-4">
           <div className="relative w-16 h-16 shrink-0">
             <svg className="w-16 h-16 -rotate-90" viewBox="0 0 36 36">
-              <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="2" className="text-slate-800" />
+              <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="2" className="text-bg-2" />
               <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="2.5" strokeDasharray={`${readiness}, 100`} className={readLabel.color} strokeLinecap="round" />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
@@ -478,24 +478,24 @@ export default function ProbationPrep() {
                 <span className={cn('text-lg font-bold tabular-nums', urgencyColor)}>{days}d</span>
               </div>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">Hard deadline: April 18 — present BEFORE this date</p>
+            <p className="text-xs text-fg-2 mt-0.5">Hard deadline: April 18 — present BEFORE this date</p>
           </div>
         </div>
 
         {/* Daily focus */}
-        <div className="bg-slate-900/40 rounded-lg px-4 py-3">
+        <div className="bg-bg-1/40 rounded-lg px-4 py-3">
           <div className="flex items-center gap-2 mb-1">
             <TrendingUp size={12} className={focus.color} />
             <span className={cn('text-xs font-semibold', focus.color)}>Today's Focus: {focus.label}</span>
           </div>
-          <p className="text-xs text-slate-400">{focus.detail}</p>
+          <p className="text-xs text-fg-1">{focus.detail}</p>
         </div>
 
         {/* Urgent warnings */}
         {days <= 5 && !checked['date'] && (
-          <div className="flex items-center gap-2 bg-red-500/10 rounded-lg px-3 py-2">
-            <AlertTriangle size={14} className="text-red-400 shrink-0" />
-            <p className="text-xs text-red-400 font-medium">You haven't set a date yet. Probation extends automatically if not done by April 18.</p>
+          <div className="flex items-center gap-2 bg-crit/10 rounded-lg px-3 py-2">
+            <AlertTriangle size={14} className="text-crit shrink-0" />
+            <p className="text-xs text-crit font-medium">You haven't set a date yet. Probation extends automatically if not done by April 18.</p>
           </div>
         )}
       </div>
@@ -503,20 +503,20 @@ export default function ProbationPrep() {
       {/* ── Attendees ────────────────────────────────────────────────────── */}
       <div className={cn('border rounded-xl overflow-hidden', sectionColors.deadline)}>
         <button onClick={() => toggleSection('attendees')} className="w-full flex items-center justify-between px-5 py-4 text-left cursor-pointer">
-          <h2 className="font-semibold text-slate-100 flex items-center gap-2">
-            <Users size={16} className="text-red-400" /> Attendees (6 required)
+          <h2 className="font-semibold text-fg-0 flex items-center gap-2">
+            <Users size={16} className="text-crit" /> Attendees (6 required)
           </h2>
-          {openSections.attendees ? <ChevronUp size={16} className="text-slate-500" /> : <ChevronDown size={16} className="text-slate-500" />}
+          {openSections.attendees ? <ChevronUp size={16} className="text-fg-2" /> : <ChevronDown size={16} className="text-fg-2" />}
         </button>
         {openSections.attendees && (
           <div className="px-5 pb-5 space-y-2">
             {ATTENDEES.map((a, i) => (
-              <div key={i} className="flex items-center gap-3 bg-slate-900/50 rounded-lg px-4 py-3">
-                <span className="text-xs font-medium text-slate-500 w-36 shrink-0">{a.role}</span>
-                <span className="text-sm text-slate-300">{a.name}</span>
+              <div key={i} className="flex items-center gap-3 bg-bg-1/50 rounded-lg px-4 py-3">
+                <span className="text-xs font-medium text-fg-2 w-36 shrink-0">{a.role}</span>
+                <span className="text-sm text-fg-1">{a.name}</span>
               </div>
             ))}
-            <p className="text-[10px] text-slate-600 pt-1">HRBP (@jerina.ang) hosts the meeting. You send the calendar invite.</p>
+            <p className="text-[10px] text-fg-2 pt-1">HRBP (@jerina.ang) hosts the meeting. You send the calendar invite.</p>
           </div>
         )}
       </div>
@@ -524,29 +524,29 @@ export default function ProbationPrep() {
       {/* ── Pre-Presentation Checklist ────────────────────────────────────── */}
       <div className={cn('border rounded-xl overflow-hidden', sectionColors.checklist)}>
         <button onClick={() => toggleSection('checklist')} className="w-full flex items-center justify-between px-5 py-4 text-left cursor-pointer">
-          <h2 className="font-semibold text-slate-100 flex items-center gap-2">
-            <Target size={16} className="text-yellow-400" /> Checklist
-            <span className="text-xs text-slate-500 font-normal">{checklistDone}/{PRE_CHECKLIST.length}</span>
+          <h2 className="font-semibold text-fg-0 flex items-center gap-2">
+            <Target size={16} className="text-hero" /> Checklist
+            <span className="text-xs text-fg-2 font-normal">{checklistDone}/{PRE_CHECKLIST.length}</span>
           </h2>
-          {openSections.checklist ? <ChevronUp size={16} className="text-slate-500" /> : <ChevronDown size={16} className="text-slate-500" />}
+          {openSections.checklist ? <ChevronUp size={16} className="text-fg-2" /> : <ChevronDown size={16} className="text-fg-2" />}
         </button>
         {openSections.checklist && (
           <div className="px-5 pb-5 space-y-2">
             <div className="mb-3">
-              <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                <div className="h-full bg-yellow-400 rounded-full transition-all duration-300" style={{ width: `${(checklistDone / PRE_CHECKLIST.length) * 100}%` }} />
+              <div className="h-1.5 bg-bg-2 rounded-full overflow-hidden">
+                <div className="h-full bg-hero rounded-full transition-all duration-300" style={{ width: `${(checklistDone / PRE_CHECKLIST.length) * 100}%` }} />
               </div>
-              <p className="text-[10px] text-slate-600 mt-1">{criticalDone}/{criticalTotal} critical items done</p>
+              <p className="text-[10px] text-fg-2 mt-1">{criticalDone}/{criticalTotal} critical items done</p>
             </div>
             {PRE_CHECKLIST.map(item => (
               <button key={item.id} onClick={() => toggleCheck(item.id)} className="flex items-start gap-3 w-full text-left py-1.5 cursor-pointer">
                 {checked[item.id]
-                  ? <CheckCircle2 size={16} className="text-green-400 shrink-0 mt-0.5" />
-                  : <Circle size={16} className={cn('shrink-0 mt-0.5', item.critical ? 'text-yellow-400' : 'text-slate-600')} />
+                  ? <CheckCircle2 size={16} className="text-ok shrink-0 mt-0.5" />
+                  : <Circle size={16} className={cn('shrink-0 mt-0.5', item.critical ? 'text-hero' : 'text-fg-2')} />
                 }
-                <span className={cn('text-sm', checked[item.id] ? 'line-through text-slate-600' : 'text-slate-300')}>
+                <span className={cn('text-sm', checked[item.id] ? 'line-through text-fg-2' : 'text-fg-1')}>
                   {item.label}
-                  {item.critical && !checked[item.id] && <span className="text-[10px] text-yellow-400 ml-2">REQUIRED</span>}
+                  {item.critical && !checked[item.id] && <span className="text-[10px] text-hero ml-2">REQUIRED</span>}
                 </span>
               </button>
             ))}
@@ -557,25 +557,25 @@ export default function ProbationPrep() {
       {/* ── Self Introduction ─────────────────────────────────────────────── */}
       <div className={cn('border rounded-xl overflow-hidden', sectionColors.self)}>
         <button onClick={() => toggleSection('self')} className="w-full flex items-center justify-between px-5 py-4 text-left cursor-pointer">
-          <h2 className="font-semibold text-slate-100 flex items-center gap-2">
-            <Mic size={16} className="text-blue-400" /> Self Introduction
-            <span className="text-xs text-slate-500 font-normal ml-1">5-10 min</span>
+          <h2 className="font-semibold text-fg-0 flex items-center gap-2">
+            <Mic size={16} className="text-info" /> Self Introduction
+            <span className="text-xs text-fg-2 font-normal ml-1">5-10 min</span>
           </h2>
-          {openSections.self ? <ChevronUp size={16} className="text-slate-500" /> : <ChevronDown size={16} className="text-slate-500" />}
+          {openSections.self ? <ChevronUp size={16} className="text-fg-2" /> : <ChevronDown size={16} className="text-fg-2" />}
         </button>
         {openSections.self && (
           <div className="px-5 pb-5 space-y-3">
-            <p className="text-xs text-blue-400/70">Main focus of your presentation. Show who you are, what you delivered, and where you're going.</p>
+            <p className="text-xs text-info/70">Main focus of your presentation. Show who you are, what you delivered, and where you're going.</p>
             {SELF_INTRO_POINTS.map((point, i) => (
-              <div key={i} className="bg-slate-900/50 rounded-lg p-4">
-                <p className="font-medium text-slate-200 text-sm mb-1">{point.title}</p>
-                <p className="text-xs text-slate-500 mb-2">{point.detail}</p>
+              <div key={i} className="bg-bg-1/50 rounded-lg p-4">
+                <p className="font-medium text-fg-0 text-sm mb-1">{point.title}</p>
+                <p className="text-xs text-fg-2 mb-2">{point.detail}</p>
                 <textarea
                   value={notes[`self_${i}`] || ''}
                   onChange={e => setNote(`self_${i}`, e.target.value)}
                   placeholder="Your talking points..."
                   rows={2}
-                  className="w-full bg-slate-800 rounded-lg px-3 py-2 text-xs text-slate-300 outline-none placeholder-slate-600 border border-slate-700 focus:border-blue-400/50 resize-none transition-colors duration-150"
+                  className="w-full bg-bg-2 rounded-lg px-3 py-2 text-xs text-fg-1 outline-none placeholder-fg-3 border border-border-0 focus:border-info/50 resize-none transition-colors duration-150"
                 />
               </div>
             ))}
@@ -583,7 +583,7 @@ export default function ProbationPrep() {
             <button
               onClick={() => coachSection('Self Introduction', SELF_INTRO_POINTS, 'self', selfCoach)}
               disabled={selfCoach.loading}
-              className="flex items-center gap-1.5 text-xs bg-yellow-400/10 hover:bg-yellow-400/20 border border-yellow-400/20 text-yellow-400 px-4 py-2.5 rounded-lg transition-colors duration-150 cursor-pointer disabled:opacity-50 font-medium"
+              className="flex items-center gap-1.5 text-xs bg-hero/10 hover:bg-hero/20 border border-hero/20 text-hero px-4 py-2.5 rounded-lg transition-colors duration-150 cursor-pointer disabled:opacity-50 font-medium"
               aria-label="Get AI coaching on self introduction"
             >
               <Sparkles size={13} /> {selfCoach.loading ? 'Reviewing...' : 'Coach Me'}
@@ -596,32 +596,32 @@ export default function ProbationPrep() {
       {/* ── Department Introduction ────────────────────────────────────────── */}
       <div className={cn('border rounded-xl overflow-hidden', sectionColors.dept)}>
         <button onClick={() => toggleSection('dept')} className="w-full flex items-center justify-between px-5 py-4 text-left cursor-pointer">
-          <h2 className="font-semibold text-slate-100 flex items-center gap-2">
+          <h2 className="font-semibold text-fg-0 flex items-center gap-2">
             <Building2 size={16} className="text-purple-400" /> Department Introduction
-            <span className="text-xs text-slate-500 font-normal ml-1">5 min</span>
+            <span className="text-xs text-fg-2 font-normal ml-1">5 min</span>
           </h2>
-          {openSections.dept ? <ChevronUp size={16} className="text-slate-500" /> : <ChevronDown size={16} className="text-slate-500" />}
+          {openSections.dept ? <ChevronUp size={16} className="text-fg-2" /> : <ChevronDown size={16} className="text-fg-2" />}
         </button>
         {openSections.dept && (
           <div className="px-5 pb-5 space-y-3">
             <p className="text-xs text-purple-400/70">Show you understand the bigger picture — where your team fits and what it's working toward.</p>
             {DEPT_INTRO_POINTS.map((point, i) => (
-              <div key={i} className="bg-slate-900/50 rounded-lg p-4">
-                <p className="font-medium text-slate-200 text-sm mb-1">{point.title}</p>
-                <p className="text-xs text-slate-500 mb-2">{point.detail}</p>
+              <div key={i} className="bg-bg-1/50 rounded-lg p-4">
+                <p className="font-medium text-fg-0 text-sm mb-1">{point.title}</p>
+                <p className="text-xs text-fg-2 mb-2">{point.detail}</p>
                 <textarea
                   value={notes[`dept_${i}`] || ''}
                   onChange={e => setNote(`dept_${i}`, e.target.value)}
                   placeholder="Your talking points..."
                   rows={2}
-                  className="w-full bg-slate-800 rounded-lg px-3 py-2 text-xs text-slate-300 outline-none placeholder-slate-600 border border-slate-700 focus:border-purple-400/50 resize-none transition-colors duration-150"
+                  className="w-full bg-bg-2 rounded-lg px-3 py-2 text-xs text-fg-1 outline-none placeholder-fg-3 border border-border-0 focus:border-purple-400/50 resize-none transition-colors duration-150"
                 />
               </div>
             ))}
             <button
               onClick={() => coachSection('Department Introduction', DEPT_INTRO_POINTS, 'dept', deptCoach)}
               disabled={deptCoach.loading}
-              className="flex items-center gap-1.5 text-xs bg-yellow-400/10 hover:bg-yellow-400/20 border border-yellow-400/20 text-yellow-400 px-4 py-2.5 rounded-lg transition-colors duration-150 cursor-pointer disabled:opacity-50 font-medium"
+              className="flex items-center gap-1.5 text-xs bg-hero/10 hover:bg-hero/20 border border-hero/20 text-hero px-4 py-2.5 rounded-lg transition-colors duration-150 cursor-pointer disabled:opacity-50 font-medium"
               aria-label="Get AI coaching on department introduction"
             >
               <Sparkles size={13} /> {deptCoach.loading ? 'Reviewing...' : 'Coach Me'}
@@ -634,17 +634,17 @@ export default function ProbationPrep() {
       {/* ── Product Walkthrough ─────────────────────────────────────────────── */}
       <div className={cn('border rounded-xl overflow-hidden', sectionColors.product)}>
         <button onClick={() => toggleSection('product')} className="w-full flex items-center justify-between px-5 py-4 text-left cursor-pointer">
-          <h2 className="font-semibold text-slate-100 flex items-center gap-2">
-            <Package size={16} className="text-orange-400" /> Product Walkthrough
-            <span className="text-xs text-slate-500 font-normal ml-1">15-20 min</span>
+          <h2 className="font-semibold text-fg-0 flex items-center gap-2">
+            <Package size={16} className="text-warn" /> Product Walkthrough
+            <span className="text-xs text-fg-2 font-normal ml-1">15-20 min</span>
           </h2>
-          {openSections.product ? <ChevronUp size={16} className="text-slate-500" /> : <ChevronDown size={16} className="text-slate-500" />}
+          {openSections.product ? <ChevronUp size={16} className="text-fg-2" /> : <ChevronDown size={16} className="text-fg-2" />}
         </button>
         {openSections.product && (
           <div className="px-5 pb-5 space-y-4">
             <div>
-              <p className="text-xs text-orange-400/70 mb-1">Select 2 topics. Present as if attendees are new users.</p>
-              <p className="text-xs text-slate-600">Show advantages, disadvantages, unique selling points. Compare with competitors.</p>
+              <p className="text-xs text-warn/70 mb-1">Select 2 topics. Present as if attendees are new users.</p>
+              <p className="text-xs text-fg-2">Show advantages, disadvantages, unique selling points. Compare with competitors.</p>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
@@ -659,13 +659,13 @@ export default function ProbationPrep() {
                     className={cn(
                       'flex items-center gap-2 px-4 py-3 rounded-lg border text-left transition-all duration-150 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40',
                       selected
-                        ? 'bg-orange-400/15 border-orange-400/40 text-orange-300'
-                        : 'bg-slate-900/50 border-slate-700 text-slate-400 hover:border-slate-600'
+                        ? 'bg-orange-400/15 border-orange-400/40 text-warn'
+                        : 'bg-bg-1/50 border-border-0 text-fg-1 hover:border-border-1'
                     )}
                   >
                     <span>{topic.emoji}</span>
                     <span className="text-sm">{topic.label}</span>
-                    {selected && <CheckCircle2 size={14} className="ml-auto text-orange-400" />}
+                    {selected && <CheckCircle2 size={14} className="ml-auto text-warn" />}
                   </button>
                 );
               })}
@@ -673,7 +673,7 @@ export default function ProbationPrep() {
 
             {/* Badge reminder */}
             <div className="bg-orange-400/5 border border-orange-400/20 rounded-lg px-4 py-3">
-              <p className="text-xs text-orange-400 font-medium">First slide: show your "New Hire Must Learn" badge screenshot</p>
+              <p className="text-xs text-warn font-medium">First slide: show your "New Hire Must Learn" badge screenshot</p>
             </div>
 
             {/* Selected topics with KB reference + notes */}
@@ -683,15 +683,15 @@ export default function ProbationPrep() {
 
               return (
                 <div key={topicId} className="space-y-3">
-                  <div className="bg-slate-900/50 rounded-lg p-4">
-                    <p className="font-medium text-slate-200 text-sm mb-1">{topic.emoji} {topic.label}</p>
-                    <p className="text-xs text-slate-500 mb-2">Walk us through it step by step. Advantages? Disadvantages? How does Bybit compare?</p>
+                  <div className="bg-bg-1/50 rounded-lg p-4">
+                    <p className="font-medium text-fg-0 text-sm mb-1">{topic.emoji} {topic.label}</p>
+                    <p className="text-xs text-fg-2 mb-2">Walk us through it step by step. Advantages? Disadvantages? How does Bybit compare?</p>
                     <textarea
                       value={notes[`product_${topicId}`] || ''}
                       onChange={e => setNote(`product_${topicId}`, e.target.value)}
                       placeholder="Your walkthrough script and talking points..."
                       rows={4}
-                      className="w-full bg-slate-800 rounded-lg px-3 py-2 text-xs text-slate-300 outline-none placeholder-slate-600 border border-slate-700 focus:border-orange-400/50 resize-none transition-colors duration-150"
+                      className="w-full bg-bg-2 rounded-lg px-3 py-2 text-xs text-fg-1 outline-none placeholder-fg-3 border border-border-0 focus:border-orange-400/50 resize-none transition-colors duration-150"
                     />
                   </div>
 
@@ -699,16 +699,16 @@ export default function ProbationPrep() {
                   {kbArticles.length > 0 && (
                     <div className="bg-orange-400/5 border border-orange-400/15 rounded-lg px-4 py-3">
                       <div className="flex items-center gap-2 mb-2">
-                        <BookOpen size={12} className="text-orange-400/70" />
-                        <span className="text-xs font-medium text-orange-400/70">KB Reference — key points to weave into your walkthrough</span>
+                        <BookOpen size={12} className="text-warn/70" />
+                        <span className="text-xs font-medium text-warn/70">KB Reference — key points to weave into your walkthrough</span>
                       </div>
                       <div className="space-y-2 max-h-48 overflow-y-auto">
                         {kbArticles.map(article => (
                           <div key={article.id}>
-                            <p className="text-[10px] font-medium text-slate-400">{article.title}</p>
+                            <p className="text-[10px] font-medium text-fg-1">{article.title}</p>
                             <ul className="mt-1 space-y-0.5">
                               {article.keyPoints?.slice(0, 3).map((kp, j) => (
-                                <li key={j} className="text-[10px] text-slate-500 pl-2 border-l border-slate-700">{kp}</li>
+                                <li key={j} className="text-[10px] text-fg-2 pl-2 border-l border-border-0">{kp}</li>
                               ))}
                             </ul>
                           </div>
@@ -735,7 +735,7 @@ export default function ProbationPrep() {
                     );
                   }}
                   disabled={productCoach.loading}
-                  className="flex items-center gap-1.5 text-xs bg-yellow-400/10 hover:bg-yellow-400/20 border border-yellow-400/20 text-yellow-400 px-4 py-2.5 rounded-lg transition-colors duration-150 cursor-pointer disabled:opacity-50 font-medium"
+                  className="flex items-center gap-1.5 text-xs bg-hero/10 hover:bg-hero/20 border border-hero/20 text-hero px-4 py-2.5 rounded-lg transition-colors duration-150 cursor-pointer disabled:opacity-50 font-medium"
                   aria-label="Get AI coaching on product walkthrough"
                 >
                   <Sparkles size={13} /> {productCoach.loading ? 'Reviewing...' : 'Coach Me'}
@@ -750,11 +750,11 @@ export default function ProbationPrep() {
       {/* ── Q&A Prep + Drill ──────────────────────────────────────────────── */}
       <div className={cn('border rounded-xl overflow-hidden', sectionColors.qa)}>
         <button onClick={() => toggleSection('qa')} className="w-full flex items-center justify-between px-5 py-4 text-left cursor-pointer">
-          <h2 className="font-semibold text-slate-100 flex items-center gap-2">
+          <h2 className="font-semibold text-fg-0 flex items-center gap-2">
             <HelpCircle size={16} className="text-cyan-400" /> Q&A Prep
-            <span className="text-xs text-slate-500 font-normal ml-1">up to 30 min</span>
+            <span className="text-xs text-fg-2 font-normal ml-1">up to 30 min</span>
           </h2>
-          {openSections.qa ? <ChevronUp size={16} className="text-slate-500" /> : <ChevronDown size={16} className="text-slate-500" />}
+          {openSections.qa ? <ChevronUp size={16} className="text-fg-2" /> : <ChevronDown size={16} className="text-fg-2" />}
         </button>
         {openSections.qa && (
           <div className="px-5 pb-5 space-y-4">
@@ -765,20 +765,20 @@ export default function ProbationPrep() {
             </div>
 
             {/* Static Q&A list */}
-            <div className="border-t border-slate-800 pt-4">
-              <p className="text-xs font-medium text-slate-400 mb-3 flex items-center gap-1.5">
+            <div className="border-t border-border-0 pt-4">
+              <p className="text-xs font-medium text-fg-1 mb-3 flex items-center gap-1.5">
                 <MessageSquare size={12} /> All {QA_QUESTIONS.length} practice questions
               </p>
               {QA_QUESTIONS.map((item, i) => (
-                <div key={i} className="bg-slate-900/50 rounded-lg p-4 mb-2">
-                  <p className="font-medium text-slate-200 text-sm mb-1">{item.q}</p>
+                <div key={i} className="bg-bg-1/50 rounded-lg p-4 mb-2">
+                  <p className="font-medium text-fg-0 text-sm mb-1">{item.q}</p>
                   <p className="text-[10px] text-cyan-400/50 mb-2">Tip: {item.tip}</p>
                   <textarea
                     value={notes[`qa_${i}`] || ''}
                     onChange={e => setNote(`qa_${i}`, e.target.value)}
                     placeholder="Your answer..."
                     rows={2}
-                    className="w-full bg-slate-800 rounded-lg px-3 py-2 text-xs text-slate-300 outline-none placeholder-slate-600 border border-slate-700 focus:border-cyan-400/50 resize-none transition-colors duration-150"
+                    className="w-full bg-bg-2 rounded-lg px-3 py-2 text-xs text-fg-1 outline-none placeholder-fg-3 border border-border-0 focus:border-cyan-400/50 resize-none transition-colors duration-150"
                   />
                 </div>
               ))}
@@ -790,10 +790,10 @@ export default function ProbationPrep() {
       {/* ── Generate Full Script ───────────────────────────────────────────── */}
       <div className={cn('border rounded-xl overflow-hidden', sectionColors.script)}>
         <button onClick={() => toggleSection('script')} className="w-full flex items-center justify-between px-5 py-4 text-left cursor-pointer">
-          <h2 className="font-semibold text-slate-100 flex items-center gap-2">
+          <h2 className="font-semibold text-fg-0 flex items-center gap-2">
             <FileText size={16} className="text-pink-400" /> Generate Presentation Script
           </h2>
-          {openSections.script ? <ChevronUp size={16} className="text-slate-500" /> : <ChevronDown size={16} className="text-slate-500" />}
+          {openSections.script ? <ChevronUp size={16} className="text-fg-2" /> : <ChevronDown size={16} className="text-fg-2" />}
         </button>
         {openSections.script && (
           <div className="px-5 pb-5 space-y-3">
@@ -814,14 +814,14 @@ export default function ProbationPrep() {
       {/* ── Rehearsal Timer ────────────────────────────────────────────────── */}
       <div className={cn('border rounded-xl overflow-hidden', sectionColors.timer)}>
         <button onClick={() => toggleSection('timer')} className="w-full flex items-center justify-between px-5 py-4 text-left cursor-pointer">
-          <h2 className="font-semibold text-slate-100 flex items-center gap-2">
-            <Timer size={16} className="text-green-400" /> Rehearsal Timer
+          <h2 className="font-semibold text-fg-0 flex items-center gap-2">
+            <Timer size={16} className="text-ok" /> Rehearsal Timer
           </h2>
-          {openSections.timer ? <ChevronUp size={16} className="text-slate-500" /> : <ChevronDown size={16} className="text-slate-500" />}
+          {openSections.timer ? <ChevronUp size={16} className="text-fg-2" /> : <ChevronDown size={16} className="text-fg-2" />}
         </button>
         {openSections.timer && (
           <div className="px-5 pb-5">
-            <p className="text-xs text-green-400/70 mb-3">30-min timer with section markers. Practice your full presentation.</p>
+            <p className="text-xs text-ok/70 mb-3">30-min timer with section markers. Practice your full presentation.</p>
             <RehearsalTimer />
           </div>
         )}
@@ -829,7 +829,7 @@ export default function ProbationPrep() {
 
       {/* Footer */}
       <div className="text-center pt-2 pb-8">
-        <p className="text-xs text-slate-700">All notes auto-save locally. Your progress is yours.</p>
+        <p className="text-xs text-fg-3">All notes auto-save locally. Your progress is yours.</p>
       </div>
     </div>
   );

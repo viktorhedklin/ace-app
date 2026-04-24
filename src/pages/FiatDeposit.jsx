@@ -161,7 +161,7 @@ function useCopy(ms = 2000) {
 function CopyBtn({ text, label = 'Copy' }) {
   const [done, copy] = useCopy();
   return (
-    <button onClick={() => copy(text)} className={cn('flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border transition-all cursor-pointer', done ? 'bg-green-400/15 border-green-400/30 text-green-400' : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-yellow-400 hover:border-yellow-400/40')} aria-label={label}>
+    <button onClick={() => copy(text)} className={cn('flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border transition-all cursor-pointer', done ? 'bg-ok/15 border-ok/30 text-ok' : 'bg-bg-2 border-border-0 text-fg-1 hover:text-hero hover:border-hero/40')} aria-label={label}>
       {done ? <><Check size={11} /> Copied</> : <><Copy size={11} /> {label}</>}
     </button>
   );
@@ -170,10 +170,10 @@ function CopyBtn({ text, label = 'Copy' }) {
 function Section({ title, children, open: defaultOpen = true }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+    <div className="bg-bg-1 border border-border-0 rounded-xl overflow-hidden">
       <button onClick={() => setOpen(o => !o)} className="w-full flex items-center justify-between px-4 py-3 text-left cursor-pointer">
-        <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">{title}</span>
-        {open ? <ChevronUp size={13} className="text-slate-600" /> : <ChevronDown size={13} className="text-slate-600" />}
+        <span className="text-xs font-semibold text-fg-1 uppercase tracking-widest">{title}</span>
+        {open ? <ChevronUp size={13} className="text-fg-2" /> : <ChevronDown size={13} className="text-fg-2" />}
       </button>
       {open && children}
     </div>
@@ -182,14 +182,14 @@ function Section({ title, children, open: defaultOpen = true }) {
 
 function OptionBtn({ selected, onClick, children, color = 'yellow' }) {
   const colors = {
-    yellow: selected ? 'bg-yellow-400/15 border-yellow-400/40 text-yellow-400' : '',
-    red:    selected ? 'bg-red-400/15 border-red-400/40 text-red-400' : '',
-    green:  selected ? 'bg-green-400/15 border-green-400/40 text-green-400' : '',
-    blue:   selected ? 'bg-blue-400/15 border-blue-400/40 text-blue-400' : '',
-    slate:  selected ? 'bg-slate-700 border-slate-600 text-slate-300' : '',
+    yellow: selected ? 'bg-hero/15 border-hero/40 text-hero' : '',
+    red:    selected ? 'bg-crit/15 border-crit/40 text-crit' : '',
+    green:  selected ? 'bg-ok/15 border-ok/40 text-ok' : '',
+    blue:   selected ? 'bg-info/15 border-info/40 text-info' : '',
+    slate:  selected ? 'bg-bg-3 border-border-1 text-fg-1' : '',
   };
   return (
-    <button onClick={onClick} className={cn('px-3 py-2 rounded-lg text-xs border transition-all cursor-pointer text-left', selected ? colors[color] : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600')}>
+    <button onClick={onClick} className={cn('px-3 py-2 rounded-lg text-xs border transition-all cursor-pointer text-left', selected ? colors[color] : 'bg-bg-2 border-border-0 text-fg-1 hover:border-border-1')}>
       {children}
     </button>
   );
@@ -218,11 +218,11 @@ export default function FiatDeposit() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-100">💶 Fiat Deposit</h1>
-          <p className="text-sm text-slate-500">Global Fiat Deposit SOP — guided workflow</p>
+          <h1 className="text-xl font-bold text-fg-0">💶 Fiat Deposit</h1>
+          <p className="text-sm text-fg-2">Global Fiat Deposit SOP — guided workflow</p>
         </div>
         {inquiryType && (
-          <button onClick={reset} className="flex items-center gap-1 text-xs text-slate-500 hover:text-yellow-400 transition-colors cursor-pointer" aria-label="Restart">
+          <button onClick={reset} className="flex items-center gap-1 text-xs text-fg-2 hover:text-hero transition-colors cursor-pointer" aria-label="Restart">
             <RotateCcw size={13} /> Restart
           </button>
         )}
@@ -231,28 +231,28 @@ export default function FiatDeposit() {
       {/* Info collection reminder */}
       <Section title="Step 1 — Collect Information" open={!inquiryType}>
         <div className="px-4 pb-4 space-y-3">
-          <p className="text-xs text-slate-400">Gather from customer before proceeding:</p>
+          <p className="text-xs text-fg-1">Gather from customer before proceeding:</p>
           <div className="grid grid-cols-2 gap-2 text-xs">
             {['UID', 'Fiat currency', 'Deposit channel', 'Deposit amount', 'Order ID (if any)', 'Error message / screenshots', 'Payment proof (if charged)'].map(item => (
-              <span key={item} className="bg-slate-800 border border-slate-700 px-2.5 py-1.5 rounded-lg text-slate-300">{item}</span>
+              <span key={item} className="bg-bg-2 border border-border-0 px-2.5 py-1.5 rounded-lg text-fg-1">{item}</span>
             ))}
           </div>
-          <p className="text-xs text-slate-500">Check in CS:GO: Account Status, KYC Level, Country/Region, Risk Orders, Order Status</p>
+          <p className="text-xs text-fg-2">Check in CS:GO: Account Status, KYC Level, Country/Region, Risk Orders, Order Status</p>
         </div>
       </Section>
 
       {/* Step 2: Inquiry type */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
-        <p className="text-sm font-medium text-slate-100">Step 2 — What is the customer's issue?</p>
+      <div className="bg-bg-1 border border-border-0 rounded-xl p-5 space-y-4">
+        <p className="text-sm font-medium text-fg-0">Step 2 — What is the customer's issue?</p>
         <div className="grid grid-cols-1 gap-2">
           {INQUIRY_TYPES.map(t => (
             <button key={t.value} onClick={() => { setInquiryType(t.value); setUnableScenario(null); setOrderStatus(null); setRiskStatus(null); setOtherType(null); setFiatRemovalSelf(null); }}
               className={cn('flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all cursor-pointer',
-                inquiryType === t.value ? 'bg-yellow-400/10 border-yellow-400/30' : 'bg-slate-800 border-slate-700 hover:border-slate-600')}>
+                inquiryType === t.value ? 'bg-hero/10 border-hero/30' : 'bg-bg-2 border-border-0 hover:border-border-1')}>
               <span className="text-xl">{t.icon}</span>
               <div>
-                <p className={cn('text-sm font-semibold', inquiryType === t.value ? 'text-yellow-400' : 'text-slate-200')}>{t.label}</p>
-                <p className="text-xs text-slate-500">{t.desc}</p>
+                <p className={cn('text-sm font-semibold', inquiryType === t.value ? 'text-hero' : 'text-fg-0')}>{t.label}</p>
+                <p className="text-xs text-fg-2">{t.desc}</p>
               </div>
             </button>
           ))}
@@ -262,13 +262,13 @@ export default function FiatDeposit() {
       {/* ═══ (A) UNABLE TO PLACE ORDER ═══ */}
       {inquiryType === 'unable' && (
         <>
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
-            <p className="text-sm font-medium text-slate-100">What's preventing the order?</p>
+          <div className="bg-bg-1 border border-border-0 rounded-xl p-5 space-y-3">
+            <p className="text-sm font-medium text-fg-0">What's preventing the order?</p>
             <div className="space-y-2">
               {UNABLE_SCENARIOS.map(s => (
                 <OptionBtn key={s.value} selected={unableScenario === s.value} onClick={() => setUnableScenario(s.value)}>
                   <p className="font-semibold">{s.label}</p>
-                  <p className="text-slate-500 mt-0.5">{s.action}</p>
+                  <p className="text-fg-2 mt-0.5">{s.action}</p>
                 </OptionBtn>
               ))}
             </div>
@@ -278,11 +278,11 @@ export default function FiatDeposit() {
           {unableScenario === 'restricted' && (
             <Section title="Scenario 1: Fiat Service Restricted">
               <div className="px-4 pb-4 space-y-3">
-                <p className="text-xs text-slate-400">Check CS:GO &gt; KYC &gt; Issue Country against <a href="https://www.bybit.com/en/help-center/article?id=000002099" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">restricted country list</a></p>
+                <p className="text-xs text-fg-1">Check CS:GO &gt; KYC &gt; Issue Country against <a href="https://www.bybit.com/en/help-center/article?id=000002099" target="_blank" rel="noopener noreferrer" className="text-info hover:text-info">restricted country list</a></p>
                 {RESTRICTED_HANDLING.map((r, i) => (
-                  <div key={i} className="bg-slate-800/60 border border-slate-700 rounded-lg px-3 py-2.5">
-                    <p className="text-xs font-semibold text-slate-200">{r.condition}</p>
-                    <p className="text-xs text-slate-400 mt-0.5">{r.action}</p>
+                  <div key={i} className="bg-bg-2/60 border border-border-0 rounded-lg px-3 py-2.5">
+                    <p className="text-xs font-semibold text-fg-0">{r.condition}</p>
+                    <p className="text-xs text-fg-1 mt-0.5">{r.action}</p>
                   </div>
                 ))}
                 <div className="pt-2">
@@ -296,8 +296,8 @@ export default function FiatDeposit() {
           {unableScenario === 'banned' && (
             <Section title="Scenario 2: Service Banned by Fiat Risk">
               <div className="px-4 pb-4 space-y-3">
-                <p className="text-xs text-slate-400">Check CS:GO &gt; Funding &gt; Risk Order. User must submit docs via <a href="https://www.bybit.com/en/help-center/case-list" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">Support Hub</a></p>
-                <p className="text-xs text-slate-500">Search Order ID in Lark groups to determine stage:</p>
+                <p className="text-xs text-fg-1">Check CS:GO &gt; Funding &gt; Risk Order. User must submit docs via <a href="https://www.bybit.com/en/help-center/case-list" target="_blank" rel="noopener noreferrer" className="text-info hover:text-info">Support Hub</a></p>
+                <p className="text-xs text-fg-2">Search Order ID in Lark groups to determine stage:</p>
                 <div className="space-y-2">
                   {Object.entries(RISK_REVIEW).map(([key, r]) => (
                     <OptionBtn key={key} selected={riskStatus === key} onClick={() => setRiskStatus(key)} color={key === 'approved' ? 'green' : key === 'refused' ? 'red' : 'yellow'}>
@@ -306,15 +306,15 @@ export default function FiatDeposit() {
                   ))}
                 </div>
                 {riskInfo && (
-                  <div className="bg-yellow-400/8 border border-yellow-400/20 rounded-lg px-3 py-3 space-y-1">
-                    <p className="text-xs font-semibold text-yellow-400">{riskInfo.label}</p>
-                    <p className="text-xs text-slate-300">{riskInfo.action}</p>
-                    <p className="text-xs text-slate-500 mt-1">QT: {riskInfo.qt} | {riskInfo.et}</p>
+                  <div className="bg-hero/8 border border-hero/20 rounded-lg px-3 py-3 space-y-1">
+                    <p className="text-xs font-semibold text-hero">{riskInfo.label}</p>
+                    <p className="text-xs text-fg-1">{riskInfo.action}</p>
+                    <p className="text-xs text-fg-2 mt-1">QT: {riskInfo.qt} | {riskInfo.et}</p>
                   </div>
                 )}
                 {riskStatus === 'reviewing' && (
                   <div className="pt-1">
-                    <p className="text-xs text-slate-500 mb-1">If review exceeded 2 business days:</p>
+                    <p className="text-xs text-fg-2 mb-1">If review exceeded 2 business days:</p>
                     <CopyBtn text={ESCALATION_TEMPLATES.risk_exceeded} label="Copy escalation template" />
                   </div>
                 )}
@@ -327,13 +327,13 @@ export default function FiatDeposit() {
       {/* ═══ (B) ORDER HANDLING ═══ */}
       {inquiryType === 'order' && (
         <>
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
-            <p className="text-sm font-medium text-slate-100">Order status in CS:GO</p>
-            <p className="text-xs text-slate-500">CS:GO &gt; User Profile &gt; Funding &gt; Fiat Deposit &gt; Order Status</p>
+          <div className="bg-bg-1 border border-border-0 rounded-xl p-5 space-y-4">
+            <p className="text-sm font-medium text-fg-0">Order status in CS:GO</p>
+            <p className="text-xs text-fg-2">CS:GO &gt; User Profile &gt; Funding &gt; Fiat Deposit &gt; Order Status</p>
 
             {/* Processing statuses */}
             <div>
-              <p className="text-xs text-slate-600 mb-2">Processing Orders</p>
+              <p className="text-xs text-fg-2 mb-2">Processing Orders</p>
               <div className="flex flex-wrap gap-2">
                 {ORDER_STATUSES.filter(s => s.group === 'processing' || s.group === 'none').map(s => (
                   <OptionBtn key={s.value} selected={orderStatus === s.value} onClick={() => { setOrderStatus(s.value); setRiskStatus(null); }} color={s.color}>
@@ -345,7 +345,7 @@ export default function FiatDeposit() {
 
             {/* Completed statuses */}
             <div>
-              <p className="text-xs text-slate-600 mb-2">Completed Orders</p>
+              <p className="text-xs text-fg-2 mb-2">Completed Orders</p>
               <div className="flex flex-wrap gap-2">
                 {ORDER_STATUSES.filter(s => s.group === 'completed').map(s => (
                   <OptionBtn key={s.value} selected={orderStatus === s.value} onClick={() => { setOrderStatus(s.value); setRiskStatus(null); }} color={s.color}>
@@ -358,17 +358,17 @@ export default function FiatDeposit() {
 
           {/* Order handling detail */}
           {handling && (
-            <div className="bg-slate-900 border border-yellow-400/20 rounded-xl p-5 space-y-3">
-              <h3 className="text-sm font-semibold text-yellow-400">{handling.title}</h3>
+            <div className="bg-bg-1 border border-hero/20 rounded-xl p-5 space-y-3">
+              <h3 className="text-sm font-semibold text-hero">{handling.title}</h3>
               <div className="space-y-1.5">
                 {handling.steps.map((step, i) => (
                   <div key={i} className="flex items-start gap-2 text-xs">
-                    <span className="text-yellow-400 font-bold mt-0.5 shrink-0">{i + 1}.</span>
-                    <span className="text-slate-300">{step}</span>
+                    <span className="text-hero font-bold mt-0.5 shrink-0">{i + 1}.</span>
+                    <span className="text-fg-1">{step}</span>
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-slate-600 mt-2">Case Type: {handling.case_type}</p>
+              <p className="text-xs text-fg-2 mt-2">Case Type: {handling.case_type}</p>
             </div>
           )}
 
@@ -376,11 +376,11 @@ export default function FiatDeposit() {
           {orderStatus === 'PENDING' && (
             <Section title="PENDING — Lark Group Check">
               <div className="px-4 pb-4 space-y-3">
-                <p className="text-xs text-slate-400">Search Order ID in Lark groups to determine trigger type:</p>
+                <p className="text-xs text-fg-1">Search Order ID in Lark groups to determine trigger type:</p>
                 <div className="space-y-2">
-                  <div className="bg-yellow-400/8 border border-yellow-400/20 rounded-lg px-3 py-2.5">
-                    <p className="text-xs font-semibold text-yellow-400">Type 1: Risk Alert Group found</p>
-                    <p className="text-xs text-slate-400 mt-0.5">Handle per Risk Review flow (same as Scenario 2). No fiat ban — user can still use fiat services.</p>
+                  <div className="bg-hero/8 border border-hero/20 rounded-lg px-3 py-2.5">
+                    <p className="text-xs font-semibold text-hero">Type 1: Risk Alert Group found</p>
+                    <p className="text-xs text-fg-1 mt-0.5">Handle per Risk Review flow (same as Scenario 2). No fiat ban — user can still use fiat services.</p>
                     <div className="mt-2 space-y-1.5">
                       {Object.entries(RISK_REVIEW).map(([key, r]) => (
                         <OptionBtn key={key} selected={riskStatus === key} onClick={() => setRiskStatus(key)} color="yellow">
@@ -389,20 +389,20 @@ export default function FiatDeposit() {
                       ))}
                     </div>
                     {riskInfo && (
-                      <div className="mt-2 bg-slate-800/60 rounded-lg px-3 py-2">
-                        <p className="text-xs text-slate-300">{riskInfo.action}</p>
-                        <p className="text-xs text-slate-500">QT: {riskInfo.qt} | {riskInfo.et}</p>
+                      <div className="mt-2 bg-bg-2/60 rounded-lg px-3 py-2">
+                        <p className="text-xs text-fg-1">{riskInfo.action}</p>
+                        <p className="text-xs text-fg-2">QT: {riskInfo.qt} | {riskInfo.et}</p>
                       </div>
                     )}
                   </div>
-                  <div className="bg-blue-400/8 border border-blue-400/20 rounded-lg px-3 py-2.5">
-                    <p className="text-xs font-semibold text-blue-400">Type 2: Discrepancy Platform found</p>
-                    <p className="text-xs text-slate-400 mt-0.5">Review takes up to 5 business days. Within 5 BD → advise wait (fd03 Response 8 / ET 4880 Option 8). Exceeded → escalate P2.</p>
+                  <div className="bg-info/8 border border-info/20 rounded-lg px-3 py-2.5">
+                    <p className="text-xs font-semibold text-info">Type 2: Discrepancy Platform found</p>
+                    <p className="text-xs text-fg-1 mt-0.5">Review takes up to 5 business days. Within 5 BD → advise wait (fd03 Response 8 / ET 4880 Option 8). Exceeded → escalate P2.</p>
                     <div className="mt-2"><CopyBtn text={ESCALATION_TEMPLATES.discrepancy} label="Copy discrepancy template" /></div>
                   </div>
-                  <div className="bg-red-400/8 border border-red-400/20 rounded-lg px-3 py-2.5">
-                    <p className="text-xs font-semibold text-red-400">Type 3: No Record in Lark</p>
-                    <p className="text-xs text-slate-400 mt-0.5">No record in risk order or Lark → escalate P2 immediately.</p>
+                  <div className="bg-crit/8 border border-crit/20 rounded-lg px-3 py-2.5">
+                    <p className="text-xs font-semibold text-crit">Type 3: No Record in Lark</p>
+                    <p className="text-xs text-fg-1 mt-0.5">No record in risk order or Lark → escalate P2 immediately.</p>
                     <div className="mt-2"><CopyBtn text={ESCALATION_TEMPLATES.pending_no_lark} label="Copy escalation template" /></div>
                   </div>
                 </div>
@@ -414,9 +414,9 @@ export default function FiatDeposit() {
           {orderStatus === 'no_record' && (
             <Section title="Escalation — No Order Created">
               <div className="px-4 pb-4 space-y-2">
-                <p className="text-xs text-slate-400">Collect: Full Name, Currency, Amount, Channel, Date, Payment Proof. Then escalate:</p>
+                <p className="text-xs text-fg-1">Collect: Full Name, Currency, Amount, Channel, Date, Payment Proof. Then escalate:</p>
                 <CopyBtn text={ESCALATION_TEMPLATES.no_record} label="Copy template" />
-                <pre className="text-xs text-slate-500 font-mono whitespace-pre-wrap bg-slate-800/50 rounded-lg p-3 mt-2">{ESCALATION_TEMPLATES.no_record}</pre>
+                <pre className="text-xs text-fg-2 font-mono whitespace-pre-wrap bg-bg-2/50 rounded-lg p-3 mt-2">{ESCALATION_TEMPLATES.no_record}</pre>
               </div>
             </Section>
           )}
@@ -424,9 +424,9 @@ export default function FiatDeposit() {
           {orderStatus === 'PAYING' && (
             <Section title="Escalation — PAYING Stuck" open={false}>
               <div className="px-4 pb-4 space-y-2">
-                <p className="text-xs text-slate-400">If exceeded 96 hours:</p>
+                <p className="text-xs text-fg-1">If exceeded 96 hours:</p>
                 <CopyBtn text={ESCALATION_TEMPLATES.paying_stuck} label="Copy template" />
-                <pre className="text-xs text-slate-500 font-mono whitespace-pre-wrap bg-slate-800/50 rounded-lg p-3 mt-2">{ESCALATION_TEMPLATES.paying_stuck}</pre>
+                <pre className="text-xs text-fg-2 font-mono whitespace-pre-wrap bg-bg-2/50 rounded-lg p-3 mt-2">{ESCALATION_TEMPLATES.paying_stuck}</pre>
               </div>
             </Section>
           )}
@@ -434,9 +434,9 @@ export default function FiatDeposit() {
           {orderStatus === 'PENDING_PAY' && (
             <Section title="Escalation — PENDING PAY Stuck" open={false}>
               <div className="px-4 pb-4 space-y-2">
-                <p className="text-xs text-slate-400">If exceeded 48 hours:</p>
+                <p className="text-xs text-fg-1">If exceeded 48 hours:</p>
                 <CopyBtn text={ESCALATION_TEMPLATES.pending_pay_stuck} label="Copy template" />
-                <pre className="text-xs text-slate-500 font-mono whitespace-pre-wrap bg-slate-800/50 rounded-lg p-3 mt-2">{ESCALATION_TEMPLATES.pending_pay_stuck}</pre>
+                <pre className="text-xs text-fg-2 font-mono whitespace-pre-wrap bg-bg-2/50 rounded-lg p-3 mt-2">{ESCALATION_TEMPLATES.pending_pay_stuck}</pre>
               </div>
             </Section>
           )}
@@ -444,9 +444,9 @@ export default function FiatDeposit() {
           {orderStatus === 'REFUND_PROCESSING' && (
             <Section title="Escalation — Refund Stuck" open={false}>
               <div className="px-4 pb-4 space-y-2">
-                <p className="text-xs text-slate-400">If exceeded 14 business days:</p>
+                <p className="text-xs text-fg-1">If exceeded 14 business days:</p>
                 <CopyBtn text={ESCALATION_TEMPLATES.refund_stuck} label="Copy template" />
-                <pre className="text-xs text-slate-500 font-mono whitespace-pre-wrap bg-slate-800/50 rounded-lg p-3 mt-2">{ESCALATION_TEMPLATES.refund_stuck}</pre>
+                <pre className="text-xs text-fg-2 font-mono whitespace-pre-wrap bg-bg-2/50 rounded-lg p-3 mt-2">{ESCALATION_TEMPLATES.refund_stuck}</pre>
               </div>
             </Section>
           )}
@@ -454,17 +454,17 @@ export default function FiatDeposit() {
           {orderStatus === 'FAILED' && (
             <Section title="FAILED — Additional Actions">
               <div className="px-4 pb-4 space-y-3">
-                <div className="bg-slate-800/60 border border-slate-700 rounded-lg px-3 py-2.5">
-                  <p className="text-xs font-semibold text-slate-200">If error code known:</p>
-                  <p className="text-xs text-slate-400">Check FAQ Troubleshooting sheet. Reply per the matching solution.</p>
+                <div className="bg-bg-2/60 border border-border-0 rounded-lg px-3 py-2.5">
+                  <p className="text-xs font-semibold text-fg-0">If error code known:</p>
+                  <p className="text-xs text-fg-1">Check FAQ Troubleshooting sheet. Reply per the matching solution.</p>
                 </div>
-                <div className="bg-slate-800/60 border border-slate-700 rounded-lg px-3 py-2.5">
-                  <p className="text-xs font-semibold text-slate-200">If failed 3+ times in a row:</p>
+                <div className="bg-bg-2/60 border border-border-0 rounded-lg px-3 py-2.5">
+                  <p className="text-xs font-semibold text-fg-0">If failed 3+ times in a row:</p>
                   <CopyBtn text={ESCALATION_TEMPLATES.failed_repeated} label="Copy template" />
                 </div>
-                <div className="bg-red-400/8 border border-red-400/20 rounded-lg px-3 py-2.5">
-                  <p className="text-xs font-semibold text-red-400">If funds deducted but status FAILED:</p>
-                  <p className="text-xs text-slate-400 mt-0.5">Collect: Currency, Amount, Channel, Payment Proof → escalate</p>
+                <div className="bg-crit/8 border border-crit/20 rounded-lg px-3 py-2.5">
+                  <p className="text-xs font-semibold text-crit">If funds deducted but status FAILED:</p>
+                  <p className="text-xs text-fg-1 mt-0.5">Collect: Currency, Amount, Channel, Payment Proof → escalate</p>
                   <div className="mt-2"><CopyBtn text={ESCALATION_TEMPLATES.failed_deducted} label="Copy template" /></div>
                 </div>
               </div>
@@ -476,16 +476,16 @@ export default function FiatDeposit() {
       {/* ═══ (C) OTHER FIAT ISSUES ═══ */}
       {inquiryType === 'other' && (
         <>
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
-            <p className="text-sm font-medium text-slate-100">What type of issue?</p>
+          <div className="bg-bg-1 border border-border-0 rounded-xl p-5 space-y-3">
+            <p className="text-sm font-medium text-fg-0">What type of issue?</p>
             <div className="space-y-2">
               <OptionBtn selected={otherType === 'name_mismatch'} onClick={() => { setOtherType('name_mismatch'); setFiatRemovalSelf(null); }}>
                 <p className="font-semibold">KYC Name Mismatch on Fiat Deposit Account</p>
-                <p className="text-slate-500 mt-0.5">Beneficiary name doesn't match KYC name</p>
+                <p className="text-fg-2 mt-0.5">Beneficiary name doesn't match KYC name</p>
               </OptionBtn>
               <OptionBtn selected={otherType === 'fiat_removal'} onClick={() => { setOtherType('fiat_removal'); setFiatRemovalSelf(null); }}>
                 <p className="font-semibold">Fiat Info Removal</p>
-                <p className="text-slate-500 mt-0.5">KYC transfer or delete account process</p>
+                <p className="text-fg-2 mt-0.5">KYC transfer or delete account process</p>
               </OptionBtn>
             </div>
           </div>
@@ -493,16 +493,16 @@ export default function FiatDeposit() {
           {otherType === 'name_mismatch' && (
             <Section title="Scenario 5: KYC Name Mismatch">
               <div className="px-4 pb-4 space-y-3">
-                <p className="text-xs text-slate-300">Collect from user:</p>
-                <div className="text-xs text-slate-400 space-y-1">
+                <p className="text-xs text-fg-1">Collect from user:</p>
+                <div className="text-xs text-fg-1 space-y-1">
                   <p>1. Screenshot of beneficiary name page</p>
                   <p>2. Incorrect name used</p>
                   <p>3. Correct name as per KYC</p>
                   <p>4. Proof of identity (ID card or passport)</p>
                 </div>
-                <p className="text-xs text-slate-500">Live Chat: offer follow-up (a06) → Email: ET 4842 → Internal note → Macro P1&gt;P2</p>
+                <p className="text-xs text-fg-2">Live Chat: offer follow-up (a06) → Email: ET 4842 → Internal note → Macro P1&gt;P2</p>
                 <CopyBtn text={ESCALATION_TEMPLATES.name_mismatch} label="Copy internal note" />
-                <p className="text-xs text-slate-600 mt-1">Case Type: E03 Fiat Transactions &gt; Fiat Deposit &gt; Fiat Deposit Guidance</p>
+                <p className="text-xs text-fg-2 mt-1">Case Type: E03 Fiat Transactions &gt; Fiat Deposit &gt; Fiat Deposit Guidance</p>
               </div>
             </Section>
           )}
@@ -510,25 +510,25 @@ export default function FiatDeposit() {
           {otherType === 'fiat_removal' && (
             <Section title="Scenario 6: Fiat Info Removal">
               <div className="px-4 pb-4 space-y-3">
-                <p className="text-xs text-slate-400">Ask: Can the user use the Fiat Info Removal Self-Service?</p>
+                <p className="text-xs text-fg-1">Ask: Can the user use the Fiat Info Removal Self-Service?</p>
                 <div className="flex gap-2">
                   <OptionBtn selected={fiatRemovalSelf === 'yes'} onClick={() => setFiatRemovalSelf('yes')} color="green">Yes — can use self-service</OptionBtn>
                   <OptionBtn selected={fiatRemovalSelf === 'no'} onClick={() => setFiatRemovalSelf('no')} color="red">No — cannot use self-service</OptionBtn>
                 </div>
 
                 {fiatRemovalSelf === 'yes' && (
-                  <div className="bg-green-400/8 border border-green-400/20 rounded-lg px-3 py-2.5 space-y-1">
-                    <p className="text-xs font-semibold text-green-400">Self-Service Available</p>
-                    <p className="text-xs text-slate-400">QT: fd06-en-fiat-removal-guide | Email: ET 4864</p>
-                    <p className="text-xs text-slate-500 mt-1">Remind: unlink all payment methods (Credit Card, Tax ID, P2P, Bank Card, Digital Wallet) before proceeding.</p>
-                    <p className="text-xs text-slate-500">Link: <a href="https://www.bybit.com/en/fiat/trade/express/expressUserCenter" target="_blank" rel="noopener noreferrer" className="text-blue-400">expressUserCenter</a></p>
+                  <div className="bg-ok/8 border border-ok/20 rounded-lg px-3 py-2.5 space-y-1">
+                    <p className="text-xs font-semibold text-ok">Self-Service Available</p>
+                    <p className="text-xs text-fg-1">QT: fd06-en-fiat-removal-guide | Email: ET 4864</p>
+                    <p className="text-xs text-fg-2 mt-1">Remind: unlink all payment methods (Credit Card, Tax ID, P2P, Bank Card, Digital Wallet) before proceeding.</p>
+                    <p className="text-xs text-fg-2">Link: <a href="https://www.bybit.com/en/fiat/trade/express/expressUserCenter" target="_blank" rel="noopener noreferrer" className="text-info">expressUserCenter</a></p>
                   </div>
                 )}
 
                 {fiatRemovalSelf === 'no' && (
-                  <div className="bg-red-400/8 border border-red-400/20 rounded-lg px-3 py-2.5 space-y-2">
-                    <p className="text-xs font-semibold text-red-400">Cannot Use Self-Service</p>
-                    <p className="text-xs text-slate-400">Request screenshot of error → offer follow-up → internal note → Macro P1&gt;P2</p>
+                  <div className="bg-crit/8 border border-crit/20 rounded-lg px-3 py-2.5 space-y-2">
+                    <p className="text-xs font-semibold text-crit">Cannot Use Self-Service</p>
+                    <p className="text-xs text-fg-1">Request screenshot of error → offer follow-up → internal note → Macro P1&gt;P2</p>
                     <CopyBtn text={ESCALATION_TEMPLATES.fiat_removal} label="Copy escalation template" />
                   </div>
                 )}
@@ -560,20 +560,20 @@ export default function FiatDeposit() {
             ['ET 4891', 'Fiat Removal Self-Service'],
           ].map(([code, desc]) => (
             <div key={code} className="flex items-center justify-between">
-              <span className="text-slate-300 font-mono">{code}</span>
-              <span className="text-slate-500">{desc}</span>
+              <span className="text-fg-1 font-mono">{code}</span>
+              <span className="text-fg-2">{desc}</span>
             </div>
           ))}
         </div>
       </Section>
 
       {/* Never do */}
-      <div className="bg-red-500/5 border border-red-500/20 rounded-xl px-5 py-3">
-        <p className="text-xs font-semibold text-red-400 uppercase tracking-widest mb-2">Never</p>
+      <div className="bg-crit/5 border border-crit/20 rounded-xl px-5 py-3">
+        <p className="text-xs font-semibold text-crit uppercase tracking-widest mb-2">Never</p>
         <div className="flex flex-wrap gap-x-6 gap-y-1">
           {['Promise an ETA', 'Manually credit fiat', 'Mention internal review logic', 'Share ban reasons', 'Ask for passwords or 2FA codes'].map(d => (
-            <span key={d} className="text-xs text-slate-500 flex items-center gap-1.5">
-              <span className="text-red-500 text-xs">✕</span> {d}
+            <span key={d} className="text-xs text-fg-2 flex items-center gap-1.5">
+              <span className="text-crit text-xs">✕</span> {d}
             </span>
           ))}
         </div>

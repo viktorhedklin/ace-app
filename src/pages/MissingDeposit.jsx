@@ -165,7 +165,7 @@ function useCopy(ms = 2000) {
 function CopyBtn({ text, label = 'Copy', className = '' }) {
   const [done, copy] = useCopy();
   return (
-    <button onClick={() => copy(text)} className={cn('flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border transition-all cursor-pointer', done ? 'bg-green-400/15 border-green-400/30 text-green-400' : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-yellow-400 hover:border-yellow-400/40', className)} aria-label={label}>
+    <button onClick={() => copy(text)} className={cn('flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border transition-all cursor-pointer', done ? 'bg-ok/15 border-ok/30 text-ok' : 'bg-bg-2 border-border-0 text-fg-1 hover:text-hero hover:border-hero/40', className)} aria-label={label}>
       {done ? <><Check size={11} /> Copied</> : <><Copy size={11} /> {label}</>}
     </button>
   );
@@ -174,10 +174,10 @@ function CopyBtn({ text, label = 'Copy', className = '' }) {
 function Section({ title, children, open: defaultOpen = true }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+    <div className="bg-bg-1 border border-border-0 rounded-xl overflow-hidden">
       <button onClick={() => setOpen(o => !o)} className="w-full flex items-center justify-between px-4 py-3 text-left cursor-pointer">
-        <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">{title}</span>
-        {open ? <ChevronUp size={13} className="text-slate-600" /> : <ChevronDown size={13} className="text-slate-600" />}
+        <span className="text-xs font-semibold text-fg-1 uppercase tracking-widest">{title}</span>
+        {open ? <ChevronUp size={13} className="text-fg-2" /> : <ChevronDown size={13} className="text-fg-2" />}
       </button>
       {open && children}
     </div>
@@ -188,7 +188,7 @@ function Section({ title, children, open: defaultOpen = true }) {
 
 function TxResultCard({ tx }) {
   if (!tx) return null;
-  const STATUS_COLORS = { confirmed: 'text-green-400 bg-green-400/15 border-green-400/30', confirming: 'text-yellow-400 bg-yellow-400/15 border-yellow-400/30', pending: 'text-orange-400 bg-orange-400/15 border-orange-400/30', failed: 'text-red-400 bg-red-400/15 border-red-400/30' };
+  const STATUS_COLORS = { confirmed: 'text-ok bg-ok/15 border-ok/30', confirming: 'text-hero bg-hero/15 border-hero/30', pending: 'text-warn bg-orange-400/15 border-orange-400/30', failed: 'text-crit bg-crit/15 border-crit/30' };
   const confPct = tx.requiredConfirmations > 0 ? Math.min(100, (tx.confirmations / tx.requiredConfirmations) * 100) : 0;
 
   // Format value — handle wei/satoshi
@@ -209,14 +209,14 @@ function TxResultCard({ tx }) {
   }
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+    <div className="bg-bg-1 border border-border-0 rounded-xl p-5 space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-slate-200">Transaction Details</h3>
+        <h3 className="text-sm font-semibold text-fg-0">Transaction Details</h3>
         <div className="flex items-center gap-2">
           <span className={cn('text-xs px-2 py-0.5 rounded border font-semibold', STATUS_COLORS[tx.status] || STATUS_COLORS.pending)}>
             {tx.status.toUpperCase()}
           </span>
-          <a href={tx.explorerUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors">
+          <a href={tx.explorerUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-info hover:text-info transition-colors">
             {tx.explorerName} <ExternalLink size={11} />
           </a>
         </div>
@@ -225,45 +225,45 @@ function TxResultCard({ tx }) {
       {/* Confirmations bar */}
       <div>
         <div className="flex items-center justify-between text-xs mb-1">
-          <span className="text-slate-500">Confirmations</span>
-          <span className={tx.confirmations >= tx.requiredConfirmations ? 'text-green-400' : 'text-yellow-400'}>
+          <span className="text-fg-2">Confirmations</span>
+          <span className={tx.confirmations >= tx.requiredConfirmations ? 'text-ok' : 'text-hero'}>
             {tx.confirmations.toLocaleString()} / {tx.requiredConfirmations} required
           </span>
         </div>
-        <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
-          <div className={cn('h-full rounded-full transition-all duration-500', tx.confirmations >= tx.requiredConfirmations ? 'bg-green-400' : 'bg-yellow-400')} style={{ width: `${confPct}%` }} />
+        <div className="h-1.5 bg-bg-2 rounded-full overflow-hidden">
+          <div className={cn('h-full rounded-full transition-all duration-500', tx.confirmations >= tx.requiredConfirmations ? 'bg-ok' : 'bg-hero')} style={{ width: `${confPct}%` }} />
         </div>
       </div>
 
       {/* Details grid */}
       <div className="grid grid-cols-2 gap-3 text-xs">
-        <div><span className="text-slate-500 block">Time</span><span className="text-slate-200 font-mono">{tx.time || '—'}</span></div>
-        <div><span className="text-slate-500 block">Block</span><span className="text-slate-200 font-mono">{tx.blockId > 0 ? tx.blockId.toLocaleString() : 'Unconfirmed'}</span></div>
-        <div><span className="text-slate-500 block">From</span><span className="text-slate-200 font-mono text-[11px] break-all">{tx.from}</span></div>
-        <div><span className="text-slate-500 block">To</span><span className="text-slate-200 font-mono text-[11px] break-all">{tx.to}</span></div>
-        <div><span className="text-slate-500 block">Value</span><span className="text-slate-200">{displayValue}{tx.valueUsd != null ? <span className="text-slate-500 ml-1">(${Number(tx.valueUsd).toFixed(2)})</span> : ''}</span></div>
-        <div><span className="text-slate-500 block">Fee</span><span className="text-slate-200">{tx.feeUsd != null ? `$${Number(tx.feeUsd).toFixed(4)}` : '—'}</span></div>
-        {tx.memo && <div className="col-span-2"><span className="text-slate-500 block">Memo / Tag</span><span className="text-slate-200 font-mono">{tx.memo}</span></div>}
+        <div><span className="text-fg-2 block">Time</span><span className="text-fg-0 font-mono">{tx.time || '—'}</span></div>
+        <div><span className="text-fg-2 block">Block</span><span className="text-fg-0 font-mono">{tx.blockId > 0 ? tx.blockId.toLocaleString() : 'Unconfirmed'}</span></div>
+        <div><span className="text-fg-2 block">From</span><span className="text-fg-0 font-mono text-[11px] break-all">{tx.from}</span></div>
+        <div><span className="text-fg-2 block">To</span><span className="text-fg-0 font-mono text-[11px] break-all">{tx.to}</span></div>
+        <div><span className="text-fg-2 block">Value</span><span className="text-fg-0">{displayValue}{tx.valueUsd != null ? <span className="text-fg-2 ml-1">(${Number(tx.valueUsd).toFixed(2)})</span> : ''}</span></div>
+        <div><span className="text-fg-2 block">Fee</span><span className="text-fg-0">{tx.feeUsd != null ? `$${Number(tx.feeUsd).toFixed(4)}` : '—'}</span></div>
+        {tx.memo && <div className="col-span-2"><span className="text-fg-2 block">Memo / Tag</span><span className="text-fg-0 font-mono">{tx.memo}</span></div>}
       </div>
 
       {/* Quick diagnosis */}
       {tx.status === 'confirmed' && (
-        <div className="bg-green-400/8 border border-green-400/20 rounded-lg px-3 py-2 text-xs text-green-400">
+        <div className="bg-ok/8 border border-ok/20 rounded-lg px-3 py-2 text-xs text-ok">
           <CheckCircle2 size={13} className="inline mr-1" /> Transaction fully confirmed. If not credited, check: correct deposit address, minimum amount ({CHAINS[tx.chain]?.minDeposit}), {CHAINS[tx.chain]?.memo ? 'memo/tag was included, ' : ''}correct network.
         </div>
       )}
       {tx.status === 'confirming' && (
-        <div className="bg-yellow-400/8 border border-yellow-400/20 rounded-lg px-3 py-2 text-xs text-yellow-400">
+        <div className="bg-hero/8 border border-hero/20 rounded-lg px-3 py-2 text-xs text-hero">
           <Clock size={13} className="inline mr-1" /> Still confirming — {tx.requiredConfirmations - tx.confirmations} more needed. Customer should wait.
         </div>
       )}
       {tx.status === 'pending' && (
-        <div className="bg-orange-400/8 border border-orange-400/20 rounded-lg px-3 py-2 text-xs text-orange-400">
+        <div className="bg-orange-400/8 border border-orange-400/20 rounded-lg px-3 py-2 text-xs text-warn">
           <AlertTriangle size={13} className="inline mr-1" /> Transaction not yet in a block. May still be in the mempool or the sending side hasn't broadcast yet.
         </div>
       )}
       {tx.status === 'failed' && (
-        <div className="bg-red-400/8 border border-red-400/20 rounded-lg px-3 py-2 text-xs text-red-400">
+        <div className="bg-crit/8 border border-crit/20 rounded-lg px-3 py-2 text-xs text-crit">
           <AlertTriangle size={13} className="inline mr-1" /> Transaction failed on-chain. Funds should revert to sender. Customer needs to retry.
         </div>
       )}
@@ -300,31 +300,31 @@ function TxChat({ txData }) {
   }
 
   return (
-    <div className="bg-slate-900 border border-yellow-400/20 rounded-xl overflow-hidden">
-      <div className="px-4 py-2.5 border-b border-slate-800 flex items-center gap-2">
-        <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
-        <span className="text-xs font-semibold text-yellow-400">Ask ACE about this transaction</span>
+    <div className="bg-bg-1 border border-hero/20 rounded-xl overflow-hidden">
+      <div className="px-4 py-2.5 border-b border-border-0 flex items-center gap-2">
+        <span className="w-1.5 h-1.5 rounded-full bg-hero animate-pulse" />
+        <span className="text-xs font-semibold text-hero">Ask ACE about this transaction</span>
       </div>
 
       {/* Messages */}
       <div className="max-h-60 overflow-y-auto p-3 space-y-2">
         {msgs.length === 0 && (
           <div className="space-y-2">
-            <p className="text-xs text-slate-600">Quick questions:</p>
+            <p className="text-xs text-fg-2">Quick questions:</p>
             <div className="flex flex-wrap gap-1.5">
               {SUGGESTIONS.map(s => (
-                <button key={s} onClick={() => send(s)} className="text-xs bg-slate-800 border border-slate-700 hover:border-yellow-400/40 text-slate-400 hover:text-yellow-400 px-2.5 py-1 rounded-lg transition-all cursor-pointer">{s}</button>
+                <button key={s} onClick={() => send(s)} className="text-xs bg-bg-2 border border-border-0 hover:border-hero/40 text-fg-1 hover:text-hero px-2.5 py-1 rounded-lg transition-all cursor-pointer">{s}</button>
               ))}
             </div>
           </div>
         )}
         {msgs.map((m, i) => (
-          <div key={i} className={cn('text-xs rounded-lg px-3 py-2 max-w-[85%]', m.role === 'user' ? 'bg-yellow-400/10 text-yellow-200 ml-auto' : 'bg-slate-800 text-slate-300')}>
+          <div key={i} className={cn('text-xs rounded-lg px-3 py-2 max-w-[85%]', m.role === 'user' ? 'bg-hero/10 text-fg-0 ml-auto' : 'bg-bg-2 text-fg-1')}>
             {m.content}
           </div>
         ))}
         {loading && (
-          <div className="flex items-center gap-2 text-xs text-slate-500">
+          <div className="flex items-center gap-2 text-xs text-fg-2">
             <Loader2 size={12} className="animate-spin" /> Thinking...
           </div>
         )}
@@ -332,15 +332,15 @@ function TxChat({ txData }) {
       </div>
 
       {/* Input */}
-      <div className="border-t border-slate-800 px-3 py-2 flex gap-2">
+      <div className="border-t border-border-0 px-3 py-2 flex gap-2">
         <input
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && send()}
           placeholder="Ask about this transaction..."
-          className="flex-1 bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 outline-none transition-colors"
+          className="flex-1 bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-1.5 text-xs text-fg-0 placeholder-fg-3 outline-none transition-colors"
         />
-        <button onClick={() => send()} disabled={loading || !input.trim()} className="bg-yellow-400 hover:bg-yellow-300 disabled:opacity-40 text-slate-900 rounded-lg px-3 py-1.5 transition-colors cursor-pointer" aria-label="Send message">
+        <button onClick={() => send()} disabled={loading || !input.trim()} className="bg-hero hover:bg-hero disabled:opacity-40 text-[#021418] rounded-lg px-3 py-1.5 transition-colors cursor-pointer" aria-label="Send message">
           <Send size={13} />
         </button>
       </div>
@@ -433,39 +433,39 @@ export default function MissingDeposit() {
     <div className="p-6 max-w-2xl mx-auto space-y-6">
       {/* Handoff banner */}
       {handoff && (
-        <div className="bg-yellow-400/10 border border-yellow-400/30 rounded-xl px-4 py-3 space-y-1">
-          <p className="text-xs font-semibold text-yellow-400 flex items-center gap-1.5">
+        <div className="bg-hero/10 border border-hero/30 rounded-xl px-4 py-3 space-y-1">
+          <p className="text-xs font-semibold text-hero flex items-center gap-1.5">
             <span>⚡</span> Routed from Live Chat
-            {handoff.vipLevel >= 3 && <span className="bg-yellow-400/20 border border-yellow-400/40 px-1.5 py-0.5 rounded text-yellow-300 font-bold ml-1">VIP {handoff.vipLevel}</span>}
+            {handoff.vipLevel >= 3 && <span className="bg-hero/20 border border-hero/40 px-1.5 py-0.5 rounded text-hero font-bold ml-1">VIP {handoff.vipLevel}</span>}
           </p>
-          {handoff.uid && <p className="text-xs text-slate-400">UID: <span className="text-slate-200 font-mono">{scrubPII(handoff.uid)}</span></p>}
+          {handoff.uid && <p className="text-xs text-fg-1">UID: <span className="text-fg-0 font-mono">{scrubPII(handoff.uid)}</span></p>}
         </div>
       )}
 
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
-          {depositType && <button onClick={resetAll} className="text-slate-500 hover:text-yellow-400 transition-colors cursor-pointer" aria-label="Back"><ArrowLeft size={18} /></button>}
+          {depositType && <button onClick={resetAll} className="text-fg-2 hover:text-hero transition-colors cursor-pointer" aria-label="Back"><ArrowLeft size={18} /></button>}
           <div>
-            <h1 className="text-xl font-bold text-slate-100">💸 Missing Deposit</h1>
-            <p className="text-sm text-slate-500">{!depositType ? 'Choose deposit type' : depositType === 'crypto' ? 'Blockchain transaction lookup & diagnostics' : 'SEPA / Fiat deposit troubleshooting'}</p>
+            <h1 className="text-xl font-bold text-fg-0">💸 Missing Deposit</h1>
+            <p className="text-sm text-fg-2">{!depositType ? 'Choose deposit type' : depositType === 'crypto' ? 'Blockchain transaction lookup & diagnostics' : 'SEPA / Fiat deposit troubleshooting'}</p>
           </div>
         </div>
-        {depositType && <button onClick={resetAll} className="flex items-center gap-1 text-xs text-slate-500 hover:text-yellow-400 transition-colors cursor-pointer" aria-label="Restart"><RotateCcw size={13} /> Restart</button>}
+        {depositType && <button onClick={resetAll} className="flex items-center gap-1 text-xs text-fg-2 hover:text-hero transition-colors cursor-pointer" aria-label="Restart"><RotateCcw size={13} /> Restart</button>}
       </div>
 
       {/* ━━━ TYPE SELECTOR ━━━ */}
       {!depositType && (
         <div className="grid grid-cols-2 gap-4">
-          <button onClick={() => setDepositType('crypto')} className="rounded-xl p-5 text-left border bg-slate-900 border-slate-800 hover:border-yellow-400/40 transition-all group cursor-pointer">
+          <button onClick={() => setDepositType('crypto')} className="rounded-xl p-5 text-left border bg-bg-1 border-border-0 hover:border-hero/40 transition-all group cursor-pointer">
             <p className="text-2xl mb-2">🔗</p>
-            <p className="font-semibold text-sm text-slate-100 group-hover:text-yellow-400 transition-colors">Crypto Deposit</p>
-            <p className="text-xs text-slate-500 mt-1">Blockchain lookup — enter TxID, ACE checks the chain for you</p>
+            <p className="font-semibold text-sm text-fg-0 group-hover:text-hero transition-colors">Crypto Deposit</p>
+            <p className="text-xs text-fg-2 mt-1">Blockchain lookup — enter TxID, ACE checks the chain for you</p>
           </button>
-          <button onClick={() => setDepositType('sepa')} className="rounded-xl p-5 text-left border bg-slate-900 border-slate-800 hover:border-yellow-400/40 transition-all group cursor-pointer">
+          <button onClick={() => setDepositType('sepa')} className="rounded-xl p-5 text-left border bg-bg-1 border-border-0 hover:border-hero/40 transition-all group cursor-pointer">
             <p className="text-2xl mb-2">🏦</p>
-            <p className="font-semibold text-sm text-slate-100 group-hover:text-yellow-400 transition-colors">SEPA / Fiat Deposit</p>
-            <p className="text-xs text-slate-500 mt-1">Bank transfer — order status, risk review, escalation templates</p>
+            <p className="font-semibold text-sm text-fg-0 group-hover:text-hero transition-colors">SEPA / Fiat Deposit</p>
+            <p className="text-xs text-fg-2 mt-1">Bank transfer — order status, risk review, escalation templates</p>
           </button>
         </div>
       )}
@@ -475,12 +475,12 @@ export default function MissingDeposit() {
         <>
           {/* Chain selector */}
           {!txData && (
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
-              <p className="font-medium text-slate-100 text-sm">Select chain</p>
+            <div className="bg-bg-1 border border-border-0 rounded-xl p-5 space-y-4">
+              <p className="font-medium text-fg-0 text-sm">Select chain</p>
               <div className="flex flex-wrap gap-2">
                 {Object.entries(CHAINS).map(([key, c]) => (
                   <button key={key} onClick={() => { setSelectedChain(key); setTxData(null); setTxError(''); }}
-                    className={cn('px-3 py-1.5 rounded-lg text-xs border transition-all cursor-pointer', selectedChain === key ? 'bg-yellow-400/15 border-yellow-400/40 text-yellow-400 font-semibold' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600')}>
+                    className={cn('px-3 py-1.5 rounded-lg text-xs border transition-all cursor-pointer', selectedChain === key ? 'bg-hero/15 border-hero/40 text-hero font-semibold' : 'bg-bg-2 border-border-0 text-fg-1 hover:border-border-1')}>
                     {key}
                   </button>
                 ))}
@@ -488,13 +488,13 @@ export default function MissingDeposit() {
 
               {/* Chain info */}
               {selectedChain && (
-                <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg px-3 py-2 text-xs">
-                  <p className="font-medium text-blue-300">{CHAINS[selectedChain].name}</p>
-                  <p className="text-slate-400 mt-0.5">{CHAINS[selectedChain].note}</p>
-                  <div className="flex gap-4 mt-1.5 text-slate-400">
-                    <span>Min: <strong className="text-slate-200">{CHAINS[selectedChain].minDeposit}</strong></span>
-                    <span>Confirmations: <strong className="text-slate-200">{CHAINS[selectedChain].confirmations}</strong></span>
-                    <span>Memo: <strong className={CHAINS[selectedChain].memo ? 'text-red-400' : 'text-green-400'}>{CHAINS[selectedChain].memo ? 'REQUIRED' : 'No'}</strong></span>
+                <div className="bg-info/10 border border-info/30 rounded-lg px-3 py-2 text-xs">
+                  <p className="font-medium text-info">{CHAINS[selectedChain].name}</p>
+                  <p className="text-fg-1 mt-0.5">{CHAINS[selectedChain].note}</p>
+                  <div className="flex gap-4 mt-1.5 text-fg-1">
+                    <span>Min: <strong className="text-fg-0">{CHAINS[selectedChain].minDeposit}</strong></span>
+                    <span>Confirmations: <strong className="text-fg-0">{CHAINS[selectedChain].confirmations}</strong></span>
+                    <span>Memo: <strong className={CHAINS[selectedChain].memo ? 'text-crit' : 'text-ok'}>{CHAINS[selectedChain].memo ? 'REQUIRED' : 'No'}</strong></span>
                   </div>
                 </div>
               )}
@@ -502,13 +502,13 @@ export default function MissingDeposit() {
               {/* TxID input */}
               {selectedChain && (
                 <div className="space-y-2">
-                  <label htmlFor="txid-input" className="text-xs text-slate-500">Transaction ID (TxID / Hash)</label>
+                  <label htmlFor="txid-input" className="text-xs text-fg-2">Transaction ID (TxID / Hash)</label>
                   <div className="flex gap-2">
                     <input id="txid-input" value={txid} onChange={e => setTxid(e.target.value)} onKeyDown={e => e.key === 'Enter' && lookupTx()}
                       placeholder="Paste transaction hash here..."
-                      className="flex-1 bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none font-mono transition-colors" />
+                      className="flex-1 bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-sm text-fg-0 placeholder-fg-3 outline-none font-mono transition-colors" />
                     <button onClick={lookupTx} disabled={txLoading || !txid.trim()}
-                      className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 disabled:opacity-40 text-slate-900 font-semibold text-xs px-4 py-2 rounded-lg transition-colors cursor-pointer" aria-label="Look up transaction">
+                      className="flex items-center gap-2 bg-hero hover:bg-hero disabled:opacity-40 text-[#021418] font-semibold text-xs px-4 py-2 rounded-lg transition-colors cursor-pointer" aria-label="Look up transaction">
                       {txLoading ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
                       {txLoading ? 'Looking up...' : 'Look Up'}
                     </button>
@@ -516,7 +516,7 @@ export default function MissingDeposit() {
                   {/* Explorer link */}
                   {txid.trim() && (
                     <a href={CHAINS[selectedChain].explorer + txid.trim()} target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors">
+                      className="inline-flex items-center gap-1 text-xs text-info hover:text-info transition-colors">
                       Open in {CHAINS[selectedChain].explorerName} <ExternalLink size={11} />
                     </a>
                   )}
@@ -525,9 +525,9 @@ export default function MissingDeposit() {
 
               {/* Error */}
               {txError && (
-                <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 text-xs text-red-400 space-y-1">
+                <div className="bg-crit/10 border border-crit/30 rounded-lg px-3 py-2 text-xs text-crit space-y-1">
                   <p><AlertTriangle size={12} className="inline mr-1" />{txError}</p>
-                  <p className="text-slate-500">Try opening the explorer link above to check manually. The API may be rate-limited or the TxID may be invalid.</p>
+                  <p className="text-fg-2">Try opening the explorer link above to check manually. The API may be rate-limited or the TxID may be invalid.</p>
                 </div>
               )}
             </div>
@@ -537,16 +537,16 @@ export default function MissingDeposit() {
           {txData && (
             <>
               <div className="flex items-center gap-2">
-                <button onClick={() => { setTxData(null); setTxError(''); }} className="text-xs text-slate-500 hover:text-yellow-400 transition-colors cursor-pointer flex items-center gap-1">
+                <button onClick={() => { setTxData(null); setTxError(''); }} className="text-xs text-fg-2 hover:text-hero transition-colors cursor-pointer flex items-center gap-1">
                   <ArrowLeft size={12} /> New lookup
                 </button>
-                <span className="text-xs text-slate-600">|</span>
-                <span className="text-xs text-slate-500 font-mono">{txData.hash.slice(0, 12)}...{txData.hash.slice(-8)}</span>
+                <span className="text-xs text-fg-2">|</span>
+                <span className="text-xs text-fg-2 font-mono">{txData.hash.slice(0, 12)}...{txData.hash.slice(-8)}</span>
               </div>
               <TxResultCard tx={txData} />
               {hasAnyApiKey() && <TxChat txData={txData} />}
               {!hasAnyApiKey() && (
-                <div className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-500">
+                <div className="bg-bg-1 border border-border-0 rounded-xl px-4 py-3 text-xs text-fg-2">
                   Add an API key in Settings to ask ACE questions about this transaction.
                 </div>
               )}
@@ -559,42 +559,42 @@ export default function MissingDeposit() {
       {depositType === 'sepa' && (
         <>
           {/* Info card */}
-          <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl px-4 py-3 text-sm">
-            <p className="font-medium text-blue-300 mb-1">SEPA / Fiat Deposit</p>
-            <p className="text-slate-400 text-xs">Standard SEPA processing: 1–3 business days (Mon–Fri). Collect UID, currency, method, amount, order ID, screenshots, and payment proof.</p>
+          <div className="bg-info/10 border border-info/30 rounded-xl px-4 py-3 text-sm">
+            <p className="font-medium text-info mb-1">SEPA / Fiat Deposit</p>
+            <p className="text-fg-1 text-xs">Standard SEPA processing: 1–3 business days (Mon–Fri). Collect UID, currency, method, amount, order ID, screenshots, and payment proof.</p>
           </div>
 
           {/* Date selector */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+          <div className="bg-bg-1 border border-border-0 rounded-xl p-5 space-y-4">
             <div className="flex items-center gap-2">
-              <Calendar size={15} className="text-yellow-400" />
-              <p className="font-medium text-slate-100 text-sm">When was the transfer sent?</p>
+              <Calendar size={15} className="text-hero" />
+              <p className="font-medium text-fg-0 text-sm">When was the transfer sent?</p>
             </div>
             <div className="flex flex-wrap gap-2">
               {DATE_QUICK.map(opt => (
                 <button key={opt.offset} onClick={() => setSepaDate(offsetToDate(opt.offset))}
-                  className={cn('px-3 py-1.5 rounded-lg text-xs border transition-all cursor-pointer', sepaDate === offsetToDate(opt.offset) ? 'bg-yellow-400/15 border-yellow-400/40 text-yellow-400' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600')}>
+                  className={cn('px-3 py-1.5 rounded-lg text-xs border transition-all cursor-pointer', sepaDate === offsetToDate(opt.offset) ? 'bg-hero/15 border-hero/40 text-hero' : 'bg-bg-2 border-border-0 text-fg-1 hover:border-border-1')}>
                   {opt.label}
                 </button>
               ))}
             </div>
             <div>
-              <label htmlFor="sepa-date" className="text-xs text-slate-500 mb-1 block">Or pick exact date:</label>
+              <label htmlFor="sepa-date" className="text-xs text-fg-2 mb-1 block">Or pick exact date:</label>
               <input id="sepa-date" type="date" value={sepaDate} max={new Date().toISOString().slice(0, 10)} onChange={e => setSepaDate(e.target.value)}
-                className="bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-3 py-2 text-sm text-slate-100 outline-none transition-colors" />
+                className="bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-sm text-fg-0 outline-none transition-colors" />
             </div>
           </div>
 
           {/* Status banner */}
           {sepaDate && (
-            <div className={cn('rounded-xl px-4 py-3 border', sepaStatus === 'processing' ? 'bg-green-500/10 border-green-500/30' : sepaStatus === 'delayed' ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-red-500/10 border-red-500/30')}>
+            <div className={cn('rounded-xl px-4 py-3 border', sepaStatus === 'processing' ? 'bg-ok/10 border-ok/30' : sepaStatus === 'delayed' ? 'bg-hero-soft/10 border-hero/30' : 'bg-crit/10 border-crit/30')}>
               <div className="flex items-center gap-2">
-                {sepaStatus === 'processing' ? <CheckCircle2 size={15} className="text-green-400" /> : sepaStatus === 'delayed' ? <Clock size={15} className="text-yellow-400" /> : <AlertTriangle size={15} className="text-red-400" />}
-                <p className={cn('font-semibold text-sm', sepaStatus === 'processing' ? 'text-green-400' : sepaStatus === 'delayed' ? 'text-yellow-400' : 'text-red-400')}>
+                {sepaStatus === 'processing' ? <CheckCircle2 size={15} className="text-ok" /> : sepaStatus === 'delayed' ? <Clock size={15} className="text-hero" /> : <AlertTriangle size={15} className="text-crit" />}
+                <p className={cn('font-semibold text-sm', sepaStatus === 'processing' ? 'text-ok' : sepaStatus === 'delayed' ? 'text-hero' : 'text-crit')}>
                   {businessDays} business day{businessDays !== 1 ? 's' : ''} — {sepaStatus === 'processing' ? 'within normal processing time' : sepaStatus === 'delayed' ? 'exceeds standard window' : 'significantly overdue'}
                 </p>
               </div>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-fg-1 mt-1">
                 {sepaStatus === 'processing' ? 'SEPA takes 1–3 business days. Educate the customer.' : 'Check if there is an order in CS:GO and run through the checklist below.'}
               </p>
             </div>
@@ -602,16 +602,16 @@ export default function MissingDeposit() {
 
           {/* Order check */}
           {sepaDate && (
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
-              <p className="font-medium text-slate-100 text-sm">Does the customer have an Order ID in CS:GO?</p>
-              <p className="text-xs text-slate-500">Check: CS:GO &gt; User Profile &gt; Funding &gt; Fiat Deposit</p>
+            <div className="bg-bg-1 border border-border-0 rounded-xl p-5 space-y-4">
+              <p className="font-medium text-fg-0 text-sm">Does the customer have an Order ID in CS:GO?</p>
+              <p className="text-xs text-fg-2">Check: CS:GO &gt; User Profile &gt; Funding &gt; Fiat Deposit</p>
               <div className="flex gap-2">
                 <button onClick={() => { setSepaHasOrder('yes'); setSepaOrderStatus(null); }}
-                  className={cn('px-4 py-2 rounded-lg text-xs border transition-all cursor-pointer', sepaHasOrder === 'yes' ? 'bg-yellow-400/15 border-yellow-400/40 text-yellow-400' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600')}>
+                  className={cn('px-4 py-2 rounded-lg text-xs border transition-all cursor-pointer', sepaHasOrder === 'yes' ? 'bg-hero/15 border-hero/40 text-hero' : 'bg-bg-2 border-border-0 text-fg-1 hover:border-border-1')}>
                   Yes — order found
                 </button>
                 <button onClick={() => { setSepaHasOrder('no'); setSepaOrderStatus('no_order'); }}
-                  className={cn('px-4 py-2 rounded-lg text-xs border transition-all cursor-pointer', sepaHasOrder === 'no' ? 'bg-red-400/15 border-red-400/40 text-red-400' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600')}>
+                  className={cn('px-4 py-2 rounded-lg text-xs border transition-all cursor-pointer', sepaHasOrder === 'no' ? 'bg-crit/15 border-crit/40 text-crit' : 'bg-bg-2 border-border-0 text-fg-1 hover:border-border-1')}>
                   No — no record
                 </button>
               </div>
@@ -619,16 +619,16 @@ export default function MissingDeposit() {
               {/* Order status selector */}
               {sepaHasOrder === 'yes' && (
                 <div className="space-y-2">
-                  <p className="text-xs text-slate-500">Select order status:</p>
+                  <p className="text-xs text-fg-2">Select order status:</p>
                   <div className="flex flex-wrap gap-2">
                     {SEPA_ORDER_STATUSES.filter(s => s.value !== 'no_order').map(s => (
                       <button key={s.value} onClick={() => setSepaOrderStatus(s.value)}
                         className={cn('px-3 py-1.5 rounded-lg text-xs border transition-all cursor-pointer',
-                          sepaOrderStatus === s.value ? `bg-${s.color}-400/15 border-${s.color}-400/40 text-${s.color}-400 font-semibold` : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600',
-                          sepaOrderStatus === s.value && s.color === 'yellow' && 'bg-yellow-400/15 border-yellow-400/40 text-yellow-400',
-                          sepaOrderStatus === s.value && s.color === 'red' && 'bg-red-400/15 border-red-400/40 text-red-400',
-                          sepaOrderStatus === s.value && s.color === 'green' && 'bg-green-400/15 border-green-400/40 text-green-400',
-                          sepaOrderStatus === s.value && s.color === 'blue' && 'bg-blue-400/15 border-blue-400/40 text-blue-400',
+                          sepaOrderStatus === s.value ? `bg-${s.color}-400/15 border-${s.color}-400/40 text-${s.color}-400 font-semibold` : 'bg-bg-2 border-border-0 text-fg-1 hover:border-border-1',
+                          sepaOrderStatus === s.value && s.color === 'yellow' && 'bg-hero/15 border-hero/40 text-hero',
+                          sepaOrderStatus === s.value && s.color === 'red' && 'bg-crit/15 border-crit/40 text-crit',
+                          sepaOrderStatus === s.value && s.color === 'green' && 'bg-ok/15 border-ok/40 text-ok',
+                          sepaOrderStatus === s.value && s.color === 'blue' && 'bg-info/15 border-info/40 text-info',
                         )}>
                         {s.label}
                       </button>
@@ -642,14 +642,14 @@ export default function MissingDeposit() {
           {/* Order status action card */}
           {selectedOrderInfo && (
             <div className={cn('rounded-xl border px-4 py-4 space-y-2',
-              selectedOrderInfo.color === 'red' ? 'bg-red-400/8 border-red-400/25' :
-              selectedOrderInfo.color === 'yellow' ? 'bg-yellow-400/8 border-yellow-400/25' :
-              selectedOrderInfo.color === 'green' ? 'bg-green-400/8 border-green-400/25' :
-              selectedOrderInfo.color === 'blue' ? 'bg-blue-400/8 border-blue-400/25' :
-              'bg-slate-800 border-slate-700'
+              selectedOrderInfo.color === 'red' ? 'bg-crit/8 border-crit/25' :
+              selectedOrderInfo.color === 'yellow' ? 'bg-hero/8 border-hero/25' :
+              selectedOrderInfo.color === 'green' ? 'bg-ok/8 border-ok/25' :
+              selectedOrderInfo.color === 'blue' ? 'bg-info/8 border-info/25' :
+              'bg-bg-2 border-border-0'
             )}>
-              <p className="text-sm font-semibold text-slate-200">{selectedOrderInfo.label}</p>
-              <p className="text-xs text-slate-400 leading-relaxed">{selectedOrderInfo.action}</p>
+              <p className="text-sm font-semibold text-fg-0">{selectedOrderInfo.label}</p>
+              <p className="text-xs text-fg-1 leading-relaxed">{selectedOrderInfo.action}</p>
             </div>
           )}
 
@@ -660,7 +660,7 @@ export default function MissingDeposit() {
                 <div className="flex justify-end mb-2">
                   <CopyBtn text={SEPA_ESCALATION_TEMPLATES[escalationKey]} label="Copy template" />
                 </div>
-                <pre className="text-xs text-slate-400 font-mono whitespace-pre-wrap leading-relaxed bg-slate-800/50 rounded-lg p-3">{SEPA_ESCALATION_TEMPLATES[escalationKey]}</pre>
+                <pre className="text-xs text-fg-1 font-mono whitespace-pre-wrap leading-relaxed bg-bg-2/50 rounded-lg p-3">{SEPA_ESCALATION_TEMPLATES[escalationKey]}</pre>
               </div>
             </Section>
           )}
@@ -672,14 +672,14 @@ export default function MissingDeposit() {
                 {SEPA_CHECKLIST.map(item => (
                   <button key={item.key} onClick={() => toggleCheck(item.key)}
                     className={cn('w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-all cursor-pointer',
-                      sepaChecklist[item.key] ? 'bg-green-400/8 border-green-400/25' : 'bg-slate-800 border-slate-700 hover:border-slate-600')}>
+                      sepaChecklist[item.key] ? 'bg-ok/8 border-ok/25' : 'bg-bg-2 border-border-0 hover:border-border-1')}>
                     <div className={cn('w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-all',
-                      sepaChecklist[item.key] ? 'bg-green-400 border-green-400' : 'border-slate-600')}>
-                      {sepaChecklist[item.key] && <Check size={10} className="text-slate-900" />}
+                      sepaChecklist[item.key] ? 'bg-ok border-ok' : 'border-border-1')}>
+                      {sepaChecklist[item.key] && <Check size={10} className="text-[#021418]" />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={cn('text-sm', sepaChecklist[item.key] ? 'text-green-400' : 'text-slate-200')}>{item.label}</p>
-                      <p className="text-xs text-slate-500 mt-0.5">{item.tip}</p>
+                      <p className={cn('text-sm', sepaChecklist[item.key] ? 'text-ok' : 'text-fg-0')}>{item.label}</p>
+                      <p className="text-xs text-fg-2 mt-0.5">{item.tip}</p>
                     </div>
                   </button>
                 ))}
@@ -689,14 +689,14 @@ export default function MissingDeposit() {
 
           {/* Notes + AI generation */}
           {sepaDate && (
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
-              <label htmlFor="sepa-notes" className="text-sm font-medium text-slate-200">Agent notes</label>
+            <div className="bg-bg-1 border border-border-0 rounded-xl p-5 space-y-3">
+              <label htmlFor="sepa-notes" className="text-sm font-medium text-fg-0">Agent notes</label>
               <textarea id="sepa-notes" value={sepaNotes} onChange={e => { setSepaNotes(e.target.value); setSepaReply(''); }}
                 placeholder="Extra context — customer says bank confirmed 4 days ago, reference XYZ123..."
-                rows={3} className="w-full bg-slate-800 border border-slate-700 focus:border-yellow-400/50 rounded-lg px-4 py-3 text-sm text-slate-100 placeholder-slate-600 outline-none resize-y transition-colors" />
+                rows={3} className="w-full bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-4 py-3 text-sm text-fg-0 placeholder-fg-3 outline-none resize-y transition-colors" />
               {hasAnyApiKey() && (
                 <button onClick={generateSepaReply} disabled={sepaLoading}
-                  className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 disabled:opacity-50 text-slate-900 font-semibold text-xs px-4 py-2 rounded-lg transition-colors cursor-pointer" aria-label="Generate reply with ACE">
+                  className="flex items-center gap-2 bg-hero hover:bg-hero disabled:opacity-50 text-[#021418] font-semibold text-xs px-4 py-2 rounded-lg transition-colors cursor-pointer" aria-label="Generate reply with ACE">
                   {sepaLoading ? <><Loader2 size={13} className="animate-spin" /> Generating...</> : <><Sparkles size={13} /> Generate reply with ACE</>}
                 </button>
               )}
@@ -705,15 +705,15 @@ export default function MissingDeposit() {
 
           {/* Generated reply */}
           {sepaReply && (
-            <div className="bg-slate-900 border border-yellow-400/20 rounded-xl overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-3 border-b border-slate-800">
+            <div className="bg-bg-1 border border-hero/20 rounded-xl overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-3 border-b border-border-0">
                 <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
-                  <h2 className="text-sm font-semibold text-yellow-400">Draft reply</h2>
+                  <span className="w-2 h-2 rounded-full bg-hero animate-pulse" />
+                  <h2 className="text-sm font-semibold text-hero">Draft reply</h2>
                 </div>
                 <CopyBtn text={sepaReply} label="Copy reply" />
               </div>
-              <pre className="text-xs text-slate-300 whitespace-pre-wrap leading-relaxed font-mono p-5 max-h-96 overflow-y-auto">{sepaReply}</pre>
+              <pre className="text-xs text-fg-1 whitespace-pre-wrap leading-relaxed font-mono p-5 max-h-96 overflow-y-auto">{sepaReply}</pre>
             </div>
           )}
 
@@ -733,8 +733,8 @@ export default function MissingDeposit() {
                 { label: 'ET: 4880 — Order Status Email', ref: 'ET 4880' },
               ].map(t => (
                 <div key={t.ref} className="flex items-center justify-between text-xs">
-                  <span className="text-slate-300">{t.label}</span>
-                  <span className="text-slate-600 font-mono">{t.ref}</span>
+                  <span className="text-fg-1">{t.label}</span>
+                  <span className="text-fg-2 font-mono">{t.ref}</span>
                 </div>
               ))}
             </div>

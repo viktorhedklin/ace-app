@@ -77,22 +77,22 @@ export default function SnippetSearch() {
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
             className="fixed top-[15%] left-1/2 -translate-x-1/2 z-50 w-full max-w-lg"
           >
-            <div className="bg-slate-950 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+            <div className="bg-bg-0 border border-border-0 rounded-2xl shadow-2xl overflow-hidden">
               {/* Search header */}
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-800">
-                <Search size={14} className="text-slate-500 shrink-0" />
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-border-0">
+                <Search size={14} className="text-fg-2 shrink-0" />
                 <input
                   ref={inputRef}
                   type="text"
                   value={query}
                   onChange={e => setQuery(e.target.value)}
                   placeholder="Search snippets..."
-                  className="flex-1 bg-transparent text-sm text-slate-200 placeholder:text-slate-600 outline-none"
+                  className="flex-1 bg-transparent text-sm text-fg-0 placeholder:text-fg-2 outline-none"
                   aria-label="Search snippets"
                 />
                 <button
                   onClick={() => setAdding(a => !a)}
-                  className="text-slate-500 hover:text-yellow-400 transition-colors duration-150 flex items-center justify-center w-7 h-7 rounded-lg hover:bg-slate-800 cursor-pointer"
+                  className="text-fg-2 hover:text-hero transition-colors duration-150 flex items-center justify-center w-7 h-7 rounded-lg hover:bg-bg-2 cursor-pointer"
                   aria-label="Add new snippet"
                   title="Add snippet"
                 >
@@ -100,7 +100,7 @@ export default function SnippetSearch() {
                 </button>
                 <button
                   onClick={() => setSnippetSearchOpen(false)}
-                  className="text-slate-500 hover:text-slate-300 transition-colors duration-150 flex items-center justify-center w-7 h-7 rounded-lg hover:bg-slate-800 cursor-pointer"
+                  className="text-fg-2 hover:text-fg-1 transition-colors duration-150 flex items-center justify-center w-7 h-7 rounded-lg hover:bg-bg-2 cursor-pointer"
                   aria-label="Close snippet search"
                 >
                   <X size={14} />
@@ -117,13 +117,13 @@ export default function SnippetSearch() {
                     transition={{ duration: 0.2 }}
                     className="overflow-hidden"
                   >
-                    <div className="px-4 py-3 border-b border-slate-800 space-y-2">
+                    <div className="px-4 py-3 border-b border-border-0 space-y-2">
                       <input
                         type="text"
                         value={newTitle}
                         onChange={e => setNewTitle(e.target.value)}
                         placeholder="Snippet title"
-                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 placeholder:text-slate-600 outline-none focus-visible:ring-2 focus-visible:ring-yellow-400/30"
+                        className="w-full bg-bg-1 border border-border-0 rounded-lg px-3 py-2 text-xs text-fg-0 placeholder:text-fg-2 outline-none focus-visible:ring-2 focus-visible:ring-hero/30"
                         aria-label="Snippet title"
                       />
                       <textarea
@@ -131,13 +131,13 @@ export default function SnippetSearch() {
                         onChange={e => setNewContent(e.target.value)}
                         placeholder="Snippet content (templates, SOPs, macros...)"
                         rows={3}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 placeholder:text-slate-600 outline-none resize-none focus-visible:ring-2 focus-visible:ring-yellow-400/30"
+                        className="w-full bg-bg-1 border border-border-0 rounded-lg px-3 py-2 text-xs text-fg-0 placeholder:text-fg-2 outline-none resize-none focus-visible:ring-2 focus-visible:ring-hero/30"
                         aria-label="Snippet content"
                       />
                       <button
                         onClick={handleAdd}
                         disabled={!newTitle.trim() || !newContent.trim()}
-                        className="w-full bg-yellow-400/10 text-yellow-400 text-xs font-medium py-2 rounded-lg hover:bg-yellow-400/20 transition-colors duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="w-full bg-hero/10 text-hero text-xs font-medium py-2 rounded-lg hover:bg-hero/20 transition-colors duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         Save Snippet
                       </button>
@@ -150,7 +150,7 @@ export default function SnippetSearch() {
               <div className="max-h-72 overflow-y-auto">
                 {filtered.length === 0 ? (
                   <div className="px-4 py-8 text-center">
-                    <p className="text-xs text-slate-600">
+                    <p className="text-xs text-fg-2">
                       {snippets.length === 0
                         ? 'No snippets yet. Click + to add one.'
                         : 'No matches found.'}
@@ -160,14 +160,14 @@ export default function SnippetSearch() {
                   filtered.map(s => (
                     <div
                       key={s.id}
-                      className="px-4 py-2.5 border-b border-slate-800/50 hover:bg-slate-900/60 transition-colors duration-100 group"
+                      className="px-4 py-2.5 border-b border-border-0/50 hover:bg-bg-1/60 transition-colors duration-100 group"
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-medium text-slate-300 truncate">{s.title}</span>
+                        <span className="text-xs font-medium text-fg-1 truncate">{s.title}</span>
                         <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                           <button
                             onClick={() => handleCopy(s.content, s.id)}
-                            className="text-slate-600 hover:text-yellow-400 transition-colors duration-150 flex items-center justify-center w-6 h-6 rounded cursor-pointer"
+                            className="text-fg-2 hover:text-hero transition-colors duration-150 flex items-center justify-center w-6 h-6 rounded cursor-pointer"
                             aria-label={`Copy ${s.title}`}
                             title="Copy to clipboard"
                           >
@@ -175,7 +175,7 @@ export default function SnippetSearch() {
                           </button>
                           <button
                             onClick={() => removeSnippet(s.id)}
-                            className="text-slate-600 hover:text-red-400 transition-colors duration-150 flex items-center justify-center w-6 h-6 rounded cursor-pointer"
+                            className="text-fg-2 hover:text-crit transition-colors duration-150 flex items-center justify-center w-6 h-6 rounded cursor-pointer"
                             aria-label={`Delete ${s.title}`}
                             title="Delete snippet"
                           >
@@ -183,8 +183,8 @@ export default function SnippetSearch() {
                           </button>
                         </div>
                       </div>
-                      <p className="text-[11px] text-slate-600 mt-0.5 line-clamp-2 leading-relaxed">
-                        {copied === s.id ? <span className="text-yellow-400">Copied</span> : s.content}
+                      <p className="text-[11px] text-fg-2 mt-0.5 line-clamp-2 leading-relaxed">
+                        {copied === s.id ? <span className="text-hero">Copied</span> : s.content}
                       </p>
                     </div>
                   ))
@@ -192,8 +192,8 @@ export default function SnippetSearch() {
               </div>
 
               {/* Footer */}
-              <div className="px-4 py-2 border-t border-slate-800">
-                <p className="text-[10px] text-slate-700 text-center">
+              <div className="px-4 py-2 border-t border-border-0">
+                <p className="text-[10px] text-fg-3 text-center">
                   {snippets.length} snippet{snippets.length !== 1 ? 's' : ''} · local storage only · Esc to close
                 </p>
               </div>
