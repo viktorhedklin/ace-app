@@ -25,10 +25,10 @@ function openaiHeaders(apiKey) {
   };
 }
 
-// Newer OpenAI models (o1, o3, gpt-5 family) require max_completion_tokens
+// Newer OpenAI models (gpt-5 family, gpt-4.1) require max_completion_tokens
 // instead of max_tokens. Route based on model id.
 function tokenLimitField(model, maxTokens) {
-  const needsNewField = /^(o1|o3|o4|gpt-5|gpt-4\.1|gpt-4o-mini-realtime|gpt-4o-realtime)/i.test(model);
+  const needsNewField = /^(gpt-5|gpt-4\.1)/i.test(model);
   return needsNewField ? { max_completion_tokens: maxTokens } : { max_tokens: maxTokens };
 }
 

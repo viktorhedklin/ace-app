@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Loader2, ChevronDown, ChevronUp, MessageSquare } from 'lucide-react';
+import { Send, Loader2, ChevronDown, ChevronUp, MessageSquare, KeyRound } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { InvokeChatWithHistory, hasAnyApiKey } from '@/api/claude';
 import { cn } from '@/lib/utils';
 
@@ -12,7 +13,18 @@ export default function WorkflowChat({ title = 'Ask ACE', systemContext, suggest
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [msgs]);
 
-  if (!hasAnyApiKey()) return null;
+  // Browse mode: show a quiet placeholder instead of hiding the panel.
+  if (!hasAnyApiKey()) {
+    return (
+      <div className="bg-bg-1 border border-border-0 rounded-xl px-4 py-3 flex items-center gap-3">
+        <KeyRound size={14} className="text-fg-2 shrink-0" />
+        <p className="type-caption text-fg-2 flex-1">
+          Ace chat is locked. Add an API key in{' '}
+          <Link to="/settings" className="text-hero hover:underline">Settings</Link> to ask Ace about this workflow.
+        </p>
+      </div>
+    );
+  }
 
   async function send(text) {
     const q = (text || input).trim();

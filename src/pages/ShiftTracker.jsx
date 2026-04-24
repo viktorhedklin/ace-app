@@ -1,12 +1,25 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, FileText, Loader2, TrendingUp, BarChart3 } from 'lucide-react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, FileText, Loader2, TrendingUp, BarChart3, ChevronLeft, ChevronRight, Calendar, Sparkles, Image as ImageIcon, X, CheckCircle2 } from 'lucide-react';
 import { getRecentCases } from '@/lib/caseMemory';
-import { InvokeLLM, getApiKey } from '@/api/claude';
+import { InvokeLLM } from '@/api/claude';
 import { cn } from '@/lib/utils';
+import QAReviewInput from '@/components/QAReviewInput';
 
-function todayKey() {
-  return `shift_${new Date().toISOString().split('T')[0]}`;
+/* ─── Date helpers ────────────────────────────────────────────────────────── */
+function toIso(d) { return d.toISOString().split('T')[0]; }
+function todayIso() { return toIso(new Date()); }
+function dateKey(iso) { return `shift_${iso}`; }
+function addDays(iso, n) { const d = new Date(iso); d.setDate(d.getDate() + n); return toIso(d); }
+function friendlyDate(iso) {
+  const d = new Date(iso + 'T12:00:00');
+  return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
 }
+function shortDate(iso) {
+  const d = new Date(iso + 'T12:00:00');
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
+function isToday(iso) { return iso === todayIso(); }
 
 const DEFAULT_DATA = {
   chatsTaken: 0,
@@ -18,12 +31,15 @@ const DEFAULT_DATA = {
   csatMessaging: [],
   chatEscalations: 0,
   msgEscalations: 0,
+  qaChat: [],      // Array of numbers 0-100 (chat review scores)
+  qaEmail: [],     // Array of numbers 0-100 (email review scores)
+  qaReviews: [],   // Array of { date, channel: 'chat'|'email', score, issues: [], summary }
   notes: '',
 };
 
-function loadToday() {
+function loadForDate(iso) {
   try {
-    const d = JSON.parse(localStorage.getItem(todayKey()));
+    const d = JSON.parse(localStorage.getItem(dateKey(iso)));
     return d ? { ...DEFAULT_DATA, ...d } : { ...DEFAULT_DATA };
   } catch { return { ...DEFAULT_DATA }; }
 }
@@ -58,19 +74,28 @@ function Counter({ label, icon, value, onInc, onDec }) {
 }
 
 export default function ShiftTracker() {
-  const [data, setData] = useState(loadToday);
+  const [selectedDate, setSelectedDate] = useState(todayIso);
+  const [period, setPeriod] = useState('daily'); // 'daily' | 'weekly' | 'monthly'
+  const [data, setData] = useState(() => loadForDate(todayIso()));
   const [csatChatInput, setCsatChatInput] = useState('');
   const [csatMsgInput, setCsatMsgInput] = useState('');
-  const [history] = useState(loadHistory);
+  const [history, setHistory] = useState(loadHistory);
 
   // Intelligence Report
   const [report, setReport] = useState('');
   const [reportLoading, setReportLoading] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
 
+  // Reload data when selectedDate changes
   useEffect(() => {
-    localStorage.setItem(todayKey(), JSON.stringify(data));
-  }, [data]);
+    setData(loadForDate(selectedDate));
+  }, [selectedDate]);
+
+  // Persist whenever data changes — keyed to selectedDate
+  useEffect(() => {
+    localStorage.setItem(dateKey(selectedDate), JSON.stringify(data));
+    setHistory(loadHistory());
+  }, [data, selectedDate]);
 
   function update(field, val) {
     setData(prev => ({ ...prev, [field]: val }));
@@ -153,14 +178,33 @@ Keep it under 300 words. Use bullet points. No PII. Professional tone suitable f
     }
   }, [data, totalCases, notesPts, taskPts, avgChatCsat, avgMsgCsat, reportLoading]);
 
-  const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+  // Weekly/monthly aggregates — computed from history
+  const weekAgg = useMemo(() => aggregate(history, selectedDate, 7), [history, selectedDate]);
+  const monthAgg = useMemo(() => aggregate(history, selectedDate, 30), [history, selectedDate]);
 
   return (
-    <div className="p-6 max-w-3xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-fg-0">📊 Shift Tracker</h1>
-        <p className="text-sm text-fg-2">{today}</p>
+    <div className="p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
+      {/* ── HEADER ─────────────────────────────────────────────────────── */}
+      <div className="flex items-start justify-between gap-6 flex-wrap">
+        <div>
+          <h1 className="type-h1 text-fg-0 flex items-center gap-2">
+            <span className="text-xl">📊</span> Shift Console
+          </h1>
+          <p className="type-body-sm text-fg-2 mt-1">{friendlyDate(selectedDate)}{isToday(selectedDate) && <span className="text-hero ml-2">· Today</span>}</p>
+        </div>
+        <DateNavigator selectedDate={selectedDate} onChange={setSelectedDate} />
       </div>
+
+      {/* ── PERIOD TABS ────────────────────────────────────────────────── */}
+      <PeriodTabs period={period} onChange={setPeriod} />
+
+      <AnimatePresence mode="wait">
+      {period !== 'daily' ? (
+        <motion.div key={period} {...panelMotion}>
+          <PeriodView period={period} agg={period === 'weekly' ? weekAgg : monthAgg} />
+        </motion.div>
+      ) : (
+      <motion.div key={'daily-' + selectedDate} {...panelMotion} className="space-y-6">
 
       {/* Productivity counters */}
       <div>
@@ -297,6 +341,30 @@ Keep it under 300 words. Use bullet points. No PII. Professional tone suitable f
         </div>
       )}
 
+      {/* QA Reviews */}
+      <QAReviewInput
+        data={data}
+        onAdd={(entry) => setData(prev => ({
+          ...prev,
+          qaReviews: [...(prev.qaReviews || []), entry],
+          [entry.channel === 'chat' ? 'qaChat' : 'qaEmail']: [
+            ...(prev[entry.channel === 'chat' ? 'qaChat' : 'qaEmail'] || []),
+            entry.score,
+          ],
+        }))}
+        onRemove={(idx) => setData(prev => {
+          const review = prev.qaReviews[idx];
+          if (!review) return prev;
+          const field = review.channel === 'chat' ? 'qaChat' : 'qaEmail';
+          const scoreIdx = prev[field].indexOf(review.score);
+          return {
+            ...prev,
+            qaReviews: prev.qaReviews.filter((_, i) => i !== idx),
+            [field]: scoreIdx >= 0 ? prev[field].filter((_, i) => i !== scoreIdx) : prev[field],
+          };
+        })}
+      />
+
       {/* Notes */}
       <div className="bg-bg-1 border border-border-0 rounded-xl p-4">
         <p className="text-xs text-fg-2 mb-2">📝 Shift notes</p>
@@ -305,6 +373,9 @@ Keep it under 300 words. Use bullet points. No PII. Professional tone suitable f
           rows={3}
           className="w-full bg-transparent text-sm text-fg-0 placeholder-fg-3 outline-none resize-none" />
       </div>
+      </motion.div>
+      )}
+      </AnimatePresence>
 
       {/* Analytics Dashboard */}
       {history.length > 1 && (
@@ -427,6 +498,205 @@ Keep it under 300 words. Use bullet points. No PII. Professional tone suitable f
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SUPPORT COMPONENTS & HELPERS
+   ════════════════════════════════════════════════════════════════════════════ */
+
+const panelMotion = {
+  initial: { opacity: 0, y: 8, filter: 'blur(4px)' },
+  animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
+  exit: { opacity: 0, y: -8, filter: 'blur(4px)' },
+  transition: { duration: 0.25, ease: [0.2, 0, 0.2, 1] },
+};
+
+function DateNavigator({ selectedDate, onChange }) {
+  const isTod = isToday(selectedDate);
+  const isFuture = selectedDate > todayIso();
+
+  return (
+    <div className="flex items-center gap-2 bg-bg-1 border border-border-0 rounded-xl p-1">
+      <button
+        onClick={() => onChange(addDays(selectedDate, -1))}
+        className="w-8 h-8 rounded-lg hover:bg-bg-2 text-fg-1 hover:text-hero transition-colors duration-220 flex items-center justify-center cursor-pointer"
+        aria-label="Previous day"
+      >
+        <ChevronLeft size={15} />
+      </button>
+
+      <input
+        type="date"
+        value={selectedDate}
+        max={todayIso()}
+        onChange={e => onChange(e.target.value)}
+        className="bg-transparent font-mono text-xs text-fg-0 outline-none border-none cursor-pointer px-2 py-1 tabular-nums"
+        aria-label="Pick a date"
+        style={{ colorScheme: 'dark' }}
+      />
+
+      {!isTod && (
+        <button
+          onClick={() => onChange(todayIso())}
+          className="type-caption font-display text-hero hover:text-hero/80 transition-colors px-2 cursor-pointer"
+        >
+          Today
+        </button>
+      )}
+
+      <button
+        onClick={() => !isFuture && onChange(addDays(selectedDate, 1))}
+        disabled={isTod || isFuture}
+        className="w-8 h-8 rounded-lg hover:bg-bg-2 text-fg-1 hover:text-hero transition-colors duration-220 flex items-center justify-center cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+        aria-label="Next day"
+      >
+        <ChevronRight size={15} />
+      </button>
+    </div>
+  );
+}
+
+function PeriodTabs({ period, onChange }) {
+  const tabs = [
+    { id: 'daily', label: 'Daily' },
+    { id: 'weekly', label: 'Weekly' },
+    { id: 'monthly', label: 'Monthly' },
+  ];
+  return (
+    <div className="inline-flex bg-bg-1 border border-border-0 rounded-xl p-1 gap-1">
+      {tabs.map(t => {
+        const active = period === t.id;
+        return (
+          <button
+            key={t.id}
+            onClick={() => onChange(t.id)}
+            className={cn(
+              'relative type-caption font-display font-semibold px-4 py-1.5 rounded-lg transition-colors duration-220 cursor-pointer',
+              active ? 'text-hero' : 'text-fg-2 hover:text-fg-0'
+            )}
+          >
+            {active && (
+              <motion.span
+                layoutId="period-active-pill"
+                className="absolute inset-0 bg-hero/10 border border-border-hero rounded-lg"
+                transition={{ duration: 0.26, ease: [0.2, 0, 0.2, 1] }}
+              />
+            )}
+            <span className="relative z-10">{t.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function aggregate(history, anchorDate, days) {
+  const end = new Date(anchorDate + 'T12:00:00');
+  const start = new Date(end);
+  start.setDate(start.getDate() - (days - 1));
+  const startIso = toIso(start);
+  const endIso = toIso(end);
+
+  const slice = history.filter(d => d.date >= startIso && d.date <= endIso);
+  const cases = slice.reduce((s, d) => s + (d.chatsTaken || 0) + (d.messagingTaken || 0) + (d.emailProd || 0), 0);
+  const closed = slice.reduce((s, d) => s + (d.closedCases || 0), 0);
+  const escalations = slice.reduce((s, d) => s + (d.chatEscalations || 0) + (d.msgEscalations || 0), 0);
+  const csatAll = slice.flatMap(d => [...(d.csatLiveChat || []), ...(d.csatMessaging || [])]);
+  const qaAll = slice.flatMap(d => [...(d.qaChat || []), ...(d.qaEmail || [])]);
+  const qaChat = slice.flatMap(d => d.qaChat || []);
+  const qaEmail = slice.flatMap(d => d.qaEmail || []);
+  const activeDays = slice.filter(d =>
+    (d.chatsTaken || 0) + (d.messagingTaken || 0) + (d.emailProd || 0) +
+    (d.csatLiveChat?.length || 0) + (d.csatMessaging?.length || 0) > 0
+  ).length;
+
+  return {
+    range: { startIso, endIso, days },
+    cases,
+    closed,
+    escalations,
+    activeDays,
+    avgCsat: csatAll.length ? (csatAll.reduce((a, b) => a + b, 0) / csatAll.length).toFixed(2) : '—',
+    avgQA: qaAll.length ? (qaAll.reduce((a, b) => a + b, 0) / qaAll.length).toFixed(0) : '—',
+    avgQAChat: qaChat.length ? (qaChat.reduce((a, b) => a + b, 0) / qaChat.length).toFixed(0) : '—',
+    avgQAEmail: qaEmail.length ? (qaEmail.reduce((a, b) => a + b, 0) / qaEmail.length).toFixed(0) : '—',
+    daily: slice.sort((a, b) => a.date.localeCompare(b.date)),
+  };
+}
+
+function PeriodView({ period, agg }) {
+  const title = period === 'weekly' ? 'Last 7 days' : 'Last 30 days';
+  const { range, cases, closed, escalations, avgCsat, avgQA, avgQAChat, avgQAEmail, activeDays, daily } = agg;
+
+  return (
+    <div className="space-y-5">
+      <div className="panel">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="type-h2 text-fg-0">{title}</h2>
+            <p className="type-caption text-fg-2 mt-0.5">
+              {shortDate(range.startIso)} → {shortDate(range.endIso)} · {activeDays} active day{activeDays !== 1 ? 's' : ''}
+            </p>
+          </div>
+          <Sparkles size={14} className="text-hero" />
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { label: 'Cases', value: cases },
+            { label: 'Closed', value: closed },
+            { label: 'Escalations', value: escalations },
+            { label: 'Avg CSAT', value: avgCsat },
+          ].map(s => (
+            <div key={s.label} className="bg-bg-2 border border-border-0 rounded-xl p-3 text-center">
+              <p className="type-kpi-label text-fg-2">{s.label}</p>
+              <p className="font-display font-bold text-xl text-fg-0 tabular-nums mt-1">{s.value}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-3 gap-3 mt-3">
+          {[
+            { label: 'QA · Chat', value: avgQAChat },
+            { label: 'QA · Email', value: avgQAEmail },
+            { label: 'QA · Combined', value: avgQA },
+          ].map(q => (
+            <div key={q.label} className="bg-bg-2 border border-border-0 rounded-xl p-3 text-center">
+              <p className="type-kpi-label text-fg-2">{q.label}</p>
+              <p className="font-display font-bold text-xl text-fg-0 tabular-nums mt-1">
+                {q.value}{q.value !== '—' && <span className="type-caption text-fg-3 font-normal ml-0.5">/100</span>}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Daily breakdown list */}
+      <div className="panel">
+        <h3 className="type-h3 text-fg-0 mb-3">Day-by-day</h3>
+        {daily.length === 0 ? (
+          <p className="type-caption text-fg-3 text-center py-4">No activity in this range.</p>
+        ) : (
+          <div className="space-y-1.5">
+            {daily.slice().reverse().map(d => {
+              const dayCases = (d.chatsTaken || 0) + (d.messagingTaken || 0) + (d.emailProd || 0);
+              const dayEsc = (d.chatEscalations || 0) + (d.msgEscalations || 0);
+              return (
+                <div key={d.date} className="bg-bg-2 border border-border-0 rounded-lg px-3 py-2 flex items-center gap-3 font-mono text-xs flex-wrap">
+                  <span className="text-fg-1 w-20 shrink-0 tabular-nums">{d.date.slice(5)}</span>
+                  <span className="text-fg-1">💬 {dayCases}</span>
+                  <span className="text-fg-1">⭐ {d.avgChat}</span>
+                  <span className="text-fg-1">📤 {dayEsc}</span>
+                  <span className="text-fg-1">🎯 {d.qaChat?.length || d.qaEmail?.length ? [...(d.qaChat || []), ...(d.qaEmail || [])].reduce((a,b)=>a+b,0) / ((d.qaChat?.length || 0) + (d.qaEmail?.length || 0)) : '—'}</span>
+                  <span className="ml-auto text-fg-2">{d.total?.toFixed?.(0) || d.total || 0} pts</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

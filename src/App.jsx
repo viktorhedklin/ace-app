@@ -97,7 +97,7 @@ function App() {
   const [unlocked, setUnlocked] = useState(() =>
     !gateEnabled || sessionStorage.getItem('ace_terminal_unlocked') === '1'
   );
-  const [hasKey, setHasKey] = useState(() => hasAnyApiKey());
+  const [hasKey, setHasKey] = useState(() => hasAnyApiKey() || sessionStorage.getItem('ace_browse_mode_unlocked') === 'true');
 
   // ── Dead Man's Switch — 30 min inactivity locks the gate ──────────────────
   const timerRef = useRef(null);

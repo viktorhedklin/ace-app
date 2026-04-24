@@ -62,6 +62,44 @@ function getCaseEvents() {
   catch { return []; }
 }
 
+// ─── Shift history helpers ────────────────────────────────────────────────────
+// Walk all shift_YYYY-MM-DD entries in localStorage and return parsed array.
+function getShiftHistory() {
+  const keys = Object.keys(localStorage).filter(k => k.startsWith('shift_')).sort();
+  return keys.map(k => {
+    try {
+      const d = JSON.parse(localStorage.getItem(k));
+      return { date: k.replace('shift_', ''), ...d };
+    } catch { return null; }
+  }).filter(Boolean);
+}
+
+// Rolling average over shift history for a given channel's QA scores.
+function getAvgQA(history, field) {
+  const all = history.flatMap(d => d[field] || []);
+  if (!all.length) return '—';
+  return (all.reduce((a, b) => a + b, 0) / all.length).toFixed(0);
+}
+
+// Consecutive days with any activity (cases logged OR CSAT logged), ending today.
+function getStreak(history) {
+  if (!history.length) return 0;
+  let streak = 0;
+  const today = new Date();
+  for (let i = 0; ; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().split('T')[0];
+    const day = history.find(h => h.date === key);
+    if (!day) break;
+    const active = (day.chatsTaken || 0) + (day.messagingTaken || 0) + (day.emailProd || 0) +
+      (day.csatLiveChat?.length || 0) + (day.csatMessaging?.length || 0);
+    if (!active) break;
+    streak++;
+  }
+  return streak;
+}
+
 function buildHeatmapData(events) {
   const map = {};
   events.forEach(e => {
@@ -178,6 +216,46 @@ export default function Dashboard() {
   const isHighPressure = vipPressure >= 2;
   const greeting = getTimeOfDayGreeting();
 
+  const history = useMemo(() => getShiftHistory(), []);
+  const streak = useMemo(() => getStreak(history), [history]);
+  const qaChat = useMemo(() => getAvgQA(history, 'qaChat'), [history]);
+  const qaEmail = useMemo(() => getAvgQA(history, 'qaEmail'), [history]);
+  const qaCombined = useMemo(() => {
+    const all = history.flatMap(d => [...(d.qaChat || []), ...(d.qaEmail || [])]);
+    if (!all.length) return '—';
+    return (all.reduce((a, b) => a + b, 0) / all.length).toFixed(0);
+  }, [history]);
+
+  // Rotating daily brief — picks a line based on what's most interesting today.
+  const dailyBrief = useMemo(() => {
+    if (isHighPressure) {
+      return {
+        icon: <AlertTriangle size={14} className="inline mr-1.5 -mt-0.5" />,
+        text: `${vipPressure} VIP 3+ case${vipPressure !== 1 ? 's' : ''} in the last 60 minutes. Stay sharp.`,
+        cls: 'text-warn',
+      };
+    }
+    if (streak >= 3) {
+      return {
+        icon: <span className="mr-1.5">🔥</span>,
+        text: `${streak}-day streak. You're in flow — keep it rolling.`,
+        cls: 'text-fg-1',
+      };
+    }
+    if (qaCombined !== '—' && Number(qaCombined) >= 90) {
+      return {
+        icon: <span className="mr-1.5">✨</span>,
+        text: `QA average ${qaCombined}. Top-tier work — the SOP loops are paying off.`,
+        cls: 'text-fg-1',
+      };
+    }
+    return {
+      icon: null,
+      text: "Three months in. You've handled things that stumped people with years of experience.",
+      cls: 'text-fg-1',
+    };
+  }, [isHighPressure, vipPressure, streak, qaCombined]);
+
   const csatDelta = stats.csat !== '—' && parseFloat(stats.csat) >= 4.5
     ? { text: `★ ${stats.csat} / 5.0`, cls: 'text-ok' }
     : { text: 'Tracking…', cls: 'text-fg-2' };
@@ -185,23 +263,38 @@ export default function Dashboard() {
   return (
     <div className="px-6 py-8 lg:px-10 lg:py-10 max-w-6xl mx-auto space-y-8">
       {/* ── GREETING ────────────────────────────────────────────────────── */}
-      <motion.div {...fadeUp(0)}>
-        <h1 className="type-display text-fg-0">
-          {greeting},{' '}
-          <span
-            className="text-hero animate-hero-shimmer"
-            style={{ textShadow: '0 0 24px rgba(34, 211, 238, 0.35)' }}
+      <motion.div {...fadeUp(0)} className="flex items-start justify-between gap-6 flex-wrap">
+        <div>
+          <h1 className="type-display text-fg-0">
+            {greeting},{' '}
+            <span
+              className="text-hero animate-hero-shimmer"
+              style={{ textShadow: '0 0 24px rgba(34, 211, 238, 0.35)' }}
+            >
+              Viktor
+            </span>
+            <span className="text-fg-3">.</span>
+          </h1>
+          <p className={cn('type-body mt-2', dailyBrief.cls)}>
+            {dailyBrief.icon}{dailyBrief.text}
+          </p>
+        </div>
+        {streak >= 1 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3, delay: 0.15, ease: [0.2, 0, 0.2, 1] }}
+            className="flex items-center gap-2 bg-bg-1 border border-border-0 rounded-xl px-4 py-2"
           >
-            Viktor
-          </span>
-          <span className="text-fg-3">.</span>
-        </h1>
-        <p className="type-body text-fg-1 mt-2">
-          {isHighPressure
-            ? <span className="text-warn"><AlertTriangle size={14} className="inline mr-1.5 -mt-0.5" />{vipPressure} VIP 3+ case{vipPressure !== 1 ? 's' : ''} in the last 60 minutes. Stay sharp.</span>
-            : "Three months in. You've handled things that stumped people with years of experience."
-          }
-        </p>
+            <span className="text-xl">🔥</span>
+            <div>
+              <p className="type-kpi-label text-fg-2">Streak</p>
+              <p className="font-display font-bold text-fg-0 tabular-nums text-base leading-tight">
+                {streak}<span className="type-caption text-fg-2 font-normal ml-1">day{streak !== 1 ? 's' : ''}</span>
+              </p>
+            </div>
+          </motion.div>
+        )}
       </motion.div>
 
       {/* ── KPI ROW ─────────────────────────────────────────────────────── */}
@@ -212,6 +305,23 @@ export default function Dashboard() {
         <KPICard label="Escalations" value={stats.escalations} delta={stats.escalations > 0 ? { text: `${stats.escalations} sent to P2`, cls: 'text-warn' } : 'None'} delay={0.16} />
       </div>
 
+      {/* ── QA PILL ROW ─────────────────────────────────────────────────── */}
+      <motion.div {...fadeUp(0.20)} className="grid grid-cols-3 gap-3">
+        {[
+          { label: 'QA · Chat', value: qaChat },
+          { label: 'QA · Email', value: qaEmail },
+          { label: 'QA · Combined', value: qaCombined },
+        ].map(q => (
+          <div key={q.label} className="bg-bg-1 border border-border-0 rounded-xl px-4 py-3 flex items-center justify-between">
+            <p className="type-kpi-label text-fg-2">{q.label}</p>
+            <p className="font-display font-bold text-fg-0 tabular-nums text-xl">
+              {q.value}
+              {q.value !== '—' && <span className="type-caption text-fg-3 font-normal ml-0.5">/100</span>}
+            </p>
+          </div>
+        ))}
+      </motion.div>
+
       {/* ── PRIMARY CTA ─────────────────────────────────────────────────── */}
       <motion.div {...fadeUp(0.22)}>
         <MotionLink
@@ -219,7 +329,7 @@ export default function Dashboard() {
           whileTap={{ scale: 0.985 }}
           className="cta-primary w-full"
         >
-          <span className="relative z-10">Start a case</span>
+          <span className="relative z-10">Open Shift Console</span>
           <ArrowRight size={16} className="relative z-10" strokeWidth={2.5} />
         </MotionLink>
       </motion.div>
