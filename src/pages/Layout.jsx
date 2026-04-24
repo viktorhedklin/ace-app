@@ -64,19 +64,14 @@ function NavLink({ to, icon, label, badge, badgeType, onClick }) {
     <Link
       to={to}
       onClick={onClick}
-      className={cn(
-        'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all',
-        active
-          ? 'bg-yellow-400/15 text-yellow-400 font-medium'
-          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
-      )}
+      className={cn('nav-item', active && 'is-active')}
     >
       <span className="text-base w-5 text-center shrink-0">{icon}</span>
       <span className="truncate flex-1">{label}</span>
       {badge && (
         <span className={cn(
-          'text-xs px-1.5 py-0.5 rounded font-medium shrink-0',
-          badgeType === 'CHAT' ? 'bg-green-500/20 text-green-400' : 'bg-blue-500/20 text-blue-400'
+          'type-badge px-1.5 py-0.5 rounded shrink-0',
+          badgeType === 'CHAT' ? 'bg-ok/15 text-ok' : 'bg-info/15 text-info'
         )}>{badge}</span>
       )}
     </Link>
@@ -85,26 +80,40 @@ function NavLink({ to, icon, label, badge, badgeType, onClick }) {
 
 function SidebarContent({ onNav, onOpenPalette, ghostMode, setGhostMode }) {
   return (
-    <div className="flex flex-col h-full w-64 bg-slate-900 border-r border-slate-800">
-      <div className="p-4 border-b border-slate-800 shrink-0">
+    <div className="flex flex-col h-full w-64 bg-bg-1 border-r border-border-0 relative">
+      {/* Vertical accent rail */}
+      <div className="absolute top-0 right-0 bottom-0 w-px bg-gradient-to-b from-transparent via-hero/10 to-transparent pointer-events-none" />
+
+      <div className="p-5 border-b border-border-0 shrink-0">
         <Link to="/" onClick={onNav} className="flex items-center gap-2">
-          <span className={cn('font-bold text-xl tracking-tight transition-colors duration-300', ghostMode ? 'text-slate-400' : 'text-yellow-400')}>ACE</span>
-          <span className="text-slate-500 text-xs">Super Agent</span>
-          {ghostMode && <span className="text-xs text-slate-600 bg-slate-800 px-1.5 py-0.5 rounded font-mono">GHOST</span>}
+          <span
+            className={cn(
+              'font-display font-bold text-2xl tracking-tight transition-colors duration-220',
+              ghostMode ? 'text-fg-3' : 'text-brand-amber'
+            )}
+            style={!ghostMode ? { textShadow: '0 0 20px rgba(245, 181, 68, 0.35)' } : {}}
+          >
+            ACE
+          </span>
+          <span className="type-badge text-fg-3 ml-1">v1.0</span>
+          {ghostMode && (
+            <span className="type-badge px-1.5 py-0.5 rounded bg-bg-2 text-fg-3 ml-auto">GHOST</span>
+          )}
         </Link>
+        <p className="type-caption text-fg-2 mt-1">Support Co-Pilot</p>
       </div>
 
-      <nav className="flex-1 overflow-y-auto p-2 space-y-3">
+      <nav className="flex-1 overflow-y-auto p-3 space-y-4">
         <div className="space-y-0.5">
           <NavLink to="/" icon="🏠" label="Dashboard" onClick={onNav} />
           <NavLink to="/knowledge" icon="🧠" label="Knowledge Base" onClick={onNav} />
         </div>
 
         <div>
-          <p className="px-3 pt-1 pb-1 text-xs font-semibold text-slate-600 uppercase tracking-wider">Chat Channels</p>
+          <p className="type-nav-section px-3 pt-1 pb-2">Chat Channels</p>
           <div className="space-y-0.5">
             <NavLink to="/workspace" icon="🗂️" label="Workspace" badge="4x" badgeType="CHAT" onClick={onNav} />
-            <div className="h-px bg-slate-800 mx-3 my-1" />
+            <div className="h-px bg-border-0 mx-3 my-1.5" />
             {CHAT_CHANNELS.map(ch => (
               <NavLink key={ch.path} to={ch.path} icon={ch.flag} label={ch.name} badge={ch.type} badgeType={ch.type} onClick={onNav} />
             ))}
@@ -112,7 +121,7 @@ function SidebarContent({ onNav, onOpenPalette, ghostMode, setGhostMode }) {
         </div>
 
         <div>
-          <p className="px-3 pt-1 pb-1 text-xs font-semibold text-slate-600 uppercase tracking-wider">Tools & Workflows</p>
+          <p className="type-nav-section px-3 pt-1 pb-2">Tools & Workflows</p>
           <div className="space-y-0.5">
             {TOOLS.map(t => (
               <NavLink key={t.path} to={t.path} icon={t.icon} label={t.name} onClick={onNav} />
@@ -121,35 +130,30 @@ function SidebarContent({ onNav, onOpenPalette, ghostMode, setGhostMode }) {
         </div>
       </nav>
 
-      <div className="p-3 border-t border-slate-800 shrink-0 space-y-1">
+      <div className="p-3 border-t border-border-0 shrink-0 space-y-1">
         <NavLink to="/models" icon="🧪" label="Models & Usage" onClick={onNav} />
         <NavLink to="/settings" icon="⚙️" label="Settings" onClick={onNav} />
         <button
           onClick={onOpenPalette}
-          className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs text-slate-600 hover:text-slate-400 hover:bg-slate-800 transition-colors duration-150 cursor-pointer"
+          className="w-full flex items-center justify-between px-3 py-2 rounded-lg type-caption text-fg-2 hover:text-fg-0 hover:bg-bg-2 transition-colors duration-220 cursor-pointer"
           aria-label="Open command palette"
         >
           <span>Search everything…</span>
-          <span className="flex items-center gap-1">
-            <kbd className="bg-slate-800 border border-slate-700 px-1 py-0.5 rounded text-slate-600">⌘K</kbd>
-          </span>
+          <kbd className="font-mono bg-bg-2 border border-border-0 px-1.5 py-0.5 rounded text-fg-2 text-[10px]">⌘K</kbd>
         </button>
         <button
           onClick={() => setGhostMode(prev => !prev)}
           className={cn(
-            'w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-all duration-200 cursor-pointer',
-            ghostMode
-              ? 'bg-slate-800 text-slate-400 hover:text-slate-300'
-              : 'text-slate-700 hover:text-slate-500 hover:bg-slate-800/50'
+            'w-full flex items-center gap-2 px-3 py-1.5 rounded-lg type-caption transition-colors duration-220 cursor-pointer',
+            ghostMode ? 'bg-bg-2 text-fg-1 hover:text-fg-0' : 'text-fg-3 hover:text-fg-2 hover:bg-bg-2/50'
           )}
           title="Ghost Mode — hide VIP glow & accents (⌘H)"
           aria-label="Toggle ghost mode"
         >
           <span className="text-base w-5 text-center shrink-0">👻</span>
           <span className="truncate flex-1 text-left">{ghostMode ? 'Ghost Mode ON' : 'Ghost Mode'}</span>
-          <kbd className="bg-slate-800 border border-slate-700 px-1 py-0.5 rounded text-slate-600 text-xs shrink-0">⌘H</kbd>
+          <kbd className="font-mono bg-bg-2 border border-border-0 px-1.5 py-0.5 rounded text-fg-3 text-[10px] shrink-0">⌘H</kbd>
         </button>
-        <p className="text-xs text-slate-700 text-center pt-1">Ace v1.0</p>
       </div>
     </div>
   );
@@ -181,9 +185,12 @@ function CasePad() {
         onClick={() => setOpen(o => !o)}
         title="CasePad — quick notes"
         className={cn(
-          'fixed bottom-5 right-5 z-40 w-11 h-11 rounded-full flex items-center justify-center shadow-lg transition-all',
-          open ? 'bg-yellow-400 text-slate-900' : 'bg-slate-800 border border-slate-700 text-slate-400 hover:text-yellow-400 hover:border-yellow-400/40'
+          'fixed bottom-5 right-5 z-40 w-11 h-11 rounded-full flex items-center justify-center transition-colors duration-220 cursor-pointer',
+          open
+            ? 'bg-hero text-[#021418] shadow-glow-2'
+            : 'bg-bg-2 border border-border-0 text-fg-1 hover:text-hero hover:border-border-hero'
         )}
+        aria-label={open ? 'Close CasePad' : 'Open CasePad'}
       >
         {open ? <X size={16} /> : <StickyNote size={16} />}
       </button>
@@ -195,11 +202,11 @@ function CasePad() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.97 }}
             transition={{ duration: 0.18, ease: 'easeOut' }}
-            className="fixed bottom-20 right-5 z-40 w-80 bg-slate-900 border border-yellow-400/20 rounded-xl shadow-2xl flex flex-col overflow-hidden"
+            className="fixed bottom-20 right-5 z-40 w-80 bg-bg-1 border border-border-hero rounded-2xl shadow-glow-1 flex flex-col overflow-hidden"
           >
-            <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-800">
-              <span className="text-xs font-semibold text-yellow-400 tracking-wide">📝 CasePad</span>
-              <button onClick={clear} className="text-xs text-slate-600 hover:text-red-400 transition-colors">Clear</button>
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-border-0">
+              <span className="type-badge text-hero">📝 CASEPAD</span>
+              <button onClick={clear} className="type-caption text-fg-2 hover:text-crit transition-colors">Clear</button>
             </div>
             <textarea
               ref={textareaRef}
@@ -207,10 +214,10 @@ function CasePad() {
               onChange={handleChange}
               placeholder="Paste UID, order ID, jot case notes, anything mid-shift..."
               rows={10}
-              className="w-full bg-transparent px-4 py-3 text-sm text-slate-200 placeholder-slate-600 outline-none resize-none font-mono"
+              className="w-full bg-transparent px-4 py-3 text-sm text-fg-0 placeholder-fg-3 outline-none resize-none font-mono"
             />
-            <div className="px-4 py-2 border-t border-slate-800">
-              <p className="text-xs text-slate-700">Saved automatically · clears on clear only</p>
+            <div className="px-4 py-2 border-t border-border-0">
+              <p className="type-caption text-fg-3">Saved automatically · clears on clear only</p>
             </div>
           </motion.div>
         )}
@@ -252,8 +259,8 @@ export default function Layout({ children }) {
   }, [navigate, setGhostMode]);
 
   return (
-    <div className="flex h-screen bg-slate-950 text-slate-100 relative overflow-hidden">
-      <NebulaBackground vipLevel={ghostMode ? 0 : vipLevel} />
+    <div className="flex h-screen bg-bg-0 text-fg-0 relative overflow-hidden">
+      {!ghostMode && <NebulaBackground vipLevel={vipLevel} />}
       {/* Desktop sidebar */}
       <div className="hidden md:flex flex-shrink-0 relative z-10">
         <SidebarContent onNav={() => {}} onOpenPalette={() => setPaletteOpen(true)} ghostMode={ghostMode} setGhostMode={setGhostMode} />
@@ -285,17 +292,17 @@ export default function Layout({ children }) {
 
       <div className="flex-1 flex flex-col min-w-0 relative z-10">
         {/* Mobile topbar */}
-        <div className="md:hidden flex items-center gap-3 px-4 py-3 bg-slate-900 border-b border-slate-800 shrink-0">
-          <button onClick={() => setMobileOpen(true)} className="text-slate-400 hover:text-slate-100" aria-label="Open menu">
+        <div className="md:hidden flex items-center gap-3 px-4 py-3 bg-bg-1 border-b border-border-0 shrink-0">
+          <button onClick={() => setMobileOpen(true)} className="text-fg-1 hover:text-fg-0 transition-colors" aria-label="Open menu">
             <Menu size={20} />
           </button>
-          <span className="text-yellow-400 font-bold tracking-tight">ACE</span>
+          <span className="font-display font-bold tracking-tight text-brand-amber" style={{ textShadow: '0 0 12px rgba(245, 181, 68, 0.35)' }}>ACE</span>
           <button
             onClick={() => setPaletteOpen(true)}
-            className="ml-auto text-slate-600 hover:text-slate-400 transition-colors duration-150"
+            className="ml-auto text-fg-2 hover:text-fg-0 transition-colors duration-220"
             aria-label="Open command palette"
           >
-            <span className="text-xs bg-slate-800 border border-slate-700 px-2 py-1 rounded-md">⌘K</span>
+            <span className="type-caption font-mono bg-bg-2 border border-border-0 px-2 py-1 rounded-md">⌘K</span>
           </button>
         </div>
         {/* Offline banner */}
@@ -306,10 +313,10 @@ export default function Layout({ children }) {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.2 }}
-              className="bg-orange-500/15 border-b border-orange-500/30 px-4 py-2 flex items-center gap-2 shrink-0"
+              className="bg-warn/10 border-b border-warn/30 px-4 py-2 flex items-center gap-2 shrink-0"
             >
-              <WifiOff size={13} className="text-orange-400 shrink-0" />
-              <p className="text-xs text-orange-300">You are offline. KB articles and cached pages are still available. API features require a connection.</p>
+              <WifiOff size={13} className="text-warn shrink-0" />
+              <p className="type-caption text-warn">You are offline. KB articles and cached pages are still available. API features require a connection.</p>
             </motion.div>
           )}
         </AnimatePresence>

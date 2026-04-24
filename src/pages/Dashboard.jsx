@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import TiltCard from '@/components/TiltCard';
+import { ArrowRight, AlertTriangle } from 'lucide-react';
 
 const MotionLink = motion.create ? motion.create(Link) : motion(Link);
 
@@ -61,7 +62,6 @@ function getCaseEvents() {
   catch { return []; }
 }
 
-// Returns map of ISO-date → case count for last 91 days
 function buildHeatmapData(events) {
   const map = {};
   events.forEach(e => {
@@ -71,22 +71,30 @@ function buildHeatmapData(events) {
   return map;
 }
 
-// Count VIP 3+ case events in the last 60 minutes
 function getVIPPressure(events) {
   const cutoff = Date.now() - 60 * 60 * 1000;
   return events.filter(e => e.ts > cutoff && e.vipLevel >= 3).length;
 }
 
-// ─── Efficiency Heatmap ───────────────────────────────────────────────────────
+function getTimeOfDayGreeting() {
+  const h = new Date().getHours();
+  if (h < 5) return 'Still up';
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  if (h < 22) return 'Good evening';
+  return 'Working late';
+}
+
+// ─── Efficiency Heatmap (cyan tier) ───────────────────────────────────────────
 
 const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
-function cellColor(count) {
-  if (!count) return 'bg-slate-800 border-slate-700/50';
-  if (count < 3) return 'bg-yellow-400/20 border-yellow-400/20';
-  if (count < 6) return 'bg-yellow-400/40 border-yellow-400/30';
-  if (count < 10) return 'bg-yellow-400/65 border-yellow-400/50';
-  return 'bg-yellow-400 border-yellow-500/50';
+function cellClass(count) {
+  if (!count) return 'bg-bg-2 border-border-0';
+  if (count < 3) return 'bg-hero/15 border-hero/20';
+  if (count < 6) return 'bg-hero/35 border-hero/40';
+  if (count < 10) return 'bg-hero/60 border-hero/60';
+  return 'bg-hero border-hero';
 }
 
 function Heatmap({ data }) {
@@ -99,10 +107,8 @@ function Heatmap({ data }) {
       const key = d.toISOString().split('T')[0];
       days.push({ key, count: data[key] || 0, dow: d.getDay() });
     }
-    // Pad start to align to Sunday column
     const firstDow = days[0].dow;
     const padded = [...Array(firstDow).fill(null), ...days];
-    // Split into week columns
     const result = [];
     for (let i = 0; i < padded.length; i += 7) result.push(padded.slice(i, i + 7));
     return result;
@@ -110,10 +116,9 @@ function Heatmap({ data }) {
 
   return (
     <div className="flex gap-0.5 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-      {/* Day-of-week labels */}
-      <div className="flex flex-col gap-0.5 mr-1 shrink-0">
+      <div className="flex flex-col gap-0.5 mr-1.5 shrink-0">
         {DAY_LABELS.map((l, i) => (
-          <div key={i} className="w-3 h-3 flex items-center justify-center text-[8px] text-slate-700 select-none">{l}</div>
+          <div key={i} className="w-3 h-3 flex items-center justify-center font-mono text-[8px] text-fg-3 select-none">{l}</div>
         ))}
       </div>
       {weeks.map((week, wi) => (
@@ -124,7 +129,7 @@ function Heatmap({ data }) {
             return (
               <div
                 key={di}
-                className={cn('w-3 h-3 rounded-sm border', cellColor(day.count))}
+                className={cn('w-3 h-3 rounded-sm border transition-colors duration-220', cellClass(day.count))}
                 title={`${day.key}: ${day.count} case${day.count !== 1 ? 's' : ''}`}
               />
             );
@@ -135,10 +140,34 @@ function Heatmap({ data }) {
   );
 }
 
+// ─── KPI Card ─────────────────────────────────────────────────────────────────
+
+function KPICard({ label, value, delta, live = false, delay = 0 }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12, filter: 'blur(4px)' }}
+      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      transition={{ duration: 0.28, delay, ease: [0.2, 0, 0.2, 1] }}
+      className={cn('kpi-card', live && 'is-live')}
+    >
+      {live && <span className="live-dot" aria-hidden="true" />}
+      <p className="type-kpi-label text-fg-2">{label}</p>
+      <p className="type-kpi text-fg-0 mt-2 tabular-nums">{value}</p>
+      {delta && (
+        <p className={cn('font-mono text-[11px] mt-1 tabular-nums', typeof delta === 'object' ? delta.cls : 'text-fg-2')}>
+          {typeof delta === 'object' ? delta.text : delta}
+        </p>
+      )}
+    </motion.div>
+  );
+}
+
+// ─── Dashboard ────────────────────────────────────────────────────────────────
+
 const fadeUp = (delay = 0) => ({
-  initial: { opacity: 0, y: 14 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.22, delay },
+  initial: { opacity: 0, y: 12, filter: 'blur(4px)' },
+  animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
+  transition: { duration: 0.3, delay, ease: [0.2, 0, 0.2, 1] },
 });
 
 export default function Dashboard() {
@@ -147,123 +176,139 @@ export default function Dashboard() {
   const heatmapData = buildHeatmapData(events);
   const vipPressure = getVIPPressure(events);
   const isHighPressure = vipPressure >= 2;
+  const greeting = getTimeOfDayGreeting();
 
-  const headerGlow = isHighPressure
-    ? { boxShadow: '0 0 30px rgba(250, 204, 21, 0.15) inset' }
-    : {};
+  const csatDelta = stats.csat !== '—' && parseFloat(stats.csat) >= 4.5
+    ? { text: `★ ${stats.csat} / 5.0`, cls: 'text-ok' }
+    : { text: 'Tracking…', cls: 'text-fg-2' };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-8">
-      {/* Motivational banner */}
-      <motion.div {...fadeUp(0)}
-        className="bg-gradient-to-r from-yellow-400/10 to-transparent border border-yellow-400/20 rounded-xl p-4"
-        style={headerGlow}
-      >
-        <p className="text-slate-300 text-sm leading-relaxed">
+    <div className="px-6 py-8 lg:px-10 lg:py-10 max-w-6xl mx-auto space-y-8">
+      {/* ── GREETING ────────────────────────────────────────────────────── */}
+      <motion.div {...fadeUp(0)}>
+        <h1 className="type-display text-fg-0">
+          {greeting},{' '}
+          <span
+            className="text-hero animate-hero-shimmer"
+            style={{ textShadow: '0 0 24px rgba(34, 211, 238, 0.35)' }}
+          >
+            Viktor
+          </span>
+          <span className="text-fg-3">.</span>
+        </h1>
+        <p className="type-body text-fg-1 mt-2">
           {isHighPressure
-            ? `⚠️ High VIP pressure — ${vipPressure} VIP 3+ case${vipPressure !== 1 ? 's' : ''} in the last 60 minutes. Stay sharp.`
-            : "You're three months in. You've already handled things that stumped people with years of experience."
+            ? <span className="text-warn"><AlertTriangle size={14} className="inline mr-1.5 -mt-0.5" />{vipPressure} VIP 3+ case{vipPressure !== 1 ? 's' : ''} in the last 60 minutes. Stay sharp.</span>
+            : "Three months in. You've handled things that stumped people with years of experience."
           }
         </p>
       </motion.div>
 
-      {/* Stats */}
+      {/* ── KPI ROW ─────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          { icon: '📁', label: 'Cases today', value: stats.cases },
-          { icon: '✓', label: 'Closed today', value: stats.closed },
-          { icon: '⭐', label: 'Avg CSAT', value: stats.csat },
-          { icon: '📤', label: 'Escalations', value: stats.escalations },
-        ].map((s, i) => (
-          <motion.div
-            key={s.label}
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2, delay: 0.05 + i * 0.06 }}
-            whileHover={{ scale: 1.04, borderColor: 'rgba(250,204,21,0.35)' }}
-            className="bg-slate-900 border border-slate-800 rounded-xl p-4 text-center cursor-default"
-          >
-            <div className="text-2xl mb-1">{s.icon}</div>
-            <div className="text-2xl font-bold text-slate-100">{s.value}</div>
-            <div className="text-xs text-slate-500 mt-0.5">{s.label}</div>
-          </motion.div>
-        ))}
+        <KPICard label="Cases Today" value={stats.cases} live delay={0.04} />
+        <KPICard label="Closed" value={stats.closed} delta={stats.closed > 0 ? { text: `${stats.closed} resolved`, cls: 'text-ok' } : '—'} delay={0.08} />
+        <KPICard label="Avg CSAT" value={stats.csat} delta={csatDelta} delay={0.12} />
+        <KPICard label="Escalations" value={stats.escalations} delta={stats.escalations > 0 ? { text: `${stats.escalations} sent to P2`, cls: 'text-warn' } : 'None'} delay={0.16} />
       </div>
 
-      {/* Start a case */}
-      <motion.div {...fadeUp(0.28)}>
+      {/* ── PRIMARY CTA ─────────────────────────────────────────────────── */}
+      <motion.div {...fadeUp(0.22)}>
         <MotionLink
           to="/shift-tracker"
-          whileHover={{ scale: 1.012 }}
           whileTap={{ scale: 0.985 }}
-          className="block w-full text-center bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-semibold py-3 rounded-xl transition-colors"
+          className="cta-primary w-full"
         >
-          Start a case
+          <span className="relative z-10">Start a case</span>
+          <ArrowRight size={16} className="relative z-10" strokeWidth={2.5} />
         </MotionLink>
       </motion.div>
 
-      {/* Efficiency Heatmap */}
-      <motion.div {...fadeUp(0.32)}>
-        <div
-          className={cn(
-            'bg-slate-900 border rounded-xl p-5 space-y-3 transition-colors duration-300',
-            isHighPressure ? 'border-yellow-400/30' : 'border-slate-800'
-          )}
-          style={isHighPressure ? { boxShadow: '0 0 20px rgba(250,204,21,0.08)' } : {}}
-        >
-          <div className="flex items-center justify-between">
+      {/* ── 2-COLUMN: HEATMAP + NEEDS-ATTENTION ─────────────────────────── */}
+      <motion.div {...fadeUp(0.26)} className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-4">
+        {/* Heatmap */}
+        <div className="panel">
+          <div className="flex items-start justify-between mb-4">
             <div>
-              <h2 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+              <h2 className="type-h2 text-fg-0 flex items-center gap-2">
                 Efficiency Heatmap
                 {isHighPressure && (
-                  <span className="text-xs bg-yellow-400/20 text-yellow-400 border border-yellow-400/30 px-2 py-0.5 rounded font-bold animate-pulse">
+                  <span className="type-badge text-warn bg-warn/10 border border-warn/25 px-2 py-0.5 rounded">
                     VIP PRESSURE
                   </span>
                 )}
               </h2>
-              <p className="text-xs text-slate-600 mt-0.5">Cases handled — last 90 days</p>
+              <p className="type-caption text-fg-2 mt-0.5">Cases handled · last 90 days</p>
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-slate-600">
-              <div className="w-2.5 h-2.5 rounded-sm bg-slate-800 border border-slate-700/50" />
+            <div className="flex items-center gap-1.5 font-mono text-[10px] text-fg-2">
               <span>0</span>
-              <div className="w-2.5 h-2.5 rounded-sm bg-yellow-400/20 border border-yellow-400/20" />
-              <div className="w-2.5 h-2.5 rounded-sm bg-yellow-400/65 border border-yellow-400/50" />
-              <div className="w-2.5 h-2.5 rounded-sm bg-yellow-400 border border-yellow-500/50" />
+              <div className="w-2.5 h-2.5 rounded-sm bg-bg-2 border border-border-0" />
+              <div className="w-2.5 h-2.5 rounded-sm bg-hero/35 border border-hero/40" />
+              <div className="w-2.5 h-2.5 rounded-sm bg-hero/60 border border-hero/60" />
+              <div className="w-2.5 h-2.5 rounded-sm bg-hero border border-hero" />
               <span>10+</span>
             </div>
           </div>
           <Heatmap data={heatmapData} />
           {events.length === 0 && (
-            <p className="text-xs text-slate-700 text-center py-2">No cases recorded yet — heatmap fills as you work.</p>
+            <p className="type-caption text-fg-3 text-center mt-4">No cases recorded yet — heatmap fills as you work.</p>
           )}
         </div>
+
+        {/* Needs Attention */}
+        {isHighPressure ? (
+          <div className="alert-crit">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="w-2 h-2 rounded-full bg-crit animate-live-pulse" style={{ boxShadow: '0 0 10px var(--crit)' }} />
+              <h3 className="type-h3 text-crit flex-1">Needs Attention</h3>
+              <span className="type-badge text-crit bg-crit/10 border border-crit/40 px-2 py-0.5 rounded">ESCALATE</span>
+            </div>
+            <p className="type-body-sm text-fg-1 leading-relaxed mb-4">
+              <span className="font-mono text-crit">{vipPressure}</span> VIP 3+ case{vipPressure !== 1 ? 's' : ''} active in the last hour. Prioritise before SLA breach.
+            </p>
+            <div className="flex items-center gap-2 pt-3 border-t border-crit/20">
+              <span className="type-badge font-mono text-fg-2">SLA · LIVE</span>
+              <span className="type-badge font-mono text-fg-2 ml-auto">PRIORITY P1</span>
+            </div>
+          </div>
+        ) : (
+          <div className="panel">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="w-2 h-2 rounded-full bg-ok" style={{ boxShadow: '0 0 8px var(--ok)' }} />
+              <h3 className="type-h3 text-fg-0 flex-1">All Clear</h3>
+              <span className="type-badge text-ok bg-ok/10 border border-ok/25 px-2 py-0.5 rounded">NOMINAL</span>
+            </div>
+            <p className="type-body-sm text-fg-1 leading-relaxed mb-4">
+              No high-pressure cases right now. Good window to pick up a closed case or clear your CasePad.
+            </p>
+            <div className="flex items-center gap-2 pt-3 border-t border-border-0">
+              <span className="type-badge font-mono text-fg-2">SLA · OK</span>
+              <span className="type-badge font-mono text-fg-2 ml-auto">{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
+          </div>
+        )}
       </motion.div>
 
-      {/* Chat Channels */}
-      <motion.div {...fadeUp(0.38)}>
-        <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Chat Channels</h2>
+      {/* ── CHAT CHANNELS ───────────────────────────────────────────────── */}
+      <motion.div {...fadeUp(0.3)}>
+        <h2 className="type-nav-section mb-4">Chat Channels</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {CHAT_CHANNELS.map((ch, i) => (
             <motion.div
               key={ch.path}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.18, delay: 0.40 + i * 0.05 }}
-              whileHover={{ scale: 1.02, borderColor: 'rgba(250,204,21,0.4)' }}
-              whileTap={{ scale: 0.98 }}
+              transition={{ duration: 0.22, delay: 0.34 + i * 0.04, ease: [0.2, 0, 0.2, 1] }}
             >
-              <Link
-                to={ch.path}
-                className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex items-center gap-3 transition-colors group block"
-              >
-                <span className="text-2xl">{ch.flag}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-slate-100 group-hover:text-yellow-400 transition-colors">{ch.name}</p>
-                  <p className="text-xs text-slate-500 truncate">{ch.subtitle}</p>
+              <Link to={ch.path} className="channel-card flex items-center gap-3 group">
+                <span className="text-2xl relative z-10">{ch.flag}</span>
+                <div className="flex-1 min-w-0 relative z-10">
+                  <p className="font-display font-medium text-fg-0 group-hover:text-hero transition-colors duration-220">{ch.name}</p>
+                  <p className="type-caption text-fg-2 truncate">{ch.subtitle}</p>
                 </div>
                 <span className={cn(
-                  'text-xs px-2 py-0.5 rounded font-medium shrink-0',
-                  ch.type === 'CHAT' ? 'bg-green-500/20 text-green-400' : 'bg-blue-500/20 text-blue-400'
+                  'type-badge px-2 py-0.5 rounded shrink-0 relative z-10',
+                  ch.type === 'CHAT' ? 'bg-ok/15 text-ok' : 'bg-info/15 text-info'
                 )}>{ch.type}</span>
               </Link>
             </motion.div>
@@ -271,26 +316,26 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      {/* Tools */}
-      <motion.div {...fadeUp(0.50)}>
-        <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Tools & Workflows</h2>
+      {/* ── TOOLS & WORKFLOWS ───────────────────────────────────────────── */}
+      <motion.div {...fadeUp(0.42)}>
+        <h2 className="type-nav-section mb-4">Tools & Workflows</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {TOOLS.map((t, i) => (
             <motion.div
               key={t.path}
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.16, delay: 0.52 + i * 0.03 }}
+              transition={{ duration: 0.18, delay: 0.44 + i * 0.025, ease: [0.2, 0, 0.2, 1] }}
             >
-              <TiltCard intensity={6} className="h-full">
+              <TiltCard intensity={5} className="h-full">
                 <Link
                   to={t.path}
-                  className="bg-slate-900/90 border border-slate-800 hover:border-yellow-400/30 rounded-xl p-4 flex flex-col gap-2 group block h-full transition-colors duration-150"
+                  className="bg-bg-2 border border-border-0 hover:border-border-hero rounded-xl p-4 flex flex-col gap-2 group block h-full transition-colors duration-220"
                 >
                   <span className="text-2xl">{t.icon}</span>
                   <div>
-                    <p className="font-medium text-slate-100 text-sm group-hover:text-yellow-400 transition-colors">{t.name}</p>
-                    <p className="text-xs text-slate-500">{t.desc}</p>
+                    <p className="font-display font-medium text-fg-0 text-sm group-hover:text-hero transition-colors duration-220">{t.name}</p>
+                    <p className="type-caption text-fg-2">{t.desc}</p>
                   </div>
                 </Link>
               </TiltCard>
