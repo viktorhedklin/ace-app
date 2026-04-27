@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
  * A thumbs-down prompts for a one-line reason (optional) and records as
  * a QA issue so getRecurringQAIssues() will surface the pattern.
  */
-export default function DraftRating({ messageContent, messageIndex }) {
+export default function DraftRating({ messageContent, messageIndex, onRate }) {
   const [rating, setRating] = useState(null); // 'up' | 'down' | null
   const [reason, setReason] = useState('');
   const [askingReason, setAskingReason] = useState(false);
@@ -21,6 +21,7 @@ export default function DraftRating({ messageContent, messageIndex }) {
   async function handleUp() {
     if (rating) return;
     setRating('up');
+    onRate?.('up');
     await pushEntry({
       ts: Date.now(),
       rating: 'up',
@@ -39,6 +40,7 @@ export default function DraftRating({ messageContent, messageIndex }) {
   async function submitDown() {
     setRating('down');
     setAskingReason(false);
+    onRate?.('down');
     const trimmed = reason.trim();
     await pushEntry({
       ts: Date.now(),

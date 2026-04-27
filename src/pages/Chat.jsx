@@ -405,6 +405,21 @@ export default function Chat({ channel }) {
   const [savingMem, setSavingMem] = useState(null);
   const [memTitle, setMemTitle] = useState('');
   const [memSaved, setMemSaved] = useState(null);
+
+  // Per-message FX: { [index]: 'celebrated' | 'flagged' } — transient trigger
+  // for AceAvatar state, auto-clears after 900ms. Fires when agent uses the
+  // DraftRating thumbs buttons so the avatar visibly reacts to feedback.
+  const [messageFx, setMessageFx] = useState({});
+  function triggerAvatarFx(index, kind) {
+    setMessageFx(prev => ({ ...prev, [index]: kind }));
+    setTimeout(() => {
+      setMessageFx(prev => {
+        const next = { ...prev };
+        delete next[index];
+        return next;
+      });
+    }, 900);
+  }
   const [autoMemory, setAutoMemory] = useState(() => {
     const fromCloud = storageGet(NAMESPACES.CHAT, `auto_${channel.id}`);
     if (typeof fromCloud === 'boolean') return fromCloud;
@@ -1090,7 +1105,17 @@ export default function Chat({ channel }) {
               className={cn('flex gap-2.5', m.role === 'user' ? 'justify-end' : 'justify-start')}
             >
               {m.role === 'assistant' && (
-                <AceAvatar size={28} streaming={!!m.streaming} className="mt-1" />
+                <AceAvatar
+                  size={28}
+                  state={
+                    messageFx[i] === 'celebrated' ? 'celebrated' :
+                    messageFx[i] === 'flagged'    ? 'flagged' :
+                    m.streaming && !m.content     ? 'thinking' :
+                    m.streaming                   ? 'streaming' :
+                    'idle'
+                  }
+                  className="mt-1"
+                />
               )}
               <div className="max-w-[80%] flex flex-col gap-1">
                 <div
@@ -1112,15 +1137,25 @@ export default function Chat({ channel }) {
                     </div>
                   )}
                   <MarkdownMessage content={m.content} />
+                  {/* Pre-stream indicator is now on the avatar (thinking state) —
+                      nothing needed inside the bubble until content arrives. */}
                   {m.streaming && !m.content && (
-                    <div className="flex gap-1 items-center py-0.5">
-                      <span className="w-1.5 h-1.5 bg-hero/70 rounded-full typing-dot" />
-                      <span className="w-1.5 h-1.5 bg-hero/70 rounded-full typing-dot" />
-                      <span className="w-1.5 h-1.5 bg-hero/70 rounded-full typing-dot" />
+                    <div className="h-4 flex items-center">
+                      <span className="text-xs text-fg-2/60 italic">thinking…</span>
                     </div>
                   )}
+                  {/* Streaming cursor — glowing dot trailing the last token */}
                   {m.streaming && m.content && (
-                    <span className="inline-block w-0.5 h-3.5 rounded-sm bg-hero/70 ml-0.5 align-middle animate-pulse" />
+                    <motion.span
+                      className="inline-block rounded-full ml-1 align-middle"
+                      style={{
+                        width: 7, height: 7,
+                        background: 'rgba(250,204,21,0.95)',
+                        boxShadow: '0 0 10px rgba(250,204,21,0.65)',
+                      }}
+                      animate={{ opacity: [0.35, 1, 0.35], scale: [0.9, 1.15, 0.9] }}
+                      transition={{ duration: 0.9, repeat: Infinity, ease: 'easeInOut' }}
+                    />
                   )}
 
                   {/* Action buttons on hover */}
@@ -1147,7 +1182,11 @@ export default function Chat({ channel }) {
 
                 {/* Thumbs up/down — feeds back into QA memory + trajectory */}
                 {m.role === 'assistant' && !m.streaming && m.content && (
-                  <DraftRating messageContent={m.content} messageIndex={i} />
+                  <DraftRating
+                    messageContent={m.content}
+                    messageIndex={i}
+                    onRate={kind => triggerAvatarFx(i, kind === 'up' ? 'celebrated' : 'flagged')}
+                  />
                 )}
 
                 {/* Auto-CSAT badge */}
@@ -1212,21 +1251,16 @@ export default function Chat({ channel }) {
           );
         })}
 
-        {/* Loading dots — only before first streaming token arrives */}
+        {/* Pre-stream thinking — avatar sheds particles, no separate dot bubble */}
         {loading && !messages.some(m => m.streaming) && (
-          <div className="flex gap-2.5 justify-start">
-            <AceAvatar size={28} streaming className="mt-1" />
-            <div
-              className="bg-white/[0.04] backdrop-blur-lg border border-white/[0.08] rounded-2xl rounded-tl-sm px-4 py-3"
-              style={{ boxShadow: '0 2px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.04)' }}
-            >
-              <div className="flex gap-1 items-center">
-                <span className="w-1.5 h-1.5 bg-hero/70 rounded-full typing-dot" />
-                <span className="w-1.5 h-1.5 bg-hero/70 rounded-full typing-dot" />
-                <span className="w-1.5 h-1.5 bg-hero/70 rounded-full typing-dot" />
-              </div>
-            </div>
-          </div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+            className="flex gap-2.5 justify-start items-start h-12"
+          >
+            <AceAvatar size={28} state="thinking" className="mt-1" />
+          </motion.div>
         )}
 
         {/* NBA loading — subtle indicator after AI responds */}
