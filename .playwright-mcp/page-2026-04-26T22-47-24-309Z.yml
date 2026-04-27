@@ -1,0 +1,172 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e5]:
+    - menu [ref=e8]:
+      - menuitem "Getting Started" [ref=e9] [cursor=pointer]:
+        - generic [ref=e11]: Getting Started
+      - menuitem "Top Articles" [ref=e12] [cursor=pointer]:
+        - generic [ref=e13]: Top Articles
+      - separator [ref=e14]
+      - menuitem "Account Management" [expanded] [ref=e15] [cursor=pointer]:
+        - generic [ref=e16]: Account Management
+        - img [ref=e17]
+      - menu [ref=e19]:
+        - menuitem "Registration & Login" [ref=e20] [cursor=pointer]
+        - menuitem "Account Settings" [ref=e21] [cursor=pointer]
+        - menuitem "Subaccount" [ref=e22] [cursor=pointer]
+        - menuitem "Account Deactivation" [ref=e23] [cursor=pointer]
+        - menuitem "Data Export" [ref=e24] [cursor=pointer]
+      - menuitem "KYC and Security Matters" [ref=e25] [cursor=pointer]:
+        - generic [ref=e26]: KYC and Security Matters
+        - img [ref=e27]
+      - menuitem "Platform Walkthrough" [ref=e29] [cursor=pointer]:
+        - generic [ref=e30]: Platform Walkthrough
+        - img [ref=e31]
+      - menuitem "Crypto Deposits/Withdrawals" [ref=e33] [cursor=pointer]:
+        - generic [ref=e34]: Crypto Deposits/Withdrawals
+        - img [ref=e35]
+      - menuitem "Buy Crypto" [ref=e37] [cursor=pointer]:
+        - generic [ref=e38]: Buy Crypto
+        - img [ref=e39]
+      - menuitem "Fiat Deposits/Withdrawals" [ref=e41] [cursor=pointer]:
+        - generic [ref=e42]: Fiat Deposits/Withdrawals
+        - img [ref=e43]
+      - menuitem "Spot X" [ref=e45] [cursor=pointer]:
+        - generic [ref=e46]: Spot X
+        - img [ref=e47]
+      - menuitem "Unified Trading Account" [ref=e49] [cursor=pointer]:
+        - generic [ref=e50]: Unified Trading Account
+        - img [ref=e51]
+      - menuitem "Trading Products" [ref=e53] [cursor=pointer]:
+        - generic [ref=e54]: Trading Products
+        - img [ref=e55]
+      - menuitem "Trading Tools" [ref=e57] [cursor=pointer]:
+        - generic [ref=e58]: Trading Tools
+        - img [ref=e59]
+      - menuitem "Trading Bot" [ref=e61] [cursor=pointer]:
+        - generic [ref=e62]: Trading Bot
+        - img [ref=e63]
+      - menuitem "Earn" [ref=e65] [cursor=pointer]:
+        - generic [ref=e66]: Earn
+        - img [ref=e67]
+      - menuitem "Bybit Card" [ref=e69] [cursor=pointer]:
+        - generic [ref=e70]: Bybit Card
+        - img [ref=e71]
+      - menuitem "Bybit Pay" [ref=e73] [cursor=pointer]:
+        - generic [ref=e74]: Bybit Pay
+        - img [ref=e75]
+      - menuitem "Promotions" [ref=e77] [cursor=pointer]:
+        - generic [ref=e78]: Promotions
+        - img [ref=e79]
+      - menuitem "Terms of Service" [ref=e81] [cursor=pointer]:
+        - generic [ref=e82]: Terms of Service
+        - img [ref=e83]
+    - generic [ref=e85]:
+      - generic [ref=e86]:
+        - generic [ref=e88]:
+          - generic [ref=e89]:
+            - link "Help Center" [ref=e92] [cursor=pointer]:
+              - /url: /en-EU/help-center/homepage
+            - img [ref=e94]
+          - generic [ref=e98] [cursor=pointer]: Account Management
+        - generic [ref=e101]:
+          - img [ref=e103]
+          - textbox "Ask Us Anything" [ref=e105]
+      - generic [ref=e107]:
+        - generic [ref=e110]:
+          - generic [ref=e111]:
+            - generic [ref=e112]: Registration & Login
+            - img [ref=e113]
+          - generic [ref=e115]:
+            - link "How to Reset Your Password" [ref=e117] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/How-to-reset-your-password?category=3d12d51cab73b17552
+              - generic [ref=e118]: How to Reset Your Password
+            - link "How to Register an Account" [ref=e120] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/How-to-register-an-account?category=3d12d51cab73b17552
+              - generic [ref=e121]: How to Register an Account
+            - link "How to Log In Using QR Code on Bybit EU" [ref=e123] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/How-to-Log-In-Using-QR-Code-on-Bybit?category=3d12d51cab73b17552
+              - generic [ref=e124]: How to Log In Using QR Code on Bybit EU
+        - generic [ref=e127]:
+          - generic [ref=e128]:
+            - generic [ref=e129]: Account Settings
+            - img [ref=e130]
+          - generic [ref=e132]:
+            - link "FAQ — Account Settings" [ref=e134] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/FAQ-Account-Settings?category=bf28ee070c7e01c0cd
+              - generic [ref=e135]: FAQ — Account Settings
+            - link "How to Update Your Nickname, Profile Picture and Platform Display" [ref=e137] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/How-to-change-username-and-notification-language?category=bf28ee070c7e01c0cd
+              - generic [ref=e138]: How to Update Your Nickname, Profile Picture and Platform Display
+            - link "How to Manage Your Trade Settings" [ref=e140] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/How-to-activate-deactivate-trade-option-settings?category=bf28ee070c7e01c0cd
+              - generic [ref=e141]: How to Manage Your Trade Settings
+            - link "How to Check Your Account UID" [ref=e143] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/How-to-check-your-account-UID?category=bf28ee070c7e01c0cd
+              - generic [ref=e144]: How to Check Your Account UID
+            - 'link "Self-Service Features: Updating your Email, Mobile Number, and Google Authenticator on Bybit EU" [ref=e146] [cursor=pointer]':
+              - /url: /en-EU/help-center/article/Self-Service-Features-How-to-change-your-email-address-mobile-number-or-unbind-Google-Authenticator-on-your-account?category=bf28ee070c7e01c0cd
+              - generic [ref=e147]: "Self-Service Features: Updating your Email, Mobile Number, and Google Authenticator on Bybit EU"
+            - link "FAQ — Discontinuation of Bybit.nl services and migration to Bybit EU" [ref=e149] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/FAQ-Migration-of-Bybit-SATOs-to-Bybit-EU?category=bf28ee070c7e01c0cd
+              - generic [ref=e150]: FAQ — Discontinuation of Bybit.nl services and migration to Bybit EU
+        - generic [ref=e153]:
+          - generic [ref=e154]:
+            - generic [ref=e155]: Subaccount
+            - img [ref=e156]
+          - generic [ref=e158]:
+            - link "FAQ — Custodial Trading Subaccount" [ref=e160] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/FAQ-Custodial-Trading-Subaccount?category=a91a11b763a77a2352
+              - generic [ref=e161]: FAQ — Custodial Trading Subaccount
+            - link "FAQ — Standard Subaccount" [ref=e163] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/FAQ-Standard-Subaccount?category=a91a11b763a77a2352
+              - generic [ref=e164]: FAQ — Standard Subaccount
+            - link "How to Get Started With a Standard Subaccount" [ref=e166] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/How-to-Get-Started-With-Standard-Subaccount?category=a91a11b763a77a2352
+              - generic [ref=e167]: How to Get Started With a Standard Subaccount
+            - link "How to Transfer Rewards from a Main Account to a Subaccount" [ref=e169] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/How-to-Transfer-Rewards-from-a-Main-Account-to-a-Subaccount?category=a91a11b763a77a2352
+              - generic [ref=e170]: How to Transfer Rewards from a Main Account to a Subaccount
+            - link "How to Get Started with a Custodial Trading Subaccount (Trading Team)" [ref=e172] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/How-to-Get-Started-with-a-Custodial-Trading-Subaccount-Trading-Team?category=a91a11b763a77a2352
+              - generic [ref=e173]: How to Get Started with a Custodial Trading Subaccount (Trading Team)
+            - link "How to Get Started with a Custodial Trading Subaccount (Investors)" [ref=e175] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/How-to-Get-Started-with-a-Custodial-Trading-Subaccount-Investors?category=a91a11b763a77a2352
+              - generic [ref=e176]: How to Get Started with a Custodial Trading Subaccount (Investors)
+        - generic [ref=e179]:
+          - generic [ref=e180]:
+            - generic [ref=e181]: Account Deactivation
+            - img [ref=e182]
+          - generic [ref=e184]:
+            - link "FAQ — Account Deactivation" [ref=e186] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/FAQ-Account-Deactivation?category=6e6ad488ab0a6bac17
+              - generic [ref=e187]: FAQ — Account Deactivation
+            - link "How to Reactivate Your Account" [ref=e189] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/How-to-Reactivate-Your-Account?category=6e6ad488ab0a6bac17
+              - generic [ref=e190]: How to Reactivate Your Account
+            - link "How to Deactivate Your Account" [ref=e192] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/How-to-Deactivate-Your-Account?category=6e6ad488ab0a6bac17
+              - generic [ref=e193]: How to Deactivate Your Account
+            - link "How to Delete An Account" [ref=e195] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/How-to-Delete-An-Account?category=6e6ad488ab0a6bac17
+              - generic [ref=e196]: How to Delete An Account
+        - generic [ref=e199]:
+          - generic [ref=e200]:
+            - generic [ref=e201]: Data Export
+            - img [ref=e202]
+          - generic [ref=e204]:
+            - link "How to Self-Export My Account Data" [ref=e206] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/How-to-Self-Export-Account-Data?category=50e323f3535c1f4e7b
+              - generic [ref=e207]: How to Self-Export My Account Data
+            - link "Differences between Trade History and Order History" [ref=e209] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/The-differences-between-trade-history-and-order-history?category=50e323f3535c1f4e7b
+              - generic [ref=e210]: Differences between Trade History and Order History
+            - link "How to Extract Your Account Statement from the Data Export File" [ref=e212] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/How-to-Extract-The-Content-From-Your-Data-Export-File?category=50e323f3535c1f4e7b
+              - generic [ref=e213]: How to Extract Your Account Statement from the Data Export File
+            - link "How to Submit Tax Information" [ref=e215] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/How-to-Submit-Tax-Information?category=50e323f3535c1f4e7b
+              - generic [ref=e216]: How to Submit Tax Information
+            - link "FAQ — Tax Report" [ref=e218] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/FAQ--Tax-Report?category=50e323f3535c1f4e7b
+              - generic [ref=e219]: FAQ — Tax Report
+  - alert [ref=e220]

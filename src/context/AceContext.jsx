@@ -74,7 +74,9 @@ export function recordCaseEvent({ vipLevel = 0, channel = '' } = {}) {
     const trimmed = events.filter(e => e.ts > cutoff);
     storageSet(NAMESPACES.SETTINGS, 'case_events', trimmed);
     localStorage.removeItem('ace_case_events');
-  } catch { /* non-critical */ }
+  } catch (e) {
+    console.warn('[AceContext] recordCaseEvent failed', e);
+  }
 }
 
 // ─── Secure Snippets — local-only snippet storage ────────────────────────────

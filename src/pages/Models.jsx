@@ -47,13 +47,26 @@ function UsageSection() {
     const result = {};
     for (const day of days) {
       for (const [modelId, data] of Object.entries(usage[day])) {
-        if (!result[modelId]) result[modelId] = { input: 0, output: 0, calls: 0, cost: 0 };
+        if (!result[modelId]) result[modelId] = { input: 0, output: 0, calls: 0, cost: 0, cacheCreate: 0, cacheRead: 0, costNoCache: 0 };
         const catalog = MODEL_CATALOG.find(m => m.id === modelId);
         result[modelId].input += data.input;
         result[modelId].output += data.output;
         result[modelId].calls += data.calls;
+        result[modelId].cacheCreate += data.cacheCreate || 0;
+        result[modelId].cacheRead += data.cacheRead || 0;
         if (catalog) {
-          result[modelId].cost += (data.input / 1_000_000) * catalog.inputPrice + (data.output / 1_000_000) * catalog.outputPrice;
+          // Anthropic pricing: cache writes = 1.25x input, cache reads = 0.1x input.
+          // Actual cost uses the standard rates on non-cached tokens only — cache
+          // tokens are billed separately by Anthropic. data.input already excludes
+          // cached tokens, so regular cost is accurate.
+          const inP = catalog.inputPrice / 1_000_000;
+          const outP = catalog.outputPrice / 1_000_000;
+          const actual = data.input * inP + data.output * outP
+            + (data.cacheCreate || 0) * inP * 1.25
+            + (data.cacheRead || 0) * inP * 0.1;
+          const wouldHaveBeen = (data.input + (data.cacheCreate || 0) + (data.cacheRead || 0)) * inP + data.output * outP;
+          result[modelId].cost += actual;
+          result[modelId].costNoCache += wouldHaveBeen;
         }
       }
     }
@@ -62,6 +75,13 @@ function UsageSection() {
 
   const totalCost = Object.values(totals).reduce((sum, t) => sum + t.cost, 0);
   const totalCalls = Object.values(totals).reduce((sum, t) => sum + t.calls, 0);
+  const totalCacheRead = Object.values(totals).reduce((sum, t) => sum + t.cacheRead, 0);
+  const totalCacheCreate = Object.values(totals).reduce((sum, t) => sum + t.cacheCreate, 0);
+  const totalInput = Object.values(totals).reduce((sum, t) => sum + t.input, 0);
+  const cacheHitPct = (totalInput + totalCacheRead) > 0
+    ? Math.round((totalCacheRead / (totalInput + totalCacheRead)) * 100)
+    : 0;
+  const totalSaved = Object.values(totals).reduce((sum, t) => sum + (t.costNoCache - t.cost), 0);
 
   if (!days.length) {
     return (
@@ -75,7 +95,7 @@ function UsageSection() {
     <Section title="Usage & Cost (last 30 days)" icon={BarChart3}>
       <div className="space-y-4">
         {/* Summary cards */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-4 gap-3">
           <div className="bg-bg-2 rounded-lg px-4 py-3 text-center">
             <p className="text-xs text-fg-2">Total cost</p>
             <p className="text-lg font-bold text-hero">${totalCost.toFixed(2)}</p>
@@ -84,11 +104,23 @@ function UsageSection() {
             <p className="text-xs text-fg-2">API calls</p>
             <p className="text-lg font-bold text-fg-0">{totalCalls.toLocaleString()}</p>
           </div>
-          <div className="bg-bg-2 rounded-lg px-4 py-3 text-center">
-            <p className="text-xs text-fg-2">Days tracked</p>
-            <p className="text-lg font-bold text-fg-0">{days.length}</p>
+          <div className="bg-bg-2 rounded-lg px-4 py-3 text-center" title="% of input tokens that came from cache. Higher = cheaper.">
+            <p className="text-xs text-fg-2">Cache hit</p>
+            <p className="text-lg font-bold text-ok">{cacheHitPct}%</p>
+          </div>
+          <div className="bg-bg-2 rounded-lg px-4 py-3 text-center" title="Estimated savings from prompt caching vs. no-cache baseline.">
+            <p className="text-xs text-fg-2">Saved</p>
+            <p className="text-lg font-bold text-ok">${totalSaved.toFixed(2)}</p>
           </div>
         </div>
+
+        {(totalCacheRead > 0 || totalCacheCreate > 0) && (
+          <p className="text-[11px] text-fg-2 px-1">
+            Cache: {(totalCacheRead / 1000).toFixed(1)}K tokens read from cache,
+            {' '}{(totalCacheCreate / 1000).toFixed(1)}K written.
+            {days.length} days tracked.
+          </p>
+        )}
 
         {/* Per-model breakdown */}
         <div className="space-y-2">

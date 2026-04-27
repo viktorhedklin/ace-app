@@ -3,12 +3,26 @@
 // Only accepts Bybit help-center URLs to prevent this becoming an SSRF tool.
 // No user content ever transits here — only URLs.
 
-const ALLOWED_HOST_RE = /^https?:\/\/(www\.)?bybit\.(com|eu)\//i;
+// Strict hostname allowlist — parsed via URL constructor to prevent regex
+// bypass tricks (IDN, @-embedded hosts, encoded chars). Checks hostname
+// exactly, not a substring, and requires https://.
+const ALLOWED_HOSTS = new Set(['www.bybit.com', 'bybit.com', 'www.bybit.eu', 'bybit.eu']);
 const CHROME_UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 
+function isAllowedUrl(input) {
+  try {
+    const u = new URL(input);
+    if (u.protocol !== 'https:' && u.protocol !== 'http:') return false;
+    if (u.username || u.password) return false; // reject user@host tricks
+    return ALLOWED_HOSTS.has(u.hostname.toLowerCase());
+  } catch {
+    return false;
+  }
+}
+
 async function checkOne(url) {
-  if (!ALLOWED_HOST_RE.test(url)) {
+  if (!isAllowedUrl(url)) {
     return { url, ok: false, status: 0, reason: 'not_bybit_url' };
   }
 

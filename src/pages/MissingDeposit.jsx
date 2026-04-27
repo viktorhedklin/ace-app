@@ -21,7 +21,10 @@ const CHAINS = {
   ARB:   { name: 'Arbitrum One',         confirmations: 15,  minDeposit: '0.01 ETH',   memo: false, bc: 'arbitrum-one',  explorer: 'https://arbiscan.io/tx/',                explorerName: 'Arbiscan' },
 };
 
-/* ═══ BLOCKCHAIN FETCH ═══ */
+/* ═══ BLOCKCHAIN FETCH ═══
+ * Queries blockchair.com (public chain aggregator). The TX hash is public
+ * on-chain data — this is equivalent to opening Etherscan in a browser.
+ * No customer PII is sent. Hash is a blockchain primitive, not user info. */
 
 async function fetchTx(chainKey, txid) {
   const chain = CHAINS[chainKey];

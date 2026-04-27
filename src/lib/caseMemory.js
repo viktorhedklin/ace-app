@@ -34,7 +34,9 @@ export async function saveCase({ uid = '', tool = '', channel = '', vipLevel = 0
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
     });
-  } catch { /* non-critical — never block UI */ }
+  } catch (e) {
+    console.warn('[caseMemory] saveCase failed', e);
+  }
 }
 
 // Get all cases for a specific UID

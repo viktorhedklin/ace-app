@@ -391,7 +391,13 @@ export default function Chat({ channel }) {
     if (Array.isArray(fromCloud)) return fromCloud;
     try { return JSON.parse(localStorage.getItem(legacyHistoryKey)) || []; } catch { return []; }
   });
-  const [input, setInput] = useState('');
+  // Draft recovery: persist input to sessionStorage per channel so a misclick
+  // doesn't destroy a half-written 2-min reply. Cleared on send.
+  const draftKey = `ace_draft_${channel.id}`;
+  const [input, setInput] = useState(() => {
+    try { return sessionStorage.getItem(draftKey) || ''; }
+    catch (e) { console.warn('[Chat] draft read failed', e); return ''; }
+  });
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(null);
   const [savingMem, setSavingMem] = useState(null);
@@ -456,19 +462,79 @@ export default function Chat({ channel }) {
 
   // STORAGE SHIELD: scrub ALL messages (user + assistant) before persisting.
   // Debounced so streaming doesn't fire an upsert per token.
+  // CAP: keep only the most recent MAX_HISTORY messages to prevent
+  // localStorage quota overruns over months of use.
   useEffect(() => {
     clearTimeout(historySaveTimerRef.current);
     historySaveTimerRef.current = setTimeout(() => {
-      storageSet(NAMESPACES.CHAT, historyKey, scrubMessagesForStorage(messages));
+      const MAX_HISTORY = 1000;
+      const trimmed = messages.length > MAX_HISTORY ? messages.slice(-MAX_HISTORY) : messages;
+      storageSet(NAMESPACES.CHAT, historyKey, scrubMessagesForStorage(trimmed));
       localStorage.removeItem(legacyHistoryKey);
     }, 700);
     return () => clearTimeout(historySaveTimerRef.current);
   }, [messages, historyKey, legacyHistoryKey]);
 
+  // Persist draft input to sessionStorage on every keystroke.
+  useEffect(() => {
+    try {
+      if (input) sessionStorage.setItem(draftKey, input);
+      else sessionStorage.removeItem(draftKey);
+    } catch (e) { console.warn('[Chat] draft write failed', e); }
+  }, [input, draftKey]);
+
+  // Hotkeys: Ctrl+Shift+E = escalate, Ctrl+Shift+M = save last assistant msg
+  // to memory, Ctrl+Shift+C = copy last assistant message. Live-chat workflow
+  // demands keyboard flow — every action that requires a click loses seconds.
+  useEffect(() => {
+    function onKey(e) {
+      if (!(e.ctrlKey || e.metaKey) || !e.shiftKey) return;
+      const key = e.key.toLowerCase();
+      if (key === 'e') {
+        e.preventDefault();
+        setShowEscalation(true);
+      } else if (key === 'm') {
+        e.preventDefault();
+        const lastAssistantIdx = [...messages].map((m, i) => ({ m, i }))
+          .reverse()
+          .find(({ m }) => m.role === 'assistant' && !m.streaming)?.i;
+        if (lastAssistantIdx !== undefined) {
+          setSavingMem(lastAssistantIdx);
+          setMemTitle('');
+        }
+      } else if (key === 'c') {
+        const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant' && !m.streaming);
+        const lastIdx = messages.length - 1 - [...messages].reverse().findIndex(m => m === lastAssistant);
+        if (lastAssistant) {
+          e.preventDefault();
+          copyMsg(lastAssistant.content, lastIdx);
+        }
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [messages]);
+
   useEffect(() => {
     storageSet(NAMESPACES.CHAT, `tone_${channel.id}`, tone);
     localStorage.removeItem(`tone_${channel.id}`);
   }, [tone, channel.id]);
+
+  // Auto-suggest Deep mode for high-stakes cases. Fires once per channel
+  // session when a high-VIP or security signal appears. Does not toggle
+  // silently — shows a soft banner the agent can accept or dismiss.
+  const [deepSuggestion, setDeepSuggestion] = useState(null);
+  const deepSuggestedRef = useRef(false);
+  useEffect(() => {
+    if (deepMode || deepSuggestedRef.current) return;
+    const issue = (parsedData?.issue || '').toLowerCase();
+    const securityHit = /hack|unauthori[sz]ed|compromise|scam|phish|stolen|drain|2fa lost|account.{0,10}access/i.test(issue);
+    const highVip = vipLevel >= 4;
+    if (highVip || securityHit) {
+      deepSuggestedRef.current = true;
+      setDeepSuggestion(highVip ? `VIP ${vipLevel} detected — Deep mode recommended` : 'Security signal detected — Deep mode recommended');
+    }
+  }, [vipLevel, parsedData, deepMode]);
 
   // Magic Paste: react to Bybit signals detected from clipboard
   useEffect(() => {
@@ -522,7 +588,7 @@ export default function Chat({ channel }) {
         const parsed = JSON.parse(match[0]);
         setCsatScores(prev => ({ ...prev, [msgIndex]: { score: parsed.score, grade: parsed.grade } }));
       }
-    } catch { /* non-critical */ }
+    } catch (e) { console.warn('[Chat] CSAT parse failed', e); }
   }
 
   // Handle NBA button click — navigate with context handoff
@@ -854,18 +920,24 @@ export default function Chat({ channel }) {
                 setDeepMode(next);
                 storageSet(NAMESPACES.CHAT, `deep_${channel.id}`, next);
                 localStorage.removeItem(`deep_mode_${channel.id}`);
+                if (deepSuggestion) setDeepSuggestion(null);
               }}
               className={cn(
-                'flex items-center gap-1.5 text-xs px-2 py-1 rounded-lg border transition-colors duration-150',
+                'flex items-center gap-1.5 text-xs px-2 py-1 rounded-lg border transition-colors duration-150 relative',
                 deepMode
                   ? 'bg-purple-500/15 border-purple-500/30 text-purple-300'
-                  : 'bg-bg-2 border-border-0 text-fg-2 hover:text-fg-1'
+                  : deepSuggestion
+                    ? 'bg-purple-500/10 border-purple-500/40 text-purple-200 animate-pulse'
+                    : 'bg-bg-2 border-border-0 text-fg-2 hover:text-fg-1'
               )}
-              title={deepMode ? 'Deep mode: 3-pass policy audit' : 'Flash mode: instant response'}
+              title={deepSuggestion || (deepMode ? 'Deep mode: 3-pass policy audit' : 'Flash mode: instant response')}
               aria-label={deepMode ? 'Deep reasoning mode active' : 'Flash mode active'}
             >
               <span style={{ fontSize: 11 }}>{deepMode ? '🧠' : '⚡'}</span>
               {deepMode ? 'Deep' : 'Flash'}
+              {deepSuggestion && !deepMode && (
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-purple-400 rounded-full" />
+              )}
             </button>
 
             <button

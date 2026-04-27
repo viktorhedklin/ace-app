@@ -1,0 +1,414 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - generic [ref=e6]:
+      - generic [ref=e7]: Bybit Help Center
+      - generic [ref=e8]: Hello, how can we help?
+    - main [ref=e9]:
+      - generic [ref=e10]:
+        - generic [ref=e11]:
+          - heading "Self Service" [level=4] [ref=e12]
+          - link "Submit Case" [ref=e13] [cursor=pointer]:
+            - /url: /en-EU/help-center/s/webform
+            - button "Submit Case" [ref=e14]:
+              - text: Submit Case
+              - img [ref=e15]
+        - generic [ref=e20]:
+          - generic [ref=e21]:
+            - generic [ref=e22]: Account Related
+            - generic [ref=e23]:
+              - generic [ref=e24] [cursor=pointer]:
+                - generic [ref=e26]: Change Email/Mobile Number
+                - img [ref=e27]
+              - generic [ref=e29] [cursor=pointer]:
+                - generic [ref=e31]: Reset Google Authenticator
+                - img [ref=e32]
+              - generic [ref=e34] [cursor=pointer]:
+                - generic [ref=e36]: Export Account Data
+                - img [ref=e37]
+              - generic [ref=e39] [cursor=pointer]:
+                - generic [ref=e41]: Support Hub
+                - img [ref=e42]
+              - generic [ref=e44] [cursor=pointer]:
+                - generic [ref=e46]: Set Up Account Security
+                - img [ref=e47]
+              - generic [ref=e49] [cursor=pointer]:
+                - generic [ref=e51]: Reset Password
+                - img [ref=e52]
+              - generic [ref=e54] [cursor=pointer]:
+                - generic [ref=e56]: Deactivate Account
+                - img [ref=e57]
+              - generic [ref=e59] [cursor=pointer]:
+                - generic [ref=e61]: Reactivate Account
+                - img [ref=e62]
+            - generic [ref=e65] [cursor=pointer]:
+              - text: View More
+              - img [ref=e66]
+          - generic [ref=e68]:
+            - generic [ref=e69]: Identity Verification (KYC)
+            - generic [ref=e70]:
+              - generic [ref=e71] [cursor=pointer]:
+                - generic [ref=e73]: Verify Account (Individual KYC)
+                - img [ref=e74]
+              - generic [ref=e76] [cursor=pointer]:
+                - generic [ref=e78]: KYC Appeal
+                - img [ref=e79]
+          - generic [ref=e81]:
+            - generic [ref=e82]: Deposit/Withdrawal
+            - generic [ref=e83]:
+              - generic [ref=e84] [cursor=pointer]:
+                - generic [ref=e86]: Crypto deposit not arrived
+                - img [ref=e87]
+              - generic [ref=e89] [cursor=pointer]:
+                - generic [ref=e91]: Fiat Deposit Appeal
+                - img [ref=e92]
+              - generic [ref=e94] [cursor=pointer]:
+                - generic [ref=e96]: View Deposit/Withdrawal History
+                - img [ref=e97]
+              - generic [ref=e99] [cursor=pointer]:
+                - generic [ref=e101]: Crypto Deposit/Withdrawal Status
+                - img [ref=e102]
+          - generic [ref=e104]:
+            - generic [ref=e105]: Others
+            - generic [ref=e106]:
+              - generic [ref=e107] [cursor=pointer]:
+                - generic [ref=e109]: Verify Official Channel
+                - img [ref=e110]
+              - generic [ref=e112] [cursor=pointer]:
+                - generic [ref=e114]: Report Stolen Funds
+                - img [ref=e115]
+              - generic [ref=e117] [cursor=pointer]:
+                - generic [ref=e119]: Bonus/Campaign Rewards Appeal
+                - img [ref=e120]
+      - generic [ref=e125]:
+        - generic [ref=e126]:
+          - generic [ref=e127]:
+            - heading "Getting Started" [level=4] [ref=e128]
+            - generic [ref=e129] [cursor=pointer]:
+              - text: View All
+              - img [ref=e130]
+          - generic [ref=e132]:
+            - link "Everything You Need to Know to Get Started on Bybit EU" [ref=e134] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/Everything-You-Need-to-Know-to-Get-Started-on-Bybit
+            - link "How to Complete Individual Identity Verification (KYC)" [ref=e136] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/How-to-Complete-Individual-KYC-Verification
+            - link "How to Make a Deposit on Bybit EU" [ref=e138] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/How-to-make-a-deposit
+            - link "How to Enhance the Security of Your Account" [ref=e140] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/How-to-Enhance-Your-Account-Security
+            - link "How to Convert Your Assets" [ref=e142] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/How-to-convert-your-assets
+        - generic [ref=e143]:
+          - generic [ref=e144]:
+            - heading "Top Articles" [level=4] [ref=e145]
+            - generic [ref=e146] [cursor=pointer]:
+              - text: View All
+              - img [ref=e147]
+          - generic [ref=e149]:
+            - link "FAQ — Individual KYC" [ref=e151] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/Individual-KYC-FAQ
+            - link "How to Recover an Unsupported Deposit" [ref=e153] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/Unsupported-Deposit-Recovery-Procedure-Rules
+            - link "How to Recover Your Google Authenticator Code" [ref=e155] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/How-to-Recover-Your-Google-Authenticator-Code
+            - link "Bybit EU Trading Fee Structure" [ref=e157] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/Trading-Fee-Structure
+            - link "Types of Orders Available on Bybit EU" [ref=e159] [cursor=pointer]:
+              - /url: /en-EU/help-center/article/Types-of-Orders-Available-on-Bybit
+      - generic [ref=e160]:
+        - generic [ref=e161]:
+          - heading "Topics" [level=4] [ref=e162]
+          - link "View All" [ref=e163] [cursor=pointer]:
+            - /url: /en-EU/help-center/topic-list
+            - button "View All" [ref=e164]:
+              - text: View All
+              - img [ref=e165]
+        - generic [ref=e167]:
+          - generic [ref=e168]:
+            - link "Account Management" [ref=e170] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/account-matters
+            - link "Registration & Login" [ref=e171] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/account-matters#registration_login
+              - generic [ref=e172]: Registration & Login
+              - img [ref=e173]
+            - link "Account Settings" [ref=e175] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/account-matters#account_settings_guide
+              - generic [ref=e176]: Account Settings
+              - img [ref=e177]
+            - link "Subaccount" [ref=e179] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/account-matters#subaccount
+              - generic [ref=e180]: Subaccount
+              - img [ref=e181]
+            - link "View More" [ref=e183] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/account-matters
+              - generic [ref=e184]:
+                - text: View More
+                - img [ref=e185]
+          - generic [ref=e187]:
+            - link "KYC and Security Matters" [ref=e189] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/identity-verification
+            - link "Identity Verification" [ref=e190] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/identity-verification#kyc
+              - generic [ref=e191]: Identity Verification
+              - img [ref=e192]
+            - link "Google Authenticator" [ref=e194] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/identity-verification#google_authenticator_ga_2fa
+              - generic [ref=e195]: Google Authenticator
+              - img [ref=e196]
+            - link "Email & SMS" [ref=e198] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/identity-verification#email_sms
+              - generic [ref=e199]: Email & SMS
+              - img [ref=e200]
+            - link "View More" [ref=e202] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/identity-verification
+              - generic [ref=e203]:
+                - text: View More
+                - img [ref=e204]
+          - generic [ref=e206]:
+            - link "Platform Walkthrough" [ref=e208] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/platform-walkthrough
+            - link "Getting Started" [ref=e209] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/platform-walkthrough#getting_started
+              - generic [ref=e210]: Getting Started
+              - img [ref=e211]
+            - link "Asset Page Navigation" [ref=e213] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/platform-walkthrough#account_navigation
+              - generic [ref=e214]: Asset Page Navigation
+              - img [ref=e215]
+            - link "App Page Navigation" [ref=e217] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/platform-walkthrough#bybit_app
+              - generic [ref=e218]: App Page Navigation
+              - img [ref=e219]
+            - link "View More" [ref=e221] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/platform-walkthrough
+              - generic [ref=e222]:
+                - text: View More
+                - img [ref=e223]
+          - generic [ref=e225]:
+            - link "Crypto Deposits/Withdrawals" [ref=e227] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/crypto-deposits-withdrawals
+            - link "On-chain Crypto Deposits" [ref=e228] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/crypto-deposits-withdrawals#deposit
+              - generic [ref=e229]: On-chain Crypto Deposits
+              - img [ref=e230]
+            - link "On-chain Crypto Withdrawals" [ref=e232] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/crypto-deposits-withdrawals#withdrawal
+              - generic [ref=e233]: On-chain Crypto Withdrawals
+              - img [ref=e234]
+            - link "Crypto Withdrawals via Internal Transfer" [ref=e236] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/crypto-deposits-withdrawals#withdrawal_via_internal_transfer
+              - generic [ref=e237]: Crypto Withdrawals via Internal Transfer
+              - img [ref=e238]
+            - link "View More" [ref=e240] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/crypto-deposits-withdrawals
+              - generic [ref=e241]:
+                - text: View More
+                - img [ref=e242]
+          - generic [ref=e244]:
+            - link "Buy Crypto" [ref=e246] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/buy-crypto-(express-p2p)
+            - link "Overview" [ref=e247] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/buy-crypto-(express-p2p)#one_click_buy
+              - generic [ref=e248]: Overview
+              - img [ref=e249]
+            - link "Recurring Buy" [ref=e251] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/buy-crypto-(express-p2p)#
+              - generic [ref=e252]: Recurring Buy
+              - img [ref=e253]
+            - link "Bank Card Payment" [ref=e255] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/buy-crypto-(express-p2p)#express_credit_card_payment
+              - generic [ref=e256]: Bank Card Payment
+              - img [ref=e257]
+            - link "View More" [ref=e259] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/buy-crypto-(express-p2p)
+              - generic [ref=e260]:
+                - text: View More
+                - img [ref=e261]
+          - generic [ref=e263]:
+            - link "Fiat Deposits/Withdrawals" [ref=e265] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/fiat-deposits-withdrawals
+            - link "Fiat Deposit" [ref=e266] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/fiat-deposits-withdrawals#express_fiat_deposit
+              - generic [ref=e267]: Fiat Deposit
+              - img [ref=e268]
+            - link "Fiat Withdrawal" [ref=e270] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/fiat-deposits-withdrawals#fiat_withdrawal
+              - generic [ref=e271]: Fiat Withdrawal
+              - img [ref=e272]
+            - link "View More" [ref=e274] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/fiat-deposits-withdrawals
+              - generic [ref=e275]:
+                - text: View More
+                - img [ref=e276]
+          - generic [ref=e278]:
+            - link "Spot X" [ref=e280] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/spot-x
+            - link "Launchpool" [ref=e281] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/spot-x#launchpool
+              - generic [ref=e282]: Launchpool
+              - img [ref=e283]
+            - link "Token Splash" [ref=e285] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/spot-x#token_splash
+              - generic [ref=e286]: Token Splash
+              - img [ref=e287]
+            - link "View More" [ref=e289] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/spot-x
+              - generic [ref=e290]:
+                - text: View More
+                - img [ref=e291]
+          - generic [ref=e293]:
+            - link "Unified Trading Account" [ref=e295] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/unified-trading-account
+            - link "Unified Trading Account Overview" [ref=e296] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/unified-trading-account#bybit_unified_trading_account
+              - generic [ref=e297]: Unified Trading Account Overview
+              - img [ref=e298]
+            - link "Margin Modes and Calculations" [ref=e300] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/unified-trading-account#margin_modes_and_calculations
+              - generic [ref=e301]: Margin Modes and Calculations
+              - img [ref=e302]
+            - link "Borrowing, Interest and Repayment" [ref=e304] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/unified-trading-account#borrowing_interest_and_repayment
+              - generic [ref=e305]: Borrowing, Interest and Repayment
+              - img [ref=e306]
+            - link "View More" [ref=e308] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/unified-trading-account
+              - generic [ref=e309]:
+                - text: View More
+                - img [ref=e310]
+          - generic [ref=e312]:
+            - link "Trading Products" [ref=e314] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/trading-products
+            - link "Spot Trading" [ref=e315] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/trading-products#spot_trading_uta
+              - generic [ref=e316]: Spot Trading
+              - img [ref=e317]
+            - link "Spot Margin Trading" [ref=e319] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/trading-products#spot_margin_trading_uta
+              - generic [ref=e320]: Spot Margin Trading
+              - img [ref=e321]
+            - link "View More" [ref=e323] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/trading-products
+              - generic [ref=e324]:
+                - text: View More
+                - img [ref=e325]
+          - generic [ref=e327]:
+            - link "Trading Tools" [ref=e329] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/trading-tools
+            - link "Useful Trading Features" [ref=e330] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/trading-tools#uta_trading_tools
+              - generic [ref=e331]: Useful Trading Features
+              - img [ref=e332]
+            - link "Order Types Overview" [ref=e334] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/trading-tools#order_types_overview_uta
+              - generic [ref=e335]: Order Types Overview
+              - img [ref=e336]
+            - link "View More" [ref=e338] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/trading-tools
+              - generic [ref=e339]:
+                - text: View More
+                - img [ref=e340]
+          - generic [ref=e342]:
+            - link "Trading Bot" [ref=e344] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/trading-bot
+            - link "Overview" [ref=e345] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/trading-bot#trading_bot_overview
+              - generic [ref=e346]: Overview
+              - img [ref=e347]
+            - link "Spot Grid Bot" [ref=e349] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/trading-bot#grid_trading
+              - generic [ref=e350]: Spot Grid Bot
+              - img [ref=e351]
+            - link "DCA Bot" [ref=e353] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/trading-bot#dca_bot
+              - generic [ref=e354]: DCA Bot
+              - img [ref=e355]
+            - link "View More" [ref=e357] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/trading-bot
+              - generic [ref=e358]:
+                - text: View More
+                - img [ref=e359]
+          - generic [ref=e361]:
+            - link "Earn" [ref=e363] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/bybit-earn
+            - link "Overview" [ref=e364] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/bybit-earn#earn_overview
+              - generic [ref=e365]: Overview
+              - img [ref=e366]
+            - link "Rewards Service" [ref=e368] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/bybit-earn#flexible_staking
+              - generic [ref=e369]: Rewards Service
+              - img [ref=e370]
+            - link "View More" [ref=e372] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/bybit-earn
+              - generic [ref=e373]:
+                - text: View More
+                - img [ref=e374]
+          - generic [ref=e376]:
+            - link "Bybit Card" [ref=e378] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/bybit-card
+            - link "Bybit Card Application" [ref=e379] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/bybit-card#bybit_card3
+              - generic [ref=e380]: Bybit Card Application
+              - img [ref=e381]
+            - link "Bybit Card Usage, Fees & Limits" [ref=e383] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/bybit-card#bybit_card_management
+              - generic [ref=e384]: Bybit Card Usage, Fees & Limits
+              - img [ref=e385]
+            - link "Bybit Card Transaction Safety" [ref=e387] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/bybit-card#bybit_card_transactions
+              - generic [ref=e388]: Bybit Card Transaction Safety
+              - img [ref=e389]
+            - link "View More" [ref=e391] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/bybit-card
+              - generic [ref=e392]:
+                - text: View More
+                - img [ref=e393]
+          - generic [ref=e395]:
+            - link "Bybit Pay" [ref=e397] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list?id=a00J1000000rqDgIAI
+            - link "Bybit Pay Overview" [ref=e398] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list?id=a00J1000000rqDgIAI#
+              - generic [ref=e399]: Bybit Pay Overview
+              - img [ref=e400]
+            - link "Bybit Pay Rewards" [ref=e402] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list?id=a00J1000000rqDgIAI#
+              - generic [ref=e403]: Bybit Pay Rewards
+              - img [ref=e404]
+            - link "View More" [ref=e406] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list?id=a00J1000000rqDgIAI
+              - generic [ref=e407]:
+                - text: View More
+                - img [ref=e408]
+          - generic [ref=e410]:
+            - link "Promotions" [ref=e412] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/campaign-&-program
+            - link "Rewards Hub" [ref=e413] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/campaign-&-program#promotions_guide
+              - generic [ref=e414]: Rewards Hub
+              - img [ref=e415]
+            - link "VIP Program" [ref=e417] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/campaign-&-program#bybit_vip_club
+              - generic [ref=e418]: VIP Program
+              - img [ref=e419]
+            - link "Referral Program" [ref=e421] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/campaign-&-program#referral_program
+              - generic [ref=e422]: Referral Program
+              - img [ref=e423]
+            - link "View More" [ref=e425] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/campaign-&-program
+              - generic [ref=e426]:
+                - text: View More
+                - img [ref=e427]
+          - generic [ref=e429]:
+            - link "Terms of Service" [ref=e431] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/terms-of-services
+            - link "Terms of Service" [ref=e432] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/terms-of-services#term_of_service
+              - generic [ref=e433]: Terms of Service
+              - img [ref=e434]
+            - link "View More" [ref=e436] [cursor=pointer]:
+              - /url: /en-EU/help-center/topic-list/terms-of-services
+              - generic [ref=e437]:
+                - text: View More
+                - img [ref=e438]
+  - alert [ref=e440]

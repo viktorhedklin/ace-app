@@ -61,7 +61,7 @@ async function collectSnapshot() {
   }
   // Gather IndexedDB cases
   let cases = [];
-  try { cases = await getAllCases(); } catch { /* non-critical */ }
+  try { cases = await getAllCases(); } catch (e) { console.warn('[Settings] getAllCases failed', e); }
   return JSON.stringify({ ts: new Date().toISOString(), localStorage: store, indexedDB: { cases } });
 }
 
