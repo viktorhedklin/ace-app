@@ -13,6 +13,7 @@ import { Send, Trash2, Copy, Check, Brain, X, Zap, ChevronDown, ChevronUp, XCirc
 import { cn } from '@/lib/utils';
 import EscalationBuilder from './EscalationBuilder.jsx';
 import QuickReplies from '@/components/QuickReplies';
+import LinkHealthBadge from '@/components/LinkHealthBadge';
 
 // ── Markdown renderer ──────────────────────────────────────────────────────────
 
@@ -1065,6 +1066,11 @@ export default function Chat({ channel }) {
                     </button>
                   </div>
                 </div>
+
+                {/* Dead-link warning — runs async, silent when links are healthy */}
+                {m.role === 'assistant' && !m.streaming && m.content && (
+                  <LinkHealthBadge content={m.content} streaming={m.streaming} />
+                )}
 
                 {/* Auto-CSAT badge */}
                 {m.role === 'assistant' && csatScores[i] && (
