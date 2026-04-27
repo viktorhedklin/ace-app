@@ -207,13 +207,15 @@ function buildUserKnowledgeBlock() {
 
 // Format a retrieved KB article as first-person domain knowledge.
 // Option B framing: presents the article as Ace's own expertise, not as a document.
+// Includes the exact URL so Claude can cite it verbatim — never invent URLs.
 function formatArticleForPrompt(article) {
   const keyPoints = (article.keyPoints || []).map(p => `  • ${p}`).join('\n');
   const agentTips = (article.agentTips || []).length
     ? '\n  Pro tips:\n' + article.agentTips.map(p => `    - ${p}`).join('\n')
     : '';
   const escalate = article.escalatePath ? `\n  Escalation: ${article.escalatePath}` : '';
-  return `[${article.domain} — ${article.title}]\n${keyPoints}${agentTips}${escalate}`;
+  const url = article.url ? `\n  URL (use exactly if citing): ${article.url}` : '';
+  return `[${article.domain} — ${article.title}]${url}\n${keyPoints}${agentTips}${escalate}`;
 }
 
 // Official BYBIT_KB retrieval — hybrid filter + semantic search.
@@ -256,6 +258,7 @@ HARD RULES — NEVER BREAK THESE:
 - Never assume a Global campaign or product applies to Bybit EU.
 - Explain restrictions as regulatory/security process, not personal decisions.
 - For EDD/KYC reviews: neutral and process-based only. Never speculate on rejection reasons.
+- URL CITATION: When citing a Bybit help-center article, ONLY use a URL that appears in the "YOUR KNOWLEDGE ON THIS TOPIC" block (marked "URL (use exactly if citing): ..."). Copy it EXACTLY — do not modify, shorten, or rewrite it. Never invent, guess, or construct a URL from the article title. If the retrieved article has no URL field, name the article by title only — do not fabricate a link.
 - CHANNEL AWARENESS: Read the channel context. If this is a LIVE CHAT channel, the customer is ALREADY talking to the agent — NEVER suggest "contact Live Chat" or "reach out to support". If this is an EMAIL channel, this IS the support email — NEVER suggest "email support" or "contact us". When escalation is needed, tell the AGENT what to do internally (submit a case, P2 escalation), do not tell the customer to contact a channel they are already in.
 
 TONE — NEVER USE:
