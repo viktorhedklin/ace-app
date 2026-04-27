@@ -4,6 +4,7 @@ import { InvokeChatWithHistory, getKnowledge, saveKnowledge, parseAndExtractMemo
 import { scrubPII, scrubMessagesForStorage, scrubForStorage } from '@/lib/SecurityModule';
 import { Send, Trash2, Copy, Check, Brain, X, Zap, Plus, Briefcase, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import AceAvatar from '@/components/AceAvatar';
 
 // ─── Channel Definitions ──────────────────────────────────────────────────────
 
@@ -588,7 +589,7 @@ function TabContent({
         {channel && tab.messages.map((m, i) => (
           <div key={i} className={cn('flex gap-2', m.role === 'user' ? 'justify-end' : 'justify-start')}>
             {m.role === 'assistant' && (
-              <div className="w-6 h-6 rounded-full bg-hero/20 flex items-center justify-center text-xs shrink-0 mt-0.5 select-none font-bold text-hero">A</div>
+              <AceAvatar size={24} streaming={!!m.streaming} className="mt-0.5" />
             )}
             <div className="max-w-[82%] flex flex-col gap-1">
               <div className={cn(
@@ -661,7 +662,7 @@ function TabContent({
         {/* Loading */}
         {tab.loading && (
           <div className="flex gap-2 justify-start">
-            <div className="w-6 h-6 rounded-full bg-hero/20 flex items-center justify-center text-xs shrink-0 font-bold text-hero">A</div>
+            <AceAvatar size={24} streaming />
             <div className="bg-bg-2/60 border border-border-0/50 rounded-2xl rounded-tl-sm px-3 py-2.5">
               <div className="flex gap-1 items-center">
                 {[0, 1, 2].map(i => (

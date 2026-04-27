@@ -15,6 +15,7 @@ import EscalationBuilder from './EscalationBuilder.jsx';
 import QuickReplies from '@/components/QuickReplies';
 import LinkHealthBadge from '@/components/LinkHealthBadge';
 import DraftRating from '@/components/DraftRating';
+import AceAvatar from '@/components/AceAvatar';
 
 // ── Markdown renderer ──────────────────────────────────────────────────────────
 
@@ -1089,10 +1090,7 @@ export default function Chat({ channel }) {
               className={cn('flex gap-2.5', m.role === 'user' ? 'justify-end' : 'justify-start')}
             >
               {m.role === 'assistant' && (
-                <div
-                  className="w-7 h-7 rounded-xl bg-gradient-to-br from-hero/25 to-hero/15 border border-hero/20 backdrop-blur-sm flex items-center justify-center text-xs shrink-0 mt-1 select-none font-bold text-hero"
-                  style={{ boxShadow: '0 0 12px rgba(250,204,21,0.08)' }}
-                >A</div>
+                <AceAvatar size={28} streaming={!!m.streaming} className="mt-1" />
               )}
               <div className="max-w-[80%] flex flex-col gap-1">
                 <div
@@ -1217,10 +1215,7 @@ export default function Chat({ channel }) {
         {/* Loading dots — only before first streaming token arrives */}
         {loading && !messages.some(m => m.streaming) && (
           <div className="flex gap-2.5 justify-start">
-            <div
-              className="w-7 h-7 rounded-xl bg-gradient-to-br from-hero/25 to-hero/15 border border-hero/20 backdrop-blur-sm flex items-center justify-center text-xs shrink-0 mt-1 font-bold text-hero"
-              style={{ boxShadow: '0 0 12px rgba(250,204,21,0.08)' }}
-            >A</div>
+            <AceAvatar size={28} streaming className="mt-1" />
             <div
               className="bg-white/[0.04] backdrop-blur-lg border border-white/[0.08] rounded-2xl rounded-tl-sm px-4 py-3"
               style={{ boxShadow: '0 2px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.04)' }}
