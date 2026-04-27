@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import EscalationBuilder from './EscalationBuilder.jsx';
 import QuickReplies from '@/components/QuickReplies';
 import LinkHealthBadge from '@/components/LinkHealthBadge';
+import DraftRating from '@/components/DraftRating';
 
 // ── Markdown renderer ──────────────────────────────────────────────────────────
 
@@ -712,6 +713,8 @@ export default function Chat({ channel }) {
         messages: historyForApi,
         system_prompt: channel.systemContext + vipContext + toneContext + '\n\n' + reasoningInstruction,
         autoMemory,
+        // Scrubbed UID — enables Ace to pull prior case history for this customer
+        kbUid: parsedData?.uid ? scrubPII(parsedData.uid) : undefined,
         onToken: (token, accumulated) => {
           fullRaw = accumulated;
           // Hide [PLAN] block while streaming — show clean content only
@@ -1142,6 +1145,11 @@ export default function Chat({ channel }) {
                 {/* Dead-link warning — runs async, silent when links are healthy */}
                 {m.role === 'assistant' && !m.streaming && m.content && (
                   <LinkHealthBadge content={m.content} streaming={m.streaming} />
+                )}
+
+                {/* Thumbs up/down — feeds back into QA memory + trajectory */}
+                {m.role === 'assistant' && !m.streaming && m.content && (
+                  <DraftRating messageContent={m.content} messageIndex={i} />
                 )}
 
                 {/* Auto-CSAT badge */}

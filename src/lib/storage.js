@@ -166,25 +166,66 @@ export async function pullAll() {
 }
 
 // Flush any queued writes made while offline / signed out.
+// Exponential backoff per op: attempts 1..5 map to 1s / 4s / 15s / 60s / 300s
+// minimum gaps since last try. Ops older than 24h get dropped to prevent
+// the queue growing forever if sync is permanently broken.
+const RETRY_GAPS_MS = [0, 1000, 4000, 15000, 60000, 300000];
+const MAX_ATTEMPTS = 5;
+const OP_TTL_MS = 24 * 60 * 60 * 1000;
+
 export async function flushQueue() {
   const queue = readQueue();
-  if (!queue.length) return { flushed: 0, failed: 0 };
+  if (!queue.length) return { flushed: 0, failed: 0, dropped: 0 };
 
+  const now = Date.now();
   const remaining = [];
   let flushed = 0;
+  let dropped = 0;
 
   for (const op of queue) {
+    // Drop stale ops — either past TTL or exhausted retries
+    if (now - (op.ts || now) > OP_TTL_MS) {
+      console.warn('[storage] dropping queued op past 24h TTL', { op: op.op, namespace: op.namespace, key: op.key });
+      dropped++;
+      continue;
+    }
+    if ((op.attempts || 0) >= MAX_ATTEMPTS) {
+      console.warn('[storage] dropping queued op after max retries', { op: op.op, namespace: op.namespace, key: op.key, attempts: op.attempts });
+      dropped++;
+      continue;
+    }
+    // Backoff gate — skip until gap elapsed since last attempt
+    const nextAttempt = (op.attempts || 0) + 1;
+    const gap = RETRY_GAPS_MS[nextAttempt - 1] || RETRY_GAPS_MS[RETRY_GAPS_MS.length - 1];
+    if (op.lastTry && now - op.lastTry < gap) {
+      remaining.push(op);
+      continue;
+    }
+
     let res;
     if (op.op === 'set') res = await cloudUpsert(op.namespace, op.key, op.value);
     else if (op.op === 'delete') res = await cloudDelete(op.namespace, op.key);
     else continue;
 
-    if (res.ok) flushed++;
-    else remaining.push(op);
+    if (res.ok) {
+      flushed++;
+    } else {
+      remaining.push({ ...op, attempts: nextAttempt, lastTry: now, lastReason: res.reason });
+    }
   }
 
   writeQueue(remaining);
-  return { flushed, failed: remaining.length };
+  return { flushed, failed: remaining.length, dropped };
+}
+
+// Auto-flush hooks — trigger on reconnect and every 60s as a safety net.
+// Idempotent: registers listeners at most once per page load.
+let autoFlushRegistered = false;
+export function registerAutoFlush() {
+  if (autoFlushRegistered || typeof window === 'undefined') return;
+  autoFlushRegistered = true;
+  window.addEventListener('online', () => { flushQueue().catch(e => console.warn('[storage] online-flush failed', e)); });
+  setInterval(() => { flushQueue().catch(e => console.warn('[storage] periodic-flush failed', e)); }, 60000);
 }
 
 /* ─── One-time migration: legacy localStorage → cloud ─────────────────────── */

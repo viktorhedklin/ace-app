@@ -3,7 +3,7 @@ import { BYBIT_KB, parseErrorCodes } from '@/data/bybitKB';
 import { scrubPII } from '@/lib/SecurityModule';
 import { toast } from '@/components/ui/use-toast';
 import { syncKnowledgeFromRemote, getKBSyncUrl, setKBSyncUrl } from '@/api/claude';  // kept for optional manual sync
-import { get as storageGet, set as storageSet, remove as storageRemove, NAMESPACES } from '@/lib/storage';
+import { get as storageGet, set as storageSet, remove as storageRemove, registerAutoFlush, NAMESPACES } from '@/lib/storage';
 
 // Re-export from SecurityModule — single source of truth for all PII scrubbing.
 // Every file that imports scrubPII from AceContext gets the SecurityModule version.
@@ -160,6 +160,12 @@ export function AceProvider({ children }) {
     }
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
+  }, []);
+
+  // ── Register storage auto-flush — retries queued cloud writes on reconnect
+  // and every 60s as a safety net. Idempotent, safe to call on every mount.
+  useEffect(() => {
+    registerAutoFlush();
   }, []);
 
   // ── Magic Paste global listener ──────────────────────────────────────────────

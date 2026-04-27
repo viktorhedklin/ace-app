@@ -5,6 +5,8 @@ import {
   get as storageGet, set as storageSet, remove as storageRemove,
   list as storageList, NAMESPACES,
 } from '@/lib/storage';
+import { getRecurringQAIssues } from '@/lib/trajectory';
+import { getCasesByUID } from '@/lib/caseMemory';
 
 export function getApiKey() {
   return localStorage.getItem('claude_api_key') || localStorage.getItem('openai_api_key') || '';
@@ -787,8 +789,47 @@ export function parseAndExtractMemory(text) {
 
 // --- Chat with history (for Chat.jsx) ---
 
+// Build a short block of recent coaching feedback. Keeps Ace honest about
+// patterns that get flagged in QA reviews — e.g. "rushing first response",
+// "tone too formal". Injected into the dynamic (non-cached) block so it
+// reflects the newest feedback without breaking the cache prefix.
+function buildQAFeedbackBlock() {
+  try {
+    const issues = getRecurringQAIssues();
+    if (!issues.length) return '';
+    const lines = issues.slice(0, 5).map(i => `- ${i.issue} (flagged ${i.count}x)`);
+    return `\n\n---\nRECENT QA FEEDBACK — things you've been flagged on before; avoid repeating:\n${lines.join('\n')}\n---`;
+  } catch (e) {
+    console.warn('[claude] buildQAFeedbackBlock failed', e);
+    return '';
+  }
+}
+
+// If the agent's latest message or parsed context contains a UID, pull a
+// short summary of prior cases for that customer so Ace can reference
+// history instead of starting from zero.
+async function buildCaseHistoryBlock(uid) {
+  if (!uid) return '';
+  try {
+    const cases = await getCasesByUID(uid);
+    if (!cases.length) return '';
+    const recent = cases.slice(0, 5);
+    const lines = recent.map(c => {
+      const when = new Date(c.ts).toISOString().slice(0, 10);
+      const vip = c.vipLevel ? ` VIP${c.vipLevel}` : '';
+      const notes = c.notes ? ` — ${c.notes}` : '';
+      return `- [${when}] ${c.tool || 'chat'}${vip}${notes}`;
+    });
+    return `\n\n---\nPRIOR CASES FOR THIS CUSTOMER (${cases.length} total, showing ${recent.length}):\n${lines.join('\n')}\nUse this to recognise patterns — but never reveal the history to the customer directly.\n---`;
+  } catch (e) {
+    console.warn('[claude] buildCaseHistoryBlock failed', e);
+    return '';
+  }
+}
+
 // onToken: optional (token, accumulated) => void — enables streaming
-export async function InvokeChatWithHistory({ messages, system_prompt = '', autoMemory = false, onToken = null, kbDomains, kbTags, kbCaseType }) {
+// kbUid: optional scrubbed UID for pulling prior case history
+export async function InvokeChatWithHistory({ messages, system_prompt = '', autoMemory = false, onToken = null, kbDomains, kbTags, kbCaseType, kbUid }) {
   const model = resolveModel('chat');
   const provider = getModelProvider(model);
 
@@ -804,8 +845,14 @@ export async function InvokeChatWithHistory({ messages, system_prompt = '', auto
     : latestUserMsg?.content?.find?.(b => b.type === 'text')?.text || '';
   const retrieved = buildRetrievedKnowledgeBlock(query, { domains: kbDomains, tags: kbTags, caseType: kbCaseType });
 
+  // Feedback loops — inject recurring QA issues + prior case history.
+  // Both go in the dynamic (non-cached) block so updates take effect
+  // immediately without busting the cache prefix.
+  const qaFeedback = buildQAFeedbackBlock();
+  const caseHistory = await buildCaseHistoryBlock(kbUid);
+
   const memInstruction = autoMemory ? AUTO_MEMORY_INSTRUCTION : '';
-  const dynamicText = [retrieved, system_prompt, memInstruction].filter(Boolean).join('\n\n');
+  const dynamicText = [retrieved, qaFeedback, caseHistory, system_prompt, memInstruction].filter(Boolean).join('\n\n');
   const systemBlocks = buildCachedSystem(stableText, dynamicText);
 
   const filteredMessages = messages.filter(m => m.role === 'user' || m.role === 'assistant');
