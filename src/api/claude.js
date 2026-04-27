@@ -440,16 +440,17 @@ function getModelProvider(modelId) {
 
 const USAGE_KEY = 'ace_usage';
 
-export function trackUsage(modelId, inputTokens, outputTokens) {
+export function trackUsage(modelId, inputTokens, outputTokens, cacheCreate = 0, cacheRead = 0) {
   try {
     const today = new Date().toISOString().slice(0, 10);
     const all = JSON.parse(localStorage.getItem(USAGE_KEY) || '{}');
     if (!all[today]) all[today] = {};
-    if (!all[today][modelId]) all[today][modelId] = { input: 0, output: 0, calls: 0 };
+    if (!all[today][modelId]) all[today][modelId] = { input: 0, output: 0, calls: 0, cacheCreate: 0, cacheRead: 0 };
     all[today][modelId].input += inputTokens || 0;
     all[today][modelId].output += outputTokens || 0;
+    all[today][modelId].cacheCreate = (all[today][modelId].cacheCreate || 0) + (cacheCreate || 0);
+    all[today][modelId].cacheRead = (all[today][modelId].cacheRead || 0) + (cacheRead || 0);
     all[today][modelId].calls += 1;
-    // Keep only last 30 days
     const keys = Object.keys(all).sort();
     while (keys.length > 30) { delete all[keys.shift()]; }
     localStorage.setItem(USAGE_KEY, JSON.stringify(all));
@@ -474,20 +475,46 @@ function claudeHeaders(apiKey) {
     'x-api-key': apiKey,
     'anthropic-version': ANTHROPIC_VERSION,
     'anthropic-dangerous-direct-browser-access': 'true',
-    'anthropic-beta': 'prompt-caching-2024-07-31',
+    // prompt-caching-2024-07-31 = 5-min cache; extended-cache-ttl-2025-04-11 = adds 1-hour ttl
+    'anthropic-beta': 'prompt-caching-2024-07-31,extended-cache-ttl-2025-04-11',
   };
 }
 
-// Build system prompt with caching — stable parts (personality + KB) get cached
+// Build system prompt with caching — stable parts (personality + KB) get cached.
+// Stable block uses ttl:"1h" so cache survives full shift patterns with long gaps
+// between customer messages (default 5-min TTL expires too quickly during live chat).
 function buildCachedSystem(stableText, dynamicText) {
   const blocks = [];
   if (stableText) {
-    blocks.push({ type: 'text', text: stableText, cache_control: { type: 'ephemeral' } });
+    blocks.push({
+      type: 'text',
+      text: stableText,
+      cache_control: { type: 'ephemeral', ttl: '1h' },
+    });
   }
   if (dynamicText) {
     blocks.push({ type: 'text', text: dynamicText });
   }
   return blocks.length ? blocks : undefined;
+}
+
+// Mark the LAST message in the history with cache_control so each turn builds
+// on the cached history from the previous turn. Saves ~70% on multi-turn chats.
+// Returns a new array — does not mutate the input.
+function withHistoryCacheBreakpoint(messages) {
+  if (!messages?.length) return messages;
+  const last = messages[messages.length - 1];
+  const cachedLast = { ...last };
+  if (typeof last.content === 'string') {
+    cachedLast.content = [{ type: 'text', text: last.content, cache_control: { type: 'ephemeral' } }];
+  } else if (Array.isArray(last.content) && last.content.length) {
+    const lastBlock = last.content[last.content.length - 1];
+    cachedLast.content = [
+      ...last.content.slice(0, -1),
+      { ...lastBlock, cache_control: { type: 'ephemeral' } },
+    ];
+  }
+  return [...messages.slice(0, -1), cachedLast];
 }
 
 // Scrub message content — handles both string and content-array formats (vision)
@@ -509,7 +536,9 @@ async function claudeChatStream(apiKey, messages, systemPrompt, maxTokens, onTok
     ...m,
     content: m.role === 'user' ? scrubContent(m.content) : m.content,
   }));
-  const body = { model, max_tokens: maxTokens, messages: safeMessages, stream: true };
+  // Cache breakpoint on the last message so each turn reuses the history cache
+  const cachedMessages = withHistoryCacheBreakpoint(safeMessages);
+  const body = { model, max_tokens: maxTokens, messages: cachedMessages, stream: true };
   if (systemPrompt) body.system = systemPrompt;
 
   const res = await fetch(CLAUDE_API_URL, {
@@ -527,7 +556,7 @@ async function claudeChatStream(apiKey, messages, systemPrompt, maxTokens, onTok
   const decoder = new TextDecoder();
   let fullText = '';
   let buffer = '';
-  let usageIn = 0, usageOut = 0;
+  let usageIn = 0, usageOut = 0, cacheCreate = 0, cacheRead = 0;
 
   while (true) {
     const { done, value } = await reader.read();
@@ -538,7 +567,10 @@ async function claudeChatStream(apiKey, messages, systemPrompt, maxTokens, onTok
     for (const line of lines) {
       if (!line.startsWith('data: ')) continue;
       const data = line.slice(6).trim();
-      if (data === '[DONE]') { trackUsage(model, usageIn, usageOut); return fullText; }
+      if (data === '[DONE]') {
+        trackUsage(model, usageIn, usageOut, cacheCreate, cacheRead);
+        return fullText;
+      }
       try {
         const parsed = JSON.parse(data);
         if (parsed.type === 'content_block_delta' && parsed.delta?.type === 'text_delta') {
@@ -547,6 +579,8 @@ async function claudeChatStream(apiKey, messages, systemPrompt, maxTokens, onTok
         }
         if (parsed.type === 'message_start' && parsed.message?.usage) {
           usageIn = parsed.message.usage.input_tokens || 0;
+          cacheCreate = parsed.message.usage.cache_creation_input_tokens || 0;
+          cacheRead = parsed.message.usage.cache_read_input_tokens || 0;
         }
         if (parsed.type === 'message_delta' && parsed.usage) {
           usageOut = parsed.usage.output_tokens || 0;
@@ -554,7 +588,7 @@ async function claudeChatStream(apiKey, messages, systemPrompt, maxTokens, onTok
       } catch { /* ignore malformed lines */ }
     }
   }
-  trackUsage(model, usageIn, usageOut);
+  trackUsage(model, usageIn, usageOut, cacheCreate, cacheRead);
   return fullText;
 }
 
@@ -564,10 +598,11 @@ async function claudeChat(apiKey, messages, systemPrompt, maxTokens = 2048, mode
     ...m,
     content: m.role === 'user' ? scrubContent(m.content) : m.content,
   }));
+  const cachedMessages = withHistoryCacheBreakpoint(safeMessages);
   const body = {
     model,
     max_tokens: maxTokens,
-    messages: safeMessages,
+    messages: cachedMessages,
   };
   if (systemPrompt) body.system = systemPrompt;
 
@@ -583,7 +618,15 @@ async function claudeChat(apiKey, messages, systemPrompt, maxTokens = 2048, mode
   }
 
   const data = await res.json();
-  if (data.usage) trackUsage(model, data.usage.input_tokens, data.usage.output_tokens);
+  if (data.usage) {
+    trackUsage(
+      model,
+      data.usage.input_tokens,
+      data.usage.output_tokens,
+      data.usage.cache_creation_input_tokens || 0,
+      data.usage.cache_read_input_tokens || 0,
+    );
+  }
   return data.content?.[0]?.text || '';
 }
 
