@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const CATEGORIES = [
+export const WORKFLOW_CATEGORIES = [
   {
     label: 'Deposits & Withdrawals',
     color: 'from-emerald-500/10 to-emerald-500/5 border-emerald-500/20',
@@ -72,7 +72,7 @@ export default function Workflows() {
         <p className="text-sm text-fg-2 mt-1">SOP-driven workflows with integrated ACE assistance. Pick a workflow to start.</p>
       </div>
 
-      {CATEGORIES.map((cat, ci) => (
+      {WORKFLOW_CATEGORIES.map((cat, ci) => (
         <motion.div
           key={cat.label}
           initial="hidden"

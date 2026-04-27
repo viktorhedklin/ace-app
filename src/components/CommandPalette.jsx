@@ -6,6 +6,9 @@ import { BYBIT_KB, DOMAINS, DOMAIN_COLORS } from '@/data/bybitKB';
 import { cn } from '@/lib/utils';
 import { getMacros } from '@/lib/macros';
 import { useAce } from '@/context/AceContext';
+import { BUILT_IN_TEMPLATES } from '@/pages/QuickTemplates';
+import { WORKFLOW_CATEGORIES } from '@/pages/Workflows';
+import { get as storageGet, NAMESPACES } from '@/lib/storage';
 
 // Heavy spring — "particle assembly" snap-in feel
 const ASSEMBLE_SPRING = { type: 'spring', stiffness: 500, damping: 22, mass: 0.7 };
@@ -61,16 +64,64 @@ const KB_ITEMS = BYBIT_KB.map(article => ({
   isKB: true,
 }));
 
+// Flatten workflows across categories for single searchable list.
+// Each entry knows its category for display.
+const WORKFLOW_ITEMS = WORKFLOW_CATEGORIES.flatMap(cat =>
+  cat.items.map(item => ({
+    id: `wf-${item.path}`,
+    label: item.name,
+    subtitle: item.desc,
+    icon: item.icon,
+    category: cat.label,
+    accent: cat.accent,
+    path: item.path,
+    isWorkflow: true,
+  }))
+);
+
+// Templates are copy-to-clipboard, not navigation. Built-in + custom combined
+// at render time so custom additions show up without a reload.
+function loadCustomTemplates() {
+  try {
+    const fromCloud = storageGet(NAMESPACES.SETTINGS, 'custom_templates');
+    if (Array.isArray(fromCloud)) return fromCloud;
+  } catch (e) { console.warn('[palette] custom templates load failed', e); }
+  try {
+    const raw = localStorage.getItem('custom_templates');
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    console.warn('[palette] custom templates legacy load failed', e);
+    return [];
+  }
+}
+
 export default function CommandPalette({ open, onClose }) {
   const [search, setSearch] = useState('');
   const [copiedSnippet, setCopiedSnippet] = useState(null);
+  const [customTemplates, setCustomTemplates] = useState([]);
   const navigate = useNavigate();
   const { snippets, parsedData } = useAce();
 
-  // Reset search when opened
+  // Reset search when opened — also refresh custom templates so new ones
+  // added via QuickTemplates page appear in the palette immediately.
   useEffect(() => {
-    if (open) { setSearch(''); setCopiedSnippet(null); }
+    if (open) {
+      setSearch('');
+      setCopiedSnippet(null);
+      setCustomTemplates(loadCustomTemplates());
+    }
   }, [open]);
+
+  // Combined template list: built-in + custom. Built for search indexing.
+  const TEMPLATE_ITEMS = [...BUILT_IN_TEMPLATES, ...customTemplates].map(t => ({
+    id: `tpl-${t.id}`,
+    label: t.title,
+    subtitle: (t.text || '').slice(0, 80),
+    icon: '💬',
+    category: t.cat || 'Custom',
+    content: t.text,
+    isTemplate: true,
+  }));
 
   // Close on Escape
   useEffect(() => {
@@ -82,7 +133,7 @@ export default function CommandPalette({ open, onClose }) {
   }, [open, onClose]);
 
   function handleSelect(item) {
-    if (item.isSnippet) {
+    if (item.isSnippet || item.isTemplate) {
       // Personalize: replace [USER_ID] with active UID
       let content = item.content || '';
       if (parsedData?.uid) {
@@ -210,6 +261,63 @@ export default function CommandPalette({ open, onClose }) {
               })}
             </Command.Group>
 
+            {/* Workflows — flattened across all categories for single search */}
+            <Command.Group heading="Workflows"
+              className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-fg-2 [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider"
+            >
+              {WORKFLOW_ITEMS.map(item => (
+                <Command.Item
+                  key={item.id}
+                  value={`${item.label} ${item.subtitle} ${item.category} workflow sop`}
+                  onSelect={() => handleSelect(item)}
+                  className={cn(
+                    'flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors duration-100',
+                    'aria-selected:bg-hero/10',
+                    'data-[selected=true]:bg-hero/10'
+                  )}
+                >
+                  <span className="text-base w-5 text-center shrink-0">{item.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-fg-1 leading-snug truncate aria-selected:text-hero">{item.label}</p>
+                    <p className="text-xs text-fg-2 truncate">{item.subtitle}</p>
+                  </div>
+                  <span className={cn('text-[10px] px-1.5 py-0.5 rounded bg-bg-2 shrink-0', item.accent)}>
+                    {item.category.split(' ')[0]}
+                  </span>
+                </Command.Item>
+              ))}
+            </Command.Group>
+
+            {/* Quick Templates — copy to clipboard on select, personalizes [USER_ID] */}
+            <Command.Group heading="Quick Templates"
+              className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-fg-2 [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider"
+            >
+              {TEMPLATE_ITEMS.map(item => (
+                <Command.Item
+                  key={item.id}
+                  value={`template ${item.label} ${item.category} ${item.subtitle}`}
+                  onSelect={() => handleSelect(item)}
+                  className={cn(
+                    'flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors duration-100',
+                    'aria-selected:bg-hero/10',
+                    'data-[selected=true]:bg-hero/10'
+                  )}
+                >
+                  <span className="text-base w-5 text-center shrink-0">
+                    {copiedSnippet === item.id ? '✓' : item.icon}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-fg-1 leading-snug truncate aria-selected:text-hero">{item.label}</p>
+                    <p className="text-xs text-fg-2 truncate">{item.subtitle}</p>
+                  </div>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-bg-2 text-fg-2 shrink-0">{item.category}</span>
+                  {copiedSnippet === item.id && (
+                    <span className="text-xs text-ok font-medium shrink-0">Copied!</span>
+                  )}
+                </Command.Item>
+              ))}
+            </Command.Group>
+
             {/* Macros group — inside Command.List for proper filtering */}
             {(() => {
               const macros = getMacros();
@@ -277,7 +385,7 @@ export default function CommandPalette({ open, onClose }) {
               <kbd className="bg-bg-2 px-1 py-0.5 rounded border border-border-0 text-fg-2">/</kbd> snippets &nbsp;
               <kbd className="bg-bg-2 px-1 py-0.5 rounded border border-border-0 text-fg-2">Alt+1–9</kbd> macros
             </p>
-            <p className="text-xs text-fg-3">{NAV_ITEMS.length + KB_ITEMS.length + snippets.length} items</p>
+            <p className="text-xs text-fg-3">{NAV_ITEMS.length + KB_ITEMS.length + WORKFLOW_ITEMS.length + TEMPLATE_ITEMS.length + snippets.length} items</p>
           </div>
         </Command>
       </motion.div>

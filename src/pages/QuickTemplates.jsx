@@ -3,7 +3,7 @@ import { Copy, Check, Plus, Trash2, Star, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { get as storageGet, set as storageSet, NAMESPACES } from '@/lib/storage';
 
-const BUILT_IN = [
+export const BUILT_IN_TEMPLATES = [
   // Greetings
   { id: 'g1', cat: 'Greeting', title: 'Standard open', text: `Thank you for contacting Bybit support! My name is [NAME] and I'll be assisting you today. Could you please provide more details about your issue so I can help you as quickly as possible?` },
   { id: 'g2', cat: 'Greeting', title: 'Warm open (chat)', text: `Hey! Thanks for reaching out to Bybit. I'm here and ready to help — what's going on?` },
@@ -108,7 +108,7 @@ const BUILT_IN = [
   { id: 'em2', cat: 'Email Templates', title: 'Empty Chat / Inactivity Follow-up', text: `Thank you for contacting Bybit Customer Support.\n\nWe would like to express our sincere apologies that the chat had to be closed due to inactivity. Allow me to assist you further with your inquiry.\n\nWe noticed that the chat was disconnected before you were able to share your concern with us. Kindly reply to this message with more details regarding the issue so we can assist you accordingly.\n\nYou may also visit our Help Center for answers and step-by-step guides to common inquiries.\n\nThank you and we hope to hear from you soon.` },
 ];
 
-const CATEGORIES = ['All', ...new Set(BUILT_IN.map(t => t.cat))];
+const CATEGORIES = ['All', ...new Set(BUILT_IN_TEMPLATES.map(t => t.cat))];
 
 function TemplateCard({ tpl, onCopy, copied, onPin, pinned, onDelete, isCustom }) {
   return (
@@ -195,7 +195,7 @@ export default function QuickTemplates() {
     localStorage.removeItem('custom_templates');
   }
 
-  const all = [...BUILT_IN, ...custom];
+  const all = [...BUILT_IN_TEMPLATES, ...custom];
 
   const filtered = all.filter(t => {
     const matchCat = cat === 'All' || t.cat === cat;
