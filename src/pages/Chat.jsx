@@ -178,8 +178,21 @@ function PlanPanel({ plan }) {
 
 // ── NBA action buttons ────────────────────────────────────────────────────────
 
+// Priority ordering — critical buttons render first and enter first, so the
+// urgent action always reads as "do this one first" at a glance.
+const NBA_PRIORITY_ORDER = { critical: 0, high: 1, medium: 2, low: 3 };
+
 function NBAButtons({ actions, vipLevel, onAction }) {
   if (!actions?.length) return null;
+
+  // Stable sort by priority — critical first, then high, then medium/low.
+  // When VIP >= 3 we also lift actions up a slot since the whole case is hot.
+  const sorted = [...actions].sort((a, b) => {
+    const pa = NBA_PRIORITY_ORDER[a.priority] ?? 4;
+    const pb = NBA_PRIORITY_ORDER[b.priority] ?? 4;
+    return pa - pb;
+  });
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
@@ -187,21 +200,58 @@ function NBAButtons({ actions, vipLevel, onAction }) {
       transition={{ type: 'spring', stiffness: 400, damping: 30 }}
       className="flex flex-wrap gap-2 mt-2"
     >
-      <p className="w-full text-xs text-fg-2 flex items-center gap-1">
+      <motion.p
+        className="w-full text-xs text-fg-2 flex items-center gap-1"
+        initial={{ opacity: 0, x: -4 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.2 }}
+      >
         <span className="text-hero/50">⚡</span> Next best action
-      </p>
-      {actions.map((action, i) => {
+      </motion.p>
+      {sorted.map((action, i) => {
         const { className, glowStyle, pulse } = getNBAButtonStyle(action.priority, vipLevel);
         const isCritical = action.priority === 'critical' || vipLevel >= 3;
+        // Cascade: critical buttons enter first with a longer entrance,
+        // subsequent actions stagger in 80ms behind each other.
+        const delay = 0.08 + i * 0.08;
         return (
           <motion.button
             key={i}
-            whileHover={{ scale: 1.03 }}
+            initial={{ opacity: 0, y: 10, scale: 0.92 }}
+            animate={{
+              opacity: 1,
+              y: 0,
+              scale: 1,
+              // One-shot entrance glow for critical buttons — reinforces urgency
+              boxShadow: isCritical ? [
+                glowStyle.boxShadow || '0 0 0px rgba(250,204,21,0)',
+                '0 0 32px rgba(250,204,21,0.75)',
+                glowStyle.boxShadow || '0 0 0px rgba(250,204,21,0)',
+              ] : undefined,
+            }}
+            transition={{
+              delay,
+              type: 'spring',
+              stiffness: 380,
+              damping: 22,
+              boxShadow: isCritical
+                ? { delay, duration: 1.1, times: [0, 0.5, 1] }
+                : undefined,
+            }}
+            whileHover={{
+              scale: 1.04,
+              y: -1,
+              // Deepen shadow on hover so the button feels "raised"
+              boxShadow: isCritical
+                ? '0 4px 20px rgba(250,204,21,0.45), 0 0 24px rgba(250,204,21,0.55)'
+                : '0 4px 14px rgba(0,0,0,0.35)',
+            }}
             whileTap={{ scale: 0.97 }}
             onClick={() => onAction(action)}
             style={glowStyle}
             className={cn(
-              'flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg border font-medium transition-colors duration-150 cursor-pointer',
+              'flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg border font-medium cursor-pointer',
+              'transition-colors duration-150',
               className,
               pulse && 'animate-pulse',
             )}
@@ -1039,31 +1089,96 @@ export default function Chat({ channel }) {
         </div>
       </div>
 
-      {/* Magic Paste banner */}
+      {/* Magic Paste banner — each detected field stagger-reveals with a gold
+          bloom; a light sweep passes across the banner on mount for "scanning"
+          feel. Makes ACE's paste intelligence visible, not invisible. */}
       <AnimatePresence>
-        {pasteDetected && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="shrink-0 mx-4 mt-2 bg-hero/10 border border-hero/30 rounded-xl px-4 py-2.5 flex items-center gap-3"
-          >
-            <span className="text-hero text-sm shrink-0">⚡</span>
-            <div className="flex-1 flex items-center gap-2 flex-wrap min-w-0">
-              <span className="text-xs font-medium text-hero">Bybit signals detected</span>
-              {pasteDetected.uid && <span className="text-xs bg-bg-2 text-fg-1 px-2 py-0.5 rounded font-mono">UID {pasteDetected.uid}</span>}
-              {pasteDetected.orderId && <span className="text-xs bg-bg-2 text-fg-1 px-2 py-0.5 rounded font-mono">{pasteDetected.orderId}</span>}
-              {pasteDetected.coin && <span className="text-xs bg-bg-2 text-hero px-2 py-0.5 rounded font-medium">{pasteDetected.coin}</span>}
-              {pasteDetected.txHash && <span className="text-xs bg-bg-2 text-fg-1 px-2 py-0.5 rounded font-mono">{pasteDetected.txHash.slice(0, 12)}…</span>}
-              {pasteDetected.errorCode && <span className="text-xs bg-crit/20 text-crit px-2 py-0.5 rounded font-mono">{pasteDetected.errorCode}</span>}
-              <span className="text-xs text-fg-2">— routing NBA…</span>
-            </div>
-            <button onClick={() => setPasteDetected(null)} className="text-fg-2 hover:text-fg-1 shrink-0 transition-colors duration-150" aria-label="Dismiss">
-              <X size={13} />
-            </button>
-          </motion.div>
-        )}
+        {pasteDetected && (() => {
+          const fields = [
+            pasteDetected.uid && { key: 'uid', label: `UID ${pasteDetected.uid}`, cls: 'bg-bg-2 text-fg-1 font-mono' },
+            pasteDetected.orderId && { key: 'order', label: pasteDetected.orderId, cls: 'bg-bg-2 text-fg-1 font-mono' },
+            pasteDetected.coin && { key: 'coin', label: pasteDetected.coin, cls: 'bg-bg-2 text-hero font-medium' },
+            pasteDetected.txHash && { key: 'tx', label: `${pasteDetected.txHash.slice(0, 12)}…`, cls: 'bg-bg-2 text-fg-1 font-mono' },
+            pasteDetected.errorCode && { key: 'err', label: pasteDetected.errorCode, cls: 'bg-crit/20 text-crit font-mono' },
+          ].filter(Boolean);
+
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              className="relative shrink-0 mx-4 mt-2 bg-hero/10 border border-hero/30 rounded-xl px-4 py-2.5 flex items-center gap-3 overflow-hidden"
+            >
+              {/* Scan sweep — single horizontal beam left→right on mount */}
+              <motion.span
+                className="absolute inset-y-0 w-20 pointer-events-none"
+                style={{
+                  background: 'linear-gradient(90deg, transparent 0%, rgba(250,204,21,0.35) 50%, transparent 100%)',
+                  filter: 'blur(6px)',
+                }}
+                initial={{ x: '-100%' }}
+                animate={{ x: '700%' }}
+                transition={{ duration: 0.9, ease: 'easeOut' }}
+              />
+
+              <motion.span
+                className="text-hero text-sm shrink-0 relative"
+                initial={{ scale: 0, rotate: -90 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 18 }}
+              >⚡</motion.span>
+
+              <div className="flex-1 flex items-center gap-2 flex-wrap min-w-0 relative">
+                <motion.span
+                  className="text-xs font-medium text-hero"
+                  initial={{ opacity: 0, x: -6 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.05, duration: 0.25 }}
+                >Bybit signals detected</motion.span>
+
+                {fields.map((f, idx) => (
+                  <motion.span
+                    key={f.key}
+                    className={`text-xs px-2 py-0.5 rounded relative ${f.cls}`}
+                    initial={{ opacity: 0, scale: 0.6, y: 4 }}
+                    animate={{
+                      opacity: 1,
+                      scale: 1,
+                      y: 0,
+                      boxShadow: [
+                        '0 0 0px rgba(250,204,21,0)',
+                        '0 0 14px rgba(250,204,21,0.55)',
+                        '0 0 0px rgba(250,204,21,0)',
+                      ],
+                    }}
+                    transition={{
+                      delay: 0.15 + idx * 0.08,
+                      scale: { type: 'spring', stiffness: 500, damping: 20 },
+                      opacity: { duration: 0.2 },
+                      boxShadow: { duration: 0.9, times: [0, 0.4, 1] },
+                    }}
+                  >{f.label}</motion.span>
+                ))}
+
+                <motion.span
+                  className="text-xs text-fg-2"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 + fields.length * 0.08, duration: 0.3 }}
+                >— routing NBA…</motion.span>
+              </div>
+
+              <button
+                onClick={() => setPasteDetected(null)}
+                className="text-fg-2 hover:text-fg-1 shrink-0 transition-colors duration-150 relative"
+                aria-label="Dismiss"
+              >
+                <X size={13} />
+              </button>
+            </motion.div>
+          );
+        })()}
       </AnimatePresence>
 
       {/* Messages */}
