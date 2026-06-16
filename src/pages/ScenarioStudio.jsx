@@ -1,10 +1,27 @@
 import { useState } from 'react';
-import { Loader2, Copy, Check, Wand2, ClipboardCheck, FileText, Brain } from 'lucide-react';
+import { Loader2, Copy, Check, Wand2, ClipboardCheck, FileText, Brain, AlertTriangle, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  buildScenario, evaluateTranscript, CANONICAL_CHECKPOINTS,
+  buildScenario, evaluateTranscript, refineScenario, CANONICAL_CHECKPOINTS,
 } from '@/lib/scenarioStudio';
+
+// ── official enums (from the CS Training — Role-play Scenario Creation Guide) ──
+const SCOPE_OPTIONS = ['Non-tech', 'Tech', 'MT5'];
+const CASE_TYPE_OPTIONS = ['MT5', 'Bybit Card', 'Deposit & Withdrawal', 'Account Matters', 'Spot Trading', 'C&B', 'Others'];
+const EMOTION_OPTIONS = ['Low (Calm)', 'Medium (Dissatisfied)', 'High (Angry)'];
+const CP_CATEGORIES = ['Probing Questions', 'Accuracy and Product Knowledge', 'Process Handling and Escalation', 'Soft Skills and Empathy', 'Added-Value Support'];
+
+function cpCategory(c) {
+  if (c.category) return c.category;
+  const d = (c.desc || '').toLowerCase();
+  if (/added.?value|bonus/.test(d) || c.bonus) return 'Added-Value Support';
+  if (/probing|ask|question/.test(d)) return 'Probing Questions';
+  if (/accuracy|product|sop|root cause|policy/.test(d)) return 'Accuracy and Product Knowledge';
+  if (/process|escalat|timeframe|document/.test(d)) return 'Process Handling and Escalation';
+  if (/soft|empath|tone|frustrat/.test(d)) return 'Soft Skills and Empathy';
+  return 'Accuracy and Product Knowledge';
+}
 
 // ── helpers ─────────────────────────────────────────────────────────────────
 const FIELD_LABELS = {
@@ -40,7 +57,8 @@ function scenarioToLark(s) {
   for (const k of ORDER) { L.push(`【${FIELD_LABELS[k]}】`); L.push(s[k] || ''); L.push(''); }
   L.push('【6 · Evaluation Checkpoints】');
   (s.checkpoints || []).forEach(c => {
-    L.push(`- ${c.desc}  [${c.max}${(c.bonus || /added.?value|bonus/i.test(c.desc || '')) ? ' BONUS' : ''} pts]`);
+    const bonus = c.bonus || /added.?value|bonus/i.test(c.desc || '');
+    L.push(`[${cpCategory(c)}] ${c.desc}  → ${c.max}${bonus ? ' BONUS' : ''} pts`);
   });
   L.push(`Base total: ${baseTotal(s.checkpoints)}/100 (+5 Added-Value bonus, excluded from base)`);
   return L.join('\n');
@@ -73,6 +91,54 @@ function Field({ label, value, onChange, mono, rows = 4 }) {
         )}
       />
     </div>
+  );
+}
+
+function SelectField({ label, value, onChange, options, placeholder = 'Select…' }) {
+  const known = options.includes(value);
+  return (
+    <div>
+      <label className="text-xs text-fg-2 mb-1 block">{label}</label>
+      <select
+        value={known ? value : ''}
+        onChange={e => onChange(e.target.value)}
+        className="w-full bg-bg-1 border border-border-0 focus:border-hero/50 rounded-xl px-3 py-2 text-sm text-fg-0 outline-none transition-colors">
+        <option value="" disabled>{value && !known ? `⚠ ${value} (off-spec)` : placeholder}</option>
+        {options.map(o => <option key={o} value={o}>{o}</option>)}
+      </select>
+    </div>
+  );
+}
+
+function StarsField({ label, value, onChange }) {
+  const v = Number(value) || 0;
+  return (
+    <div>
+      <label className="text-xs text-fg-2 mb-1 block">{label}</label>
+      <div className="flex items-center gap-1 h-[38px]">
+        {[1, 2, 3, 4, 5].map(n => (
+          <button key={n} type="button" onClick={() => onChange(n)}
+            className={cn('text-xl leading-none transition-colors', n <= v ? 'text-warn' : 'text-fg-3 hover:text-fg-2')}>★</button>
+        ))}
+        <span className="text-xs text-fg-2 ml-2">{v ? `${v}/5` : ''}</span>
+      </div>
+    </div>
+  );
+}
+
+function CheckField({ label, checked, onChange, hint }) {
+  return (
+    <button type="button" onClick={() => onChange(!checked)}
+      className="flex items-start gap-2.5 text-left w-full bg-bg-1 border border-border-0 rounded-xl px-3 py-2.5 hover:border-hero/40 transition-colors">
+      <span className={cn('mt-0.5 w-4 h-4 rounded flex items-center justify-center border shrink-0',
+        checked ? 'bg-hero border-hero' : 'border-border-0 bg-bg-2')}>
+        {checked && <Check className="w-3 h-3 text-white" />}
+      </span>
+      <span className="flex-1">
+        <span className="text-sm text-fg-0 font-medium block">{label}</span>
+        {hint && <span className="text-[11px] text-fg-2 block mt-0.5">{hint}</span>}
+      </span>
+    </button>
   );
 }
 
@@ -185,6 +251,12 @@ export default function ScenarioStudio() {
   const [evaluating, setEvaluating] = useState(false);
   const [evErr, setEvErr] = useState('');
 
+  // refine-from-bot-feedback state
+  const [feedback, setFeedback] = useState('');
+  const [refining, setRefining] = useState(false);
+  const [refErr, setRefErr] = useState('');
+  const [refNote, setRefNote] = useState('');
+
   async function runBuild() {
     if (!transcript.trim()) return;
     setBuilding(true); setErr(''); setScenario(null);
@@ -203,7 +275,7 @@ export default function ScenarioStudio() {
   function patchCp(i, k, v) {
     setScenario(s => {
       const cps = [...(s.checkpoints || [])];
-      cps[i] = { ...cps[i], [k]: k === 'max' ? Number(v) || 0 : v };
+      cps[i] = { ...cps[i], [k]: k === 'max' ? (Number(v) || 0) : v };
       return { ...s, checkpoints: cps };
     });
   }
@@ -219,6 +291,21 @@ export default function ScenarioStudio() {
         ? 'No LLM key configured — set it in Settings.' : ('Evaluation failed: ' + e.message));
     }
     setEvaluating(false);
+  }
+
+  async function runRefine() {
+    if (!feedback.trim() || !scenario) return;
+    setRefining(true); setRefErr(''); setRefNote('');
+    try {
+      const { scenario: next, changes } = await refineScenario({ scenario, feedback: feedback.trim() });
+      setScenario(next);
+      setRefNote(changes || 'Scenario updated from bot feedback.');
+      setFeedback('');
+    } catch (e) {
+      setRefErr(e.message === 'NO_ALIBABA_KEY' || e.message === 'NO_API_KEY' || e.message === 'NO_OPENAI_KEY'
+        ? 'No LLM key configured — set it in Settings.' : ('Refine failed: ' + e.message));
+    }
+    setRefining(false);
   }
 
   const cpTotal = baseTotal(scenario?.checkpoints);
@@ -264,15 +351,27 @@ export default function ScenarioStudio() {
         {step === 2 && scenario && (
           <motion.div key="s2" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Title" value={scenario.title} onChange={v => patch('title', v)} rows={1} />
+              <Field label="Scenario Title" value={scenario.title} onChange={v => patch('title', v)} rows={1} />
               <Field label="Scenario ID" value={scenario.id} onChange={v => patch('id', v)} rows={1} />
-              <Field label="Case Type" value={scenario.type} onChange={v => patch('type', v)} rows={1} />
-              <Field label="Scope" value={scenario.scope} onChange={v => patch('scope', v)} rows={1} />
+              <SelectField label="Case Type" value={scenario.type} onChange={v => patch('type', v)} options={CASE_TYPE_OPTIONS} />
+              <SelectField label="Scope" value={scenario.scope} onChange={v => patch('scope', v)} options={SCOPE_OPTIONS} />
               <Field label="Language (native)" value={scenario.language} onChange={v => patch('language', v)} rows={1} />
-              <Field label="Initial Emotion" value={scenario.emotion} onChange={v => patch('emotion', v)} rows={1} />
-              <Field label="Difficulty (1-5)" value={String(scenario.difficulty)} onChange={v => patch('difficulty', Number(v) || 3)} rows={1} />
-              <Field label="Language Team" value={scenario.languageTeam} onChange={v => patch('languageTeam', v)} rows={1} />
+              <SelectField label="Initial Customer Emotion" value={scenario.emotion} onChange={v => patch('emotion', v)} options={EMOTION_OPTIONS} />
+              <StarsField label="Difficulty" value={scenario.difficulty} onChange={v => patch('difficulty', v)} />
+              <Field label="Language Team (leave empty = everyone)" value={scenario.languageTeam} onChange={v => patch('languageTeam', v)} rows={1} />
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <CheckField label="Active Status" checked={!!scenario.activeStatus} onChange={v => patch('activeStatus', v)}
+                hint="The bot only picks from active scenarios in a random run." />
+              <CheckField label="Test Completed" checked={!!scenario.testCompleted} onChange={v => patch('testCompleted', v)}
+                hint="Openclaw won't start a session unless this is checked." />
+            </div>
+            {!scenario.testCompleted && (
+              <div className="flex items-start gap-2 bg-warn/10 border border-warn/30 rounded-xl p-3 text-xs text-fg-1">
+                <AlertTriangle className="w-4 h-4 text-warn shrink-0 mt-0.5" />
+                <span><span className="font-medium text-warn">Test Completed is unchecked.</span> The bot/Openclaw will refuse to run this scenario until it's tested and this box is checked. Test it in your role-play bot first, then tick it before going live.</span>
+              </div>
+            )}
             {ORDER.map(k => (
               <Field key={k} label={FIELD_LABELS[k]} value={scenario[k]} onChange={v => patch(k, v)}
                 rows={k === 'bot' || k === 'hidden' || k === 'flow' ? 6 : 3} />
@@ -288,9 +387,16 @@ export default function ScenarioStudio() {
                   const bonus = c.bonus || /added.?value|bonus/i.test(c.desc || '');
                   return (
                     <div key={i} className="flex gap-2 items-start">
-                      <textarea value={c.desc} onChange={e => patchCp(i, 'desc', e.target.value)} rows={2}
-                        className="flex-1 bg-bg-1 border border-border-0 rounded-lg px-2.5 py-1.5 text-xs text-fg-0 outline-none focus:border-hero/50 resize-y" />
-                      <div className="flex flex-col items-center gap-0.5">
+                      <div className="flex-1 space-y-1">
+                        <select value={cpCategory(c)} onChange={e => patchCp(i, 'category', e.target.value)}
+                          className={cn('w-full bg-bg-2 border border-border-0 rounded-lg px-2 py-1 text-[11px] outline-none focus:border-hero/50',
+                            bonus ? 'text-hero' : 'text-fg-1')}>
+                          {CP_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                        </select>
+                        <textarea value={c.desc} onChange={e => patchCp(i, 'desc', e.target.value)} rows={2}
+                          className="w-full bg-bg-1 border border-border-0 rounded-lg px-2.5 py-1.5 text-xs text-fg-0 outline-none focus:border-hero/50 resize-y" />
+                      </div>
+                      <div className="flex flex-col items-center gap-0.5 pt-6">
                         <input type="number" value={c.max} onChange={e => patchCp(i, 'max', e.target.value)}
                           className="w-16 bg-bg-1 border border-border-0 rounded-lg px-2 py-1.5 text-xs text-fg-0 outline-none focus:border-hero/50 text-center" />
                         {bonus && <span className="text-[10px] text-hero">bonus</span>}
@@ -304,6 +410,29 @@ export default function ScenarioStudio() {
             {cpTotal !== 100 && (
               <button onClick={() => patch('checkpoints', CANONICAL_CHECKPOINTS())} className="text-xs text-hero hover:underline">↺ Reset checkpoints to canonical 100 + 5 bonus</button>
             )}
+
+            {/* Refine from bot test feedback */}
+            <div className="bg-bg-1 border border-border-0 rounded-xl p-3 space-y-2">
+              <div className="flex items-center gap-1.5 text-xs font-medium text-fg-1">
+                <Sparkles className="w-3.5 h-3.5 text-hero" /> Refine from bot test feedback
+              </div>
+              <p className="text-[11px] text-fg-2">After the role-play bot tests this scenario, paste its feedback here and ACE will improve the scenario accordingly — keeping case facts (UID/TXID/amounts/root cause) unchanged.</p>
+              <textarea value={feedback} onChange={e => setFeedback(e.target.value)} rows={4}
+                placeholder={'Paste the bot\u2019s test feedback / issues found (e.g. "hidden context leaked too early", "emotion never rose", "timeframe wrong")\u2026'}
+                className="w-full bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-xs text-fg-0 placeholder-fg-2 outline-none resize-y transition-colors" />
+              {refErr && <div className="text-xs text-crit">{refErr}</div>}
+              {refNote && (
+                <div className="flex items-start gap-2 bg-ok/10 border border-ok/20 rounded-lg p-2.5 text-xs text-fg-1">
+                  <Check className="w-3.5 h-3.5 text-ok shrink-0 mt-0.5" />
+                  <span><span className="text-ok font-medium">Updated. </span>{refNote}</span>
+                </div>
+              )}
+              <button onClick={runRefine} disabled={refining || !feedback.trim()}
+                className="inline-flex items-center gap-2 text-xs bg-hero/15 text-hero border border-hero/30 font-medium px-3 py-1.5 rounded-lg hover:bg-hero/25 disabled:opacity-40 transition-colors">
+                {refining ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                {refining ? 'Refining…' : 'Apply feedback & refine'}
+              </button>
+            </div>
 
             <div className="flex items-center justify-between pt-2 border-t border-border-0">
               <div className="flex gap-2">

@@ -119,7 +119,7 @@ export function normalizeBuiltScenario(raw) {
   if (base.length !== 4 || baseTotal !== 100 || !hasBonus) {
     s.checkpoints = CANONICAL_CHECKPOINTS();
   } else {
-    s.checkpoints = cps.map(c => ({ desc: String(c.desc || ''), max: Number(c.max) || 0, ...(c.bonus ? { bonus: true } : {}) }));
+    s.checkpoints = cps.map(c => ({ desc: String(c.desc || ''), max: Number(c.max) || 0, ...(c.category ? { category: String(c.category) } : {}), ...(c.bonus ? { bonus: true } : {}) }));
   }
   if (!s.id) s.id = 'SC-' + Math.floor(Math.random() * 1000);
   return s;
@@ -246,4 +246,44 @@ ${schema}`;
   const result = parseLLMJson(raw);
   result._mode = mode;
   return result;
+}
+
+// ── REFINER ─────────────────────────────────────────────────────────────────
+// Takes the current scenario + the role-play bot's TEST feedback and improves the
+// scenario accordingly, WITHOUT changing the hard case facts (UID/TXID/amounts/
+// root cause). Stays grounded in the same ACE knowledge pack so fixes are SOP-correct.
+const REFINER_SYSTEM = `You are an expert Bybit CS Training Manager refining a role-play scenario after the in-house role-play bot TESTED it and returned feedback. Improve the scenario so the next test passes, following the OFFICIAL "CS Training — Role-play Scenario Creation Guide".
+
+You are given the ACE KNOWLEDGE PACK (authoritative SOPs) — keep every fix consistent with it.
+
+HARD RULES:
+- DO NOT change the core case facts: keep UID, order/TXID, amounts, coin, chain/contract type, dates, error codes, region/site and the real root cause EXACTLY as in the current scenario. Only fix what the feedback flags (clarity, probing/reveal order, emotion changes, escalation path, timeframe wording, checkpoint measurability, de-escalation, missing detail).
+- NUMBER & RANGE INTEGRITY: reproduce numbers/timeframes/SLAs exactly — "1-72 hours" stays "1-72 hours", never "172h". Keep the hyphen and unit.
+- Hidden Context must stay hidden (bot must not leak it before probing). If feedback says the bot leaked it early, tighten the Bot Acting Instructions reveal order — do NOT delete the hidden info.
+- Base Evaluation checkpoints MUST total EXACTLY 100 across Probing 20 / Accuracy 40 / Process 20 / Soft 20, plus a SEPARATE Added-Value bonus (max 5, "bonus":true), excluded from the 100.
+- Every checkpoint gets a "category" from: Probing Questions | Accuracy and Product Knowledge | Process Handling and Escalation | Soft Skills and Empathy | Added-Value Support.
+
+CRITICAL OUTPUT TYPING: every field except "difficulty" (1-5 number), "activeStatus", "testCompleted" and "checkpoints" MUST be a single STRING (use "\\n" for line breaks). Output ONLY a JSON object (no markdown fences) with keys:
+{ "id","title","type","scope","languageTeam","language","difficulty","emotion","activeStatus","testCompleted","issue","hidden","flow","bot","deescalation","feedbackNotes","screenshots","references","checkpoints":[{"category":"...","desc":"...","max":<int>}...],"_changes":"<one-paragraph plain-English summary of what you changed and why>" }`;
+
+export async function refineScenario({ scenario, feedback }) {
+  const pack = buildKnowledgePack(`${scenario?.issue || ''}\n${scenario?.hidden || ''}\n${scenario?.bot || ''}`);
+  const current = JSON.stringify(scenario, null, 2);
+  const prompt = `${pack}\n\n========================================\nCURRENT SCENARIO (JSON):\n${current}\n\n========================================\nROLE-PLAY BOT TEST FEEDBACK (fix the scenario to address this):\n${feedback}`;
+  const raw = await InvokeLLM({
+    prompt,
+    system_prompt: REFINER_SYSTEM,
+    useKB: true,
+    maxTokens: 4000,
+    json: true,
+    enableThinking: false,
+    temperature: 0.3,
+  });
+  const parsed = parseLLMJson(raw);
+  const changes = parsed._changes || '';
+  delete parsed._changes;
+  const next = normalizeBuiltScenario(parsed);
+  // preserve immutable management bits the user already set
+  if (scenario?.id) next.id = scenario.id;
+  return { scenario: next, changes };
 }
