@@ -41,6 +41,37 @@ function baseTotal(cps) {
     .reduce((t, c) => t + (Number(c.max) || 0), 0);
 }
 
+// per-category point subtotals (base categories only; Added-Value is bonus)
+function categorySubtotals(cps) {
+  const sums = { 'Probing Questions': 0, 'Accuracy and Product Knowledge': 0, 'Process Handling and Escalation': 0, 'Soft Skills and Empathy': 0, 'Added-Value Support': 0 };
+  (cps || []).forEach(c => { const cat = cpCategory(c); if (cat in sums) sums[cat] += Number(c.max) || 0; });
+  return sums;
+}
+const CAT_TARGET = { 'Probing Questions': 20, 'Accuracy and Product Knowledge': 40, 'Process Handling and Escalation': 20, 'Soft Skills and Empathy': 20 };
+const CAT_SHORT = { 'Probing Questions': 'Probing', 'Accuracy and Product Knowledge': 'Accuracy', 'Process Handling and Escalation': 'Process', 'Soft Skills and Empathy': 'Soft', 'Added-Value Support': 'Added-Value' };
+
+// pre-Lark readiness check — these break the bot's filtering / won't run if wrong
+function readiness(s) {
+  if (!s) return { errors: [], warnings: [] };
+  const errors = [], warnings = [];
+  if (!s.title || !s.title.trim()) errors.push('Scenario Title is empty.');
+  if (!CASE_TYPE_OPTIONS.includes(s.type)) errors.push('Case Type is empty or off-spec — the bot filters by it.');
+  if (!SCOPE_OPTIONS.includes(s.scope)) errors.push('Scope is empty or off-spec.');
+  if (!EMOTION_OPTIONS.includes(s.emotion)) errors.push('Initial Customer Emotion is empty or off-spec.');
+  if (!(Number(s.difficulty) >= 1 && Number(s.difficulty) <= 5)) warnings.push('Set a Difficulty (1–5).');
+  if (!s.language || !s.language.trim()) warnings.push('Native Language is empty — the bot needs it to open in-language.');
+  if (baseTotal(s.checkpoints) !== 100) errors.push(`Checkpoints base total is ${baseTotal(s.checkpoints)}/100 — must be exactly 100.`);
+  for (const k of ['issue', 'hidden', 'flow', 'bot']) {
+    if (!s[k] || !s[k].trim()) errors.push(`${FIELD_LABELS[k]} is empty.`);
+  }
+  const subs = categorySubtotals(s.checkpoints);
+  Object.entries(CAT_TARGET).forEach(([cat, tgt]) => {
+    if (subs[cat] !== tgt) warnings.push(`${CAT_SHORT[cat]} is ${subs[cat]} pts (guide weights it ${tgt}).`);
+  });
+  if (!s.testCompleted) warnings.push('Test Completed is unchecked — tick it only after the bot test passes.');
+  return { errors, warnings };
+}
+
 function scenarioToLark(s) {
   if (!s) return '';
   const L = [];
@@ -61,6 +92,38 @@ function scenarioToLark(s) {
     L.push(`[${cpCategory(c)}] ${c.desc}  → ${c.max}${bonus ? ' BONUS' : ''} pts`);
   });
   L.push(`Base total: ${baseTotal(s.checkpoints)}/100 (+5 Added-Value bonus, excluded from base)`);
+  return L.join('\n');
+}
+
+// build the official Lark feedback report from an agent evaluation result
+function buildLarkFeedback(result, scenario) {
+  if (!result) return '';
+  const L = [];
+  const id = scenario?.id || 'SC-XXX';
+  const total = Number(result.total_score) || 0;
+  L.push(`📋 [${id}] Roleplay Feedback Report`);
+  L.push(`Case Type: ${scenario?.type || '—'} | Difficulty: ⭐${scenario?.difficulty || '—'} | Emotion: ${scenario?.emotion || '—'}`);
+  L.push('');
+  L.push('✅ Check Points Evaluation');
+  (result.checkpoints || []).forEach((c, i) => {
+    const sc = Number(c.score) || 0, mx = Number(c.max) || 0;
+    const mark = mx === 0 ? '•' : sc >= mx ? '✅' : sc <= 0 ? '❌' : '⚠️';
+    const verdict = mx === 0 ? '' : sc >= mx ? 'PASS' : sc <= 0 ? 'FAIL' : 'PARTIAL';
+    L.push(`${i + 1}. ${c.name} (Max ${mx}pts) → ${sc}/${mx} ${mark} ${verdict}`);
+    if (c.rationale) L.push(`   - ${c.rationale}`);
+  });
+  L.push('');
+  L.push(`Base Total: ${total}/100 pts (${total}%)`);
+  if (result.added_value_note) L.push(`(Added-Value +5 bonus, separate from base): ${result.added_value_note}`);
+  if (Array.isArray(result.key_knowledge) && result.key_knowledge.length) {
+    L.push(''); L.push('📖 Key Knowledge');
+    result.key_knowledge.forEach(k => L.push(`• ${k}`));
+  }
+  if (Array.isArray(result.key_takeaways) && result.key_takeaways.length) {
+    L.push(''); L.push('💡 Key Takeaways');
+    result.key_takeaways.forEach((k, i) => L.push(`${i + 1}. ${k}`));
+  }
+  if (scenario?.scope) { L.push(''); L.push(`Scope: ${scenario.scope}`); }
   return L.join('\n');
 }
 
@@ -309,6 +372,7 @@ export default function ScenarioStudio() {
   }
 
   const cpTotal = baseTotal(scenario?.checkpoints);
+  const ready = readiness(scenario);
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -378,9 +442,22 @@ export default function ScenarioStudio() {
             ))}
 
             <div>
-              <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs text-fg-2">6 · Evaluation Checkpoints</label>
                 <span className={cn('text-xs font-medium', cpTotal === 100 ? 'text-ok' : 'text-crit')}>Base total: {cpTotal}/100</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {Object.entries(categorySubtotals(scenario.checkpoints)).map(([cat, pts]) => {
+                  const tgt = CAT_TARGET[cat];
+                  const bonus = cat === 'Added-Value Support';
+                  const ok = bonus ? true : pts === tgt;
+                  return (
+                    <span key={cat} className={cn('text-[10px] px-2 py-0.5 rounded-full border',
+                      bonus ? 'text-hero border-hero/30 bg-hero/10' : ok ? 'text-ok border-ok/25 bg-ok/10' : 'text-warn border-warn/30 bg-warn/10')}>
+                      {CAT_SHORT[cat]} {pts}{bonus ? ' (bonus)' : `/${tgt}`}
+                    </span>
+                  );
+                })}
               </div>
               <div className="space-y-2">
                 {(scenario.checkpoints || []).map((c, i) => {
@@ -434,6 +511,26 @@ export default function ScenarioStudio() {
               </button>
             </div>
 
+            {/* Readiness check before copying to Lark */}
+            {(ready.errors.length > 0 || ready.warnings.length > 0) && (
+              <div className={cn('rounded-xl p-3 text-xs space-y-1.5 border',
+                ready.errors.length ? 'bg-crit/10 border-crit/30' : 'bg-warn/10 border-warn/30')}>
+                <div className="flex items-center gap-1.5 font-medium">
+                  <AlertTriangle className={cn('w-3.5 h-3.5', ready.errors.length ? 'text-crit' : 'text-warn')} />
+                  <span className={ready.errors.length ? 'text-crit' : 'text-warn'}>
+                    {ready.errors.length ? `${ready.errors.length} thing(s) to fix before this is Lark-ready` : 'Lark-ready — minor suggestions'}
+                  </span>
+                </div>
+                {ready.errors.map((e, i) => <div key={`e${i}`} className="text-fg-1 pl-5">• {e}</div>)}
+                {ready.warnings.map((w, i) => <div key={`w${i}`} className="text-fg-2 pl-5">○ {w}</div>)}
+              </div>
+            )}
+            {ready.errors.length === 0 && ready.warnings.length === 0 && (
+              <div className="flex items-center gap-1.5 text-xs text-ok bg-ok/10 border border-ok/20 rounded-xl p-2.5">
+                <Check className="w-3.5 h-3.5" /> Spec-perfect — ready to paste into the Lark Scenario DB.
+              </div>
+            )}
+
             <div className="flex items-center justify-between pt-2 border-t border-border-0">
               <div className="flex gap-2">
                 <CopyBtn text={scenarioToLark(scenario)} label="Copy Lark-ready scenario" />
@@ -486,6 +583,11 @@ export default function ScenarioStudio() {
                 )}
                 {(evResult._mode === 'bot' || evResult._mode === 'both') && evResult.bot_qa && (
                   <div className="pt-1 border-t border-border-0"><div className="text-xs font-semibold text-fg-1 mb-2 uppercase tracking-wide">Bot QA — Customer Fidelity</div><BotQA qa={evResult.bot_qa} /></div>
+                )}
+                {(evResult._mode === 'agent' || evResult._mode === 'both') && evResult.checkpoints && (
+                  <div className="pt-3 border-t border-border-0">
+                    <CopyBtn text={buildLarkFeedback(evResult, scenario)} label="Copy Lark feedback report" />
+                  </div>
                 )}
               </motion.div>
             )}
