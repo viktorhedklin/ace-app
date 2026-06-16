@@ -145,6 +145,7 @@ HOW TO READ THE RAW TRANSCRIPT (it is messy):
 - Roles: "USER:"/"Visitor:" = customer; a named person (e.g. "Gustavo:") = the support agent; "BOT:" = automation (not the human agent).
 - Detect the customer's LANGUAGE from THEIR messages and set "language" to it. The opening line and quoted customer dialogue must be in that language.
 - Preserve concrete facts verbatim: UID, order/TXID, card txn ID, amounts, coin, chain/contract type, dates, error codes, region/site (Bybit EU / bybit.eu).
+- NUMBER & RANGE INTEGRITY (CRITICAL — wrong numbers are dangerous in training): Reproduce every numeric value, range and timeframe EXACTLY as written. NEVER drop, merge, or reformat the digits of a range. "1-72 hours" must stay "1-72 hours" (NOT "172h", "72h" or "1 to 72"). "1-3 working days" stays "1-3 working days". Always keep the separating hyphen/word in ranges, keep the unit ("hours"/"working days"/"%"/"USDT"), and do not invent a different SLA than the transcript or the knowledge pack states. If a timeframe is a range, write it as "<low>-<high> <unit>".
 
 RULES:
 - Mask PII: replace real emails/names/phone with placeholders (old_email@example.com). KEEP UID/TXID/amounts (needed for probing).
@@ -217,6 +218,8 @@ Bot Acting Instructions: ${scenario.bot || ''}` : '(no scenario provided — eva
   }
 
   const EVAL_SYSTEM = `You are a STRICT but FAIR Bybit CS Training Evaluator. You grade against the OFFICIAL rubric and the authoritative ACE KNOWLEDGE PACK provided. Use the knowledge pack as ground truth — if the agent gave info that contradicts the SOPs in the pack, that is an Accuracy failure; if they followed them, credit it.
+
+NUMBER & RANGE INTEGRITY: When you quote numbers, timeframes or SLAs from the transcript/scenario, reproduce them EXACTLY (e.g. "1-72 hours" stays "1-72 hours", never "172h"). Keep the hyphen/word in ranges and the unit. Wrong numbers in feedback are dangerous.
 
 ${pack}
 
