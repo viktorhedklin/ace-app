@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Key, Lock, Sparkles, ShieldCheck, CheckCircle2, AlertTriangle } from 'lucide-react';
-import { setApiKey } from '@/api/claude';
-import { setOpenAIKey } from '@/api/openai';
+import { setApiKey, setProvider } from '@/api/claude';
+import { setAlibabaKey } from '@/api/alibaba';
 import { enterBrowseMode } from '@/lib/gate';
 import { cn } from '@/lib/utils';
 
@@ -134,39 +134,18 @@ function ApiKeyPanel({ onSaved }) {
     setLoading(true);
     setError('');
 
-    // Auto-detect provider by prefix
+    // Auto-detect provider by prefix.
+    // Anthropic keys are sk-ant-…; everything else here is treated as an
+    // Alibaba Cloud (DashScope) key, which is ACE's default provider.
     const isAnthropic = trimmed.startsWith('sk-ant-');
-    const isOpenAI = trimmed.startsWith('sk-') && !isAnthropic;
 
-    if (!isAnthropic && !isOpenAI) {
-      setError('Expected sk-ant-… (Anthropic) or sk-… (OpenAI)');
-      setLoading(false);
-      return;
-    }
-
-    try {
-      if (isAnthropic) {
-        const res = await fetch('https://api.anthropic.com/v1/models', {
-          headers: {
-            'x-api-key': trimmed,
-            'anthropic-version': '2023-06-01',
-            'anthropic-dangerous-direct-browser-access': 'true',
-          },
-        });
-        if (!res.ok) {
-          setError('Invalid key — Anthropic rejected it.');
-          setLoading(false);
-          return;
-        }
-        setApiKey(trimmed);
-      } else {
-        // Skip validation for OpenAI to avoid extra request; trust format.
-        setOpenAIKey(trimmed);
-      }
-    } catch {
-      setError('Could not reach provider. Check your internet connection.');
-      setLoading(false);
-      return;
+    if (isAnthropic) {
+      setApiKey(trimmed);
+    } else {
+      // Alibaba Cloud / DashScope (sk-…). Trust the format; the proxy validates
+      // on first call. Set the active provider so routing picks Qwen/DeepSeek.
+      setAlibabaKey(trimmed);
+      setProvider('alibaba');
     }
 
     setLoading(false);
@@ -182,11 +161,11 @@ function ApiKeyPanel({ onSaved }) {
           value={key}
           onChange={e => { setKey(e.target.value); setError(''); }}
           onKeyDown={e => e.key === 'Enter' && save()}
-          placeholder="sk-ant-… or sk-…"
+          placeholder="sk-… (Alibaba Cloud / DashScope)"
           className="w-full bg-bg-2 border border-border-0 focus:border-hero/50 rounded-xl px-4 py-3 text-sm text-fg-0 placeholder-fg-3 outline-none transition-colors font-mono"
           autoFocus
         />
-        <p className="type-caption text-fg-3 mt-1.5">Auto-detects Anthropic or OpenAI. Pasted keys never leave your browser.</p>
+        <p className="type-caption text-fg-3 mt-1.5">Paste your Alibaba Cloud (DashScope) key to run Qwen &amp; DeepSeek. Keys stay on this device.</p>
         <AnimatePresence>
           {error && (
             <motion.p

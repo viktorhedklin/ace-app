@@ -16,9 +16,9 @@ const COST_MODES = [
 ];
 
 const PROVIDERS = [
+  { key: 'alibaba', label: 'Alibaba Cloud', icon: '🔶', models: 'Qwen3.7 · DeepSeek' },
   { key: 'anthropic', label: 'Anthropic', icon: '🟣', models: 'Opus · Sonnet' },
   { key: 'openai', label: 'OpenAI', icon: '🟢', models: 'GPT-5.4 · GPT-5.4 Mini · GPT-4.1' },
-  { key: 'alibaba', label: 'Alibaba Cloud', icon: '🔶', models: 'Qwen3.7 · DeepSeek' },
 ];
 
 function providerIcon(p) {

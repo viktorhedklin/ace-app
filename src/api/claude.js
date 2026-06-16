@@ -469,7 +469,7 @@ export function setCostMode(mode) {
 }
 
 export function getProvider() {
-  return localStorage.getItem(PROVIDER_KEY) || 'anthropic';
+  return localStorage.getItem(PROVIDER_KEY) || 'alibaba';
 }
 
 export function setProvider(provider) {
