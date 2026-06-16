@@ -687,7 +687,10 @@ async function claudeChat(apiKey, messages, systemPrompt, maxTokens = 2048, mode
 
 // --- InvokeLLM ---
 
-export async function InvokeLLM({ prompt, system_prompt = '', useKB = false, kbDomains, kbTags, kbCaseType }) {
+export async function InvokeLLM({
+  prompt, system_prompt = '', useKB = false, kbDomains, kbTags, kbCaseType,
+  maxTokens = 2048, json = false, enableThinking, temperature,
+}) {
   const model = resolveModel('utility');
   const provider = getModelProvider(model);
 
@@ -702,11 +705,13 @@ export async function InvokeLLM({ prompt, system_prompt = '', useKB = false, kbD
   const dynamicText = [retrieved, system_prompt].filter(Boolean).join('\n\n');
 
   const systemBlocks = buildCachedSystem(stableText, dynamicText);
+  const aliOpts = { json, enableThinking, temperature };
+  const oaiOpts = { json, temperature };
 
   if (provider === 'openai') {
     const oaiKey = getOpenAIKey();
     if (!oaiKey) throw new Error('NO_OPENAI_KEY');
-    const { text, usage } = await openaiChat(oaiKey, [{ role: 'user', content: prompt }], systemBlocks, 2048, model);
+    const { text, usage } = await openaiChat(oaiKey, [{ role: 'user', content: prompt }], systemBlocks, maxTokens, model, oaiOpts);
     trackUsage(model, usage.input_tokens, usage.output_tokens);
     return text;
   }
@@ -714,14 +719,14 @@ export async function InvokeLLM({ prompt, system_prompt = '', useKB = false, kbD
   if (provider === 'alibaba') {
     const aliKey = getAlibabaKey();
     if (!aliKey) throw new Error('NO_ALIBABA_KEY');
-    const { text, usage } = await alibabaChat(aliKey, [{ role: 'user', content: prompt }], systemBlocks, 2048, model);
+    const { text, usage } = await alibabaChat(aliKey, [{ role: 'user', content: prompt }], systemBlocks, maxTokens, model, aliOpts);
     trackUsage(model, usage.input_tokens, usage.output_tokens);
     return text;
   }
 
   const apiKey = getApiKey();
   if (!apiKey) throw new Error('NO_API_KEY');
-  return claudeChat(apiKey, [{ role: 'user', content: prompt }], systemBlocks, 2048, model);
+  return claudeChat(apiKey, [{ role: 'user', content: prompt }], systemBlocks, maxTokens, model);
 }
 
 // ─── PLAN instruction (injected by Chat when planMode is true) ─────────────────

@@ -53,18 +53,26 @@ function buildSystemMessages(systemPrompt) {
  * Non-streaming DashScope chat completion.
  * Returns { text, usage } where usage = { input_tokens, output_tokens }.
  */
-export async function alibabaChat(apiKey, messages, systemPrompt, maxTokens = 2048, model = 'qwen-plus') {
+export async function alibabaChat(apiKey, messages, systemPrompt, maxTokens = 2048, model = 'qwen-plus', opts = {}) {
   const safeMessages = messages.map(m => ({
     ...m,
     content: m.role === 'user' ? scrubContent(m.content) : m.content,
   }));
   const allMessages = [...buildSystemMessages(systemPrompt), ...safeMessages];
 
-  const res = await llmFetch('alibaba', apiKey, {
+  const payload = {
     model,
     messages: allMessages,
     max_tokens: maxTokens,
-  });
+  };
+  // Strict JSON output (Auto-Builder / Evaluator need parseable JSON).
+  if (opts.json) payload.response_format = { type: 'json_object' };
+  // Qwen reasoning toggle — turning OFF extended thinking massively cuts latency
+  // on structured generations and keeps us under the serverless time limit.
+  if (opts.enableThinking === false) payload.enable_thinking = false;
+  if (opts.temperature != null) payload.temperature = opts.temperature;
+
+  const res = await llmFetch('alibaba', apiKey, payload);
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));

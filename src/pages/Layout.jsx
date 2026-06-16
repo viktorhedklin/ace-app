@@ -36,6 +36,7 @@ const CHAT_CHANNELS = [
 
 const TOOLS = [
   { name: 'Workflow Hub', icon: '🔄', path: '/workflows' },
+  { name: 'Scenario Studio', icon: '🎭', path: '/scenario-studio' },
   { name: 'SEPA Delay', icon: '💶', path: '/sepa-delay' },
   { name: 'Quick Lookup', icon: '⚡', path: '/quick-lookup' },
   { name: 'Campaign', icon: '🎁', path: '/campaign' },

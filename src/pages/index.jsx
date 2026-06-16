@@ -36,6 +36,7 @@ const CsatPredictor  = lazy(() => import('./CsatPredictor.jsx'));
 const FiatDeposit    = lazy(() => import('./FiatDeposit.jsx'));
 const Models         = lazy(() => import('./Models.jsx'));
 const Workflows      = lazy(() => import('./Workflows.jsx'));
+const ScenarioStudio = lazy(() => import('./ScenarioStudio.jsx'));
 
 const EU_EMAIL = {
   id: 'bybit-eu',
@@ -189,6 +190,7 @@ function AnimatedRoutes() {
             <Route path="/csat-predictor" element={<CsatPredictor />} />
             <Route path="/models" element={<Models />} />
             <Route path="/workflows" element={<Workflows />} />
+            <Route path="/scenario-studio" element={<ScenarioStudio />} />
           </Routes>
         </Suspense>
       </motion.div>

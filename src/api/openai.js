@@ -55,7 +55,7 @@ function buildSystemMessages(systemPrompt) {
  * Non-streaming OpenAI chat completion.
  * Returns { text, usage } where usage = { input_tokens, output_tokens }.
  */
-export async function openaiChat(apiKey, messages, systemPrompt, maxTokens = 2048, model = 'gpt-4o') {
+export async function openaiChat(apiKey, messages, systemPrompt, maxTokens = 2048, model = 'gpt-4o', opts = {}) {
   const safeMessages = messages.map(m => ({
     ...m,
     content: m.role === 'user' ? scrubContent(m.content) : m.content,
@@ -65,6 +65,8 @@ export async function openaiChat(apiKey, messages, systemPrompt, maxTokens = 204
 
   const res = await llmFetch('openai', apiKey, {
     model, ...tokenLimitField(model, maxTokens), messages: allMessages,
+    ...(opts.json ? { response_format: { type: 'json_object' } } : {}),
+    ...(opts.temperature != null ? { temperature: opts.temperature } : {}),
   });
 
   if (!res.ok) {
