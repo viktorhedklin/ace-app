@@ -83,6 +83,7 @@
     "vite-plugin-pwa": "^1.2.0"
   },
   "overrides": {
-    "diff": "^5.2.0"
+    "diff": "^5.2.0",
+    "esbuild": "0.28.1"
   }
 }

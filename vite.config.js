@@ -46,6 +46,10 @@ export default defineConfig({
     }),
   ],
   build: {
+    // Explicit modern target. esbuild 0.28+ (pinned via overrides for the
+    // GHSA-gv7w-rqvm-qjhr RCE fix) refuses to down-transpile to Vite's legacy
+    // default target combo. ACE is an evergreen-browser PWA, so es2022 is safe.
+    target: ['es2022', 'edge100', 'firefox100', 'chrome100', 'safari15'],
     rollupOptions: {
       output: {
         manualChunks: {
