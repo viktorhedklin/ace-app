@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { MODEL_CATALOG, FEATURE_LABELS, getUsageStats, clearUsage, getCostMode, setCostMode, getProvider, setProvider } from '@/api/claude';
 import { getApiKey } from '@/api/claude';
 import { getOpenAIKey } from '@/api/openai';
+import { getAlibabaKey } from '@/api/alibaba';
 import { Check, Trash2, Zap, Scale, Leaf, BarChart3, DollarSign, Clock, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -17,7 +18,14 @@ const COST_MODES = [
 const PROVIDERS = [
   { key: 'anthropic', label: 'Anthropic', icon: '🟣', models: 'Opus · Sonnet' },
   { key: 'openai', label: 'OpenAI', icon: '🟢', models: 'GPT-5.4 · GPT-5.4 Mini · GPT-4.1' },
+  { key: 'alibaba', label: 'Alibaba Cloud', icon: '🔶', models: 'Qwen3.7 · DeepSeek' },
 ];
+
+function providerIcon(p) {
+  if (p === 'openai') return '🟢';
+  if (p === 'alibaba') return '🔶';
+  return '🟣';
+}
 
 function ScoreBadge({ score }) {
   return (
@@ -129,7 +137,7 @@ function UsageSection() {
             return (
               <div key={modelId} className="flex items-center justify-between bg-bg-2/50 rounded-lg px-4 py-2.5">
                 <div className="flex items-center gap-3">
-                  <span className="text-sm">{catalog?.provider === 'openai' ? '🟢' : '🟣'}</span>
+                  <span className="text-sm">{providerIcon(catalog?.provider)}</span>
                   <div>
                     <p className="text-sm text-fg-0">{catalog?.name || modelId}</p>
                     <p className="text-xs text-fg-2">{data.calls} calls · {((data.input + data.output) / 1000).toFixed(1)}K tokens</p>
@@ -158,6 +166,7 @@ export default function Models() {
   const [provider, setProviderState] = useState(getProvider);
   const hasAnthropicKey = !!getApiKey();
   const hasOpenAIKey = !!getOpenAIKey();
+  const hasAlibabaKey = !!getAlibabaKey();
 
   function pickMode(key) { setCostMode(key); setCostModeState(key); }
   function pickProvider(key) { setProvider(key); setProviderState(key); }
@@ -170,6 +179,11 @@ export default function Models() {
       if (m === 'performance') return { chat: 'gpt-5.4', utility: 'gpt-5.4', routing: 'gpt-5.4' };
       if (m === 'economy') return { chat: 'gpt-5.4-mini', utility: 'gpt-5.4-mini', routing: 'gpt-5.4-mini' };
       return { chat: 'gpt-5.4', utility: 'gpt-5.4-mini', routing: 'gpt-5.4-mini' };
+    }
+    if (p === 'alibaba') {
+      if (m === 'performance') return { chat: 'qwen3.7-max', utility: 'qwen3.7-max', routing: 'qwen3.7-max' };
+      if (m === 'economy') return { chat: 'deepseek-v4-flash', utility: 'deepseek-v4-flash', routing: 'deepseek-v4-flash' };
+      return { chat: 'qwen3.7-max', utility: 'qwen3.7-plus', routing: 'qwen3.7-plus' };
     }
     if (m === 'performance') return { chat: 'claude-opus-4-6', utility: 'claude-opus-4-6', routing: 'claude-opus-4-6' };
     if (m === 'economy') return { chat: 'claude-sonnet-4-6', utility: 'claude-sonnet-4-6', routing: 'claude-sonnet-4-6' };
@@ -184,23 +198,32 @@ export default function Models() {
       </div>
 
       {/* API Key status */}
-      {(!hasAnthropicKey || !hasOpenAIKey) && (
+      {(() => {
+        const missingActive =
+          (provider === 'anthropic' && !hasAnthropicKey) ||
+          (provider === 'openai' && !hasOpenAIKey) ||
+          (provider === 'alibaba' && !hasAlibabaKey);
+        const noneSet = !hasAnthropicKey && !hasOpenAIKey && !hasAlibabaKey;
+        if (!missingActive && !noneSet) return null;
+        const msg = noneSet
+          ? 'No API keys set. Add them in Settings to start using models.'
+          : provider === 'anthropic' ? 'No Anthropic key set — Claude models unavailable. Add one in Settings.'
+          : provider === 'openai' ? 'No OpenAI key set — GPT models unavailable. Add one in Settings.'
+          : 'No Alibaba Cloud key set — Qwen/DeepSeek models unavailable. Add one in Settings.';
+        return (
         <div className="flex items-start gap-2 bg-hero/5 border border-hero/20 rounded-xl px-4 py-3">
           <AlertTriangle size={14} className="text-hero shrink-0 mt-0.5" />
-          <p className="text-xs text-fg-1">
-            {!hasAnthropicKey && !hasOpenAIKey ? 'No API keys set. Add them in Settings to start using models.' :
-             !hasAnthropicKey ? 'No Anthropic key set — Claude models unavailable. Add one in Settings.' :
-             'No OpenAI key set — GPT models unavailable. Add one in Settings.'}
-          </p>
+          <p className="text-xs text-fg-1">{msg}</p>
         </div>
-      )}
+        );
+      })()}
 
       {/* Provider + Cost Mode selector */}
       <Section title="Active Configuration" icon={Zap}>
         <div className="space-y-4">
           <div>
             <p className="text-xs text-fg-2 mb-2">Provider</p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {PROVIDERS.map(p => (
                 <button
                   key={p.key}
@@ -263,7 +286,7 @@ export default function Models() {
                 <div key={row.tier} className="flex items-center justify-between">
                   <span className="text-xs text-fg-1">{row.tier}</span>
                   <span className="text-xs font-medium text-fg-0">
-                    {catalog?.provider === 'openai' ? '🟢' : '🟣'} {catalog?.name || row.model}
+                    {providerIcon(catalog?.provider)} {catalog?.name || row.model}
                   </span>
                 </div>
               );
@@ -290,7 +313,7 @@ export default function Models() {
                 <tr key={m.id} className="border-b border-border-0/50 hover:bg-bg-2/30 transition-colors">
                   <td className="py-2.5 pr-3">
                     <div className="flex items-center gap-2">
-                      <span>{m.provider === 'openai' ? '🟢' : '🟣'}</span>
+                      <span>{providerIcon(m.provider)}</span>
                       <span className="text-fg-0 font-medium">{m.name}</span>
                     </div>
                   </td>
@@ -322,7 +345,7 @@ export default function Models() {
                   <th className="text-left py-2 pr-3 text-fg-2 font-medium">Feature</th>
                   {MODEL_CATALOG.map(m => (
                     <th key={m.id} className="text-center py-2 px-1.5 text-fg-2 font-medium whitespace-nowrap">
-                      {m.provider === 'openai' ? '🟢' : '🟣'} {m.name.split(' ').pop()}
+                      {providerIcon(m.provider)} {m.name.split(' ').pop()}
                     </th>
                   ))}
                 </tr>
@@ -356,7 +379,7 @@ export default function Models() {
           {MODEL_CATALOG.map(m => (
             <div key={m.id} className="bg-bg-2/50 rounded-lg p-4 space-y-2">
               <div className="flex items-center gap-2">
-                <span>{m.provider === 'openai' ? '🟢' : '🟣'}</span>
+                <span>{providerIcon(m.provider)}</span>
                 <h3 className="text-sm font-semibold text-fg-0">{m.name}</h3>
                 <span className="text-xs text-fg-2 font-mono">${m.inputPrice}/${m.outputPrice}</span>
               </div>

@@ -1,13 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { InvokeLLM, getApiKey, hasAnyApiKey } from '@/api/claude';
+import { InvokeLLM, hasAnyApiKey } from '@/api/claude';
 import { BYBIT_KB } from '@/data/bybitKB';
-import {
-  CheckCircle2, Circle, ChevronDown, ChevronUp, Calendar, Users,
-  AlertTriangle, Mic, Target, Building2, Package, HelpCircle, Timer,
-  Play, Pause, RotateCcw, Sparkles, Loader2, Shuffle, BookOpen,
-  TrendingUp, MessageSquare, FileText,
-} from 'lucide-react';
+import { CheckCircle2, Circle, ChevronDown, ChevronUp, Calendar, Users, AlertTriangle, Mic, Target, Building2, Package, HelpCircle, Timer, Play, Pause, RotateCcw, Sparkles, Loader2, Shuffle, BookOpen, TrendingUp, MessageSquare, FileText } from 'lucide-react';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const DEADLINE = new Date('2026-04-18T00:00:00');

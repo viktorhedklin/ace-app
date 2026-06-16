@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  InvokeChatWithHistory, getKnowledge, saveKnowledge,
+  InvokeChatWithHistory, InvokeLLM, getKnowledge, saveKnowledge,
   parseAndExtractMemory, InvokeNBA, parsePlanBlock, PLAN_INSTRUCTION, DEEP_INSTRUCTION,
 } from '@/api/claude';
 import { useAce, scrubPII, recordCaseEvent } from '@/context/AceContext';

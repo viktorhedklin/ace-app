@@ -1,7 +1,7 @@
-import { useState, useMemo, useEffect } from 'react';
-import { Copy, Check, ChevronDown, ChevronUp, ArrowLeft, CheckCircle2, AlertTriangle, ExternalLink, ClipboardList, Info } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Copy, Check, ChevronDown, ChevronUp, ArrowLeft, AlertTriangle, ExternalLink, ClipboardList, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { hasAnyApiKey } from '@/api/claude';
+
 import WorkflowChat from '@/components/WorkflowChat';
 import { useLocation } from 'react-router-dom';
 import { scrubPII } from '@/lib/SecurityModule';
@@ -423,7 +423,7 @@ function ResetAppealFlow({ onBack, caseData }) {
    SCENARIO 3 — PENDING COIN RELEASE (BEFORE APPEAL)
    ═══════════════════════════════════════════════════════════════ */
 
-function PendingBeforeFlow({ onBack, caseData }) {
+function PendingBeforeFlow({ onBack }) {
   const [role, setRole] = useState(null);
   const [sub, setSub] = useState(null);
 
@@ -779,7 +779,7 @@ function PendingAfterFlow({ onBack, caseData }) {
    SCENARIO 5 — COMPLETED/CANCELLED ORDER WITH ASSET LOSS
    ═══════════════════════════════════════════════════════════════ */
 
-function ClosedLossFlow({ onBack, caseData }) {
+function ClosedLossFlow({ onBack }) {
   const [role, setRole] = useState(null);
   const [sub, setSub] = useState(null);
 
@@ -1349,7 +1349,7 @@ function ScamReportFlow({ onBack, caseData }) {
    SCENARIO 8 — RISK WARNING (FRAUD DETECTION)
    ═══════════════════════════════════════════════════════════════ */
 
-function RiskWarningFlow({ onBack, caseData }) {
+function RiskWarningFlow({ onBack }) {
   const [hasBan, setHasBan] = useState(null);
   const [hasAppeal, setHasAppeal] = useState(null);
   const [victimRole, setVictimRole] = useState(null);

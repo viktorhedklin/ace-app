@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Copy, Check, ChevronDown, ChevronUp, ArrowLeft, CheckCircle2, AlertTriangle, ExternalLink, ClipboardList, Info, ShieldAlert } from 'lucide-react';
+import { Copy, Check, ChevronDown, ChevronUp, ArrowLeft, CheckCircle2, ExternalLink, ClipboardList, Info, ShieldAlert } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { hasAnyApiKey } from '@/api/claude';
 import WorkflowChat from '@/components/WorkflowChat';
@@ -152,7 +152,7 @@ const HC_LINKS = [
 
 /* ═══ ESCALATION NOTE HELPER ═══ */
 
-const ESCALATION_NOTE = (uid, banRemark, summary, accountStatus = 'Abnormal') =>
+const _ESCALATION_NOTE = (uid, banRemark, summary, accountStatus = 'Abnormal') =>
 `UID: ${uid || '[INPUT UID]'}
 Account Status: ${accountStatus}
 Ban Remark: ${banRemark || '[Paste ban remark]'}
@@ -611,7 +611,7 @@ function SensitiveWordsFlow({ onBack, caseData }) {
    SCENARIO 4 — OFFLINE APPEAL (>5 days)
    ═══════════════════════════════════════════════════════════════ */
 
-function OfflineAppealFlow({ onBack, caseData }) {
+function OfflineAppealFlow({ onBack }) {
   const [sub, setSub] = useState(null);
   const [replyTime, setReplyTime] = useState(null);
 
@@ -695,7 +695,7 @@ function OfflineAppealFlow({ onBack, caseData }) {
    SCENARIO 5 — ONLINE APPEAL (≤5 days)
    ═══════════════════════════════════════════════════════════════ */
 
-function OnlineAppealFlow({ onBack, caseData }) {
+function OnlineAppealFlow({ onBack }) {
   const [sub, setSub] = useState(null);
   const [replyTime, setReplyTime] = useState(null);
 
@@ -1561,7 +1561,7 @@ When the agent asks for a reply draft, write concise, empathetic Bybit-style cha
     ];
     return [
       `Draft a reply for a user in the ${currentScenario.name} scenario`,
-      `What\'s the escalation note format for ${currentScenario.name}?`,
+      `What's the escalation note format for ${currentScenario.name}?`,
       'Summarize the current case and my next action',
     ];
   }, [currentScenario]);

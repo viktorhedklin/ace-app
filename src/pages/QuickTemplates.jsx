@@ -108,7 +108,6 @@ export const BUILT_IN_TEMPLATES = [
   { id: 'em2', cat: 'Email Templates', title: 'Empty Chat / Inactivity Follow-up', text: `Thank you for contacting Bybit Customer Support.\n\nWe would like to express our sincere apologies that the chat had to be closed due to inactivity. Allow me to assist you further with your inquiry.\n\nWe noticed that the chat was disconnected before you were able to share your concern with us. Kindly reply to this message with more details regarding the issue so we can assist you accordingly.\n\nYou may also visit our Help Center for answers and step-by-step guides to common inquiries.\n\nThank you and we hope to hear from you soon.` },
 ];
 
-const CATEGORIES = ['All', ...new Set(BUILT_IN_TEMPLATES.map(t => t.cat))];
 
 function TemplateCard({ tpl, onCopy, copied, onPin, pinned, onDelete, isCustom }) {
   return (

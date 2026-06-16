@@ -1,5 +1,7 @@
 import { scrubPII } from '@/lib/SecurityModule';
 import { getOpenAIKey, openaiChat, openaiChatStream } from '@/api/openai';
+import { llmFetch } from '@/api/proxy';
+import { getAlibabaKey, alibabaChat, alibabaChatStream } from '@/api/alibaba';
 import { retrieveArticles } from '@/lib/semanticSearch';
 import {
   get as storageGet, set as storageSet, remove as storageRemove,
@@ -12,9 +14,9 @@ export function getApiKey() {
   return localStorage.getItem('claude_api_key') || localStorage.getItem('openai_api_key') || '';
 }
 
-// Check if any LLM provider is configured (Claude or OpenAI)
+// Check if any LLM provider is configured (Claude, OpenAI, or Alibaba)
 export function hasAnyApiKey() {
-  return !!(getApiKey() || getOpenAIKey());
+  return !!(getApiKey() || getOpenAIKey() || getAlibabaKey());
 }
 
 export function setApiKey(key) {
@@ -310,8 +312,6 @@ You know Bybit inside out: P2P, KYC, deposits, withdrawals, security, MiCA, SEPA
 
 // --- Claude API helpers ---
 
-const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
-const ANTHROPIC_VERSION = '2023-06-01';
 
 const MODELS = {
   opus: 'claude-opus-4-6',
@@ -319,6 +319,11 @@ const MODELS = {
   'gpt-5.4': 'gpt-5.4',
   'gpt-5.4-mini': 'gpt-5.4-mini',
   'gpt-4.1': 'gpt-4.1',
+  'qwen3.7-max': 'qwen3.7-max',
+  'qwen3.7-plus': 'qwen3.7-plus',
+  'deepseek-v4-flash': 'deepseek-v4-flash',
+  'qwen-max': 'qwen-max',
+  'qwen-plus': 'qwen-plus',
 };
 
 // ── Model catalog — pricing, capabilities, feature suitability ──────────────
@@ -379,6 +384,61 @@ export const MODEL_CATALOG = [
     weaknesses: ['Outclassed by GPT-5.4 on complex reasoning', 'Older generation'],
     features: { chat: 4, campaign: 4, followUp: 4, qualityCheck: 4, translate: 4, csat: 3, escalation: 4, hackCase: 4, quickLookup: 4, nba: 3 },
   },
+  {
+    id: 'qwen3.7-max',
+    name: 'Qwen3.7 Max',
+    provider: 'alibaba',
+    inputPrice: 1.60,
+    outputPrice: 6.40,
+    speed: 'Fast',
+    strengths: ['Frontier multilingual reasoning', 'Strong on Asian languages', 'Great for translation', 'Competitive pricing'],
+    weaknesses: ['Less Western policy nuance', 'Newer ecosystem'],
+    features: { chat: 5, campaign: 4, followUp: 4, qualityCheck: 4, translate: 5, csat: 4, escalation: 4, hackCase: 4, quickLookup: 4, nba: 3 },
+  },
+  {
+    id: 'qwen3.7-plus',
+    name: 'Qwen3.7 Plus',
+    provider: 'alibaba',
+    inputPrice: 0.40,
+    outputPrice: 1.20,
+    speed: 'Very fast',
+    strengths: ['Excellent value', 'Fast multilingual responses', 'Strong structured output', 'Great for utility tasks'],
+    weaknesses: ['Less nuanced than Max on edge cases'],
+    features: { chat: 4, campaign: 4, followUp: 5, qualityCheck: 4, translate: 5, csat: 4, escalation: 4, hackCase: 3, quickLookup: 5, nba: 4 },
+  },
+  {
+    id: 'deepseek-v4-flash',
+    name: 'DeepSeek V4 Flash',
+    provider: 'alibaba',
+    inputPrice: 0.27,
+    outputPrice: 1.10,
+    speed: 'Very fast',
+    strengths: ['Cheapest frontier-class model', 'Strong reasoning for the price', 'Fast', 'Great for high-volume utility'],
+    weaknesses: ['Less polished tone', 'Weaker on subtle policy nuance'],
+    features: { chat: 4, campaign: 4, followUp: 4, qualityCheck: 4, translate: 4, csat: 3, escalation: 4, hackCase: 4, quickLookup: 4, nba: 5 },
+  },
+  {
+    id: 'qwen-max',
+    name: 'Qwen Max',
+    provider: 'alibaba',
+    inputPrice: 1.20,
+    outputPrice: 4.80,
+    speed: 'Fast',
+    strengths: ['Reliable general reasoning', 'Good structured output', 'Solid multilingual support'],
+    weaknesses: ['Outclassed by Qwen3.7 Max', 'Older generation'],
+    features: { chat: 4, campaign: 4, followUp: 4, qualityCheck: 4, translate: 5, csat: 3, escalation: 4, hackCase: 3, quickLookup: 4, nba: 3 },
+  },
+  {
+    id: 'qwen-plus',
+    name: 'Qwen Plus',
+    provider: 'alibaba',
+    inputPrice: 0.30,
+    outputPrice: 0.90,
+    speed: 'Very fast',
+    strengths: ['Strong value', 'Fast responses', 'Good for utility and routing'],
+    weaknesses: ['Less capable than Max tier on complex cases'],
+    features: { chat: 4, campaign: 4, followUp: 4, qualityCheck: 4, translate: 4, csat: 3, escalation: 4, hackCase: 3, quickLookup: 4, nba: 4 },
+  },
 ];
 
 // Feature labels for the catalog
@@ -428,6 +488,13 @@ function resolveModel(tier = 'utility') {
     return tier === 'chat' ? MODELS['gpt-5.4'] : MODELS['gpt-5.4-mini'];
   }
 
+  if (provider === 'alibaba') {
+    if (mode === 'performance') return MODELS['qwen3.7-max'];
+    if (mode === 'economy') return MODELS['deepseek-v4-flash'];
+    // balanced: qwen3.7-max for chat, qwen3.7-plus for utility/routing
+    return tier === 'chat' ? MODELS['qwen3.7-max'] : MODELS['qwen3.7-plus'];
+  }
+
   // Anthropic (default) — Sonnet default, Opus only for heavy tasks
   if (mode === 'performance') return MODELS.opus;
   if (mode === 'economy') return MODELS.sonnet;
@@ -438,7 +505,9 @@ function resolveModel(tier = 'utility') {
 
 // Determine provider from model ID
 function getModelProvider(modelId) {
-  return modelId.startsWith('gpt-') || modelId.startsWith('o1') || modelId.startsWith('o3') ? 'openai' : 'anthropic';
+  if (modelId.startsWith('qwen') || modelId.startsWith('deepseek')) return 'alibaba';
+  if (modelId.startsWith('gpt-') || modelId.startsWith('o1') || modelId.startsWith('o3')) return 'openai';
+  return 'anthropic';
 }
 
 // ── Usage tracking ──────────────────────────────────────────────────────────
@@ -472,17 +541,6 @@ export function getUsageStats() {
 
 export function clearUsage() {
   localStorage.removeItem(USAGE_KEY);
-}
-
-function claudeHeaders(apiKey) {
-  return {
-    'Content-Type': 'application/json',
-    'x-api-key': apiKey,
-    'anthropic-version': ANTHROPIC_VERSION,
-    'anthropic-dangerous-direct-browser-access': 'true',
-    // prompt-caching-2024-07-31 = 5-min cache; extended-cache-ttl-2025-04-11 = adds 1-hour ttl
-    'anthropic-beta': 'prompt-caching-2024-07-31,extended-cache-ttl-2025-04-11',
-  };
 }
 
 // Build system prompt with caching — stable parts (personality + KB) get cached.
@@ -546,11 +604,7 @@ async function claudeChatStream(apiKey, messages, systemPrompt, maxTokens, onTok
   const body = { model, max_tokens: maxTokens, messages: cachedMessages, stream: true };
   if (systemPrompt) body.system = systemPrompt;
 
-  const res = await fetch(CLAUDE_API_URL, {
-    method: 'POST',
-    headers: claudeHeaders(apiKey),
-    body: JSON.stringify(body),
-  });
+  const res = await llmFetch('anthropic', apiKey, body);
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -611,11 +665,7 @@ async function claudeChat(apiKey, messages, systemPrompt, maxTokens = 2048, mode
   };
   if (systemPrompt) body.system = systemPrompt;
 
-  const res = await fetch(CLAUDE_API_URL, {
-    method: 'POST',
-    headers: claudeHeaders(apiKey),
-    body: JSON.stringify(body),
-  });
+  const res = await llmFetch('anthropic', apiKey, body);
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -661,6 +711,14 @@ export async function InvokeLLM({ prompt, system_prompt = '', useKB = false, kbD
     return text;
   }
 
+  if (provider === 'alibaba') {
+    const aliKey = getAlibabaKey();
+    if (!aliKey) throw new Error('NO_ALIBABA_KEY');
+    const { text, usage } = await alibabaChat(aliKey, [{ role: 'user', content: prompt }], systemBlocks, 2048, model);
+    trackUsage(model, usage.input_tokens, usage.output_tokens);
+    return text;
+  }
+
   const apiKey = getApiKey();
   if (!apiKey) throw new Error('NO_API_KEY');
   return claudeChat(apiKey, [{ role: 'user', content: prompt }], systemBlocks, 2048, model);
@@ -684,7 +742,7 @@ After the [/PLAN] tag, write your actual response. Do not reference the plan in 
 
 export async function InvokeNBA({ messages, vipLevel = 0, parsedData = {} }) {
   const apiKey = getApiKey();
-  if (!apiKey && !getOpenAIKey()) return [];
+  if (!apiKey && !getOpenAIKey() && !getAlibabaKey()) return [];
 
   const recent = messages.slice(-6)
     .map(m => `${m.role === 'user' ? 'AGENT' : 'ACE'}: ${scrubPII(m.content.slice(0, 300))}`)
@@ -721,7 +779,14 @@ Rules: "critical" only for VIP 3+ or active financial emergencies. Labels under 
       const result = await openaiChat(oaiKey, [{ role: 'user', content: prompt }], null, 400, model);
       trackUsage(model, result.usage.input_tokens, result.usage.output_tokens);
       text = result.text;
+    } else if (provider === 'alibaba') {
+      const aliKey = getAlibabaKey();
+      if (!aliKey) return [];
+      const result = await alibabaChat(aliKey, [{ role: 'user', content: prompt }], null, 400, model);
+      trackUsage(model, result.usage.input_tokens, result.usage.output_tokens);
+      text = result.text;
     } else {
+      if (!apiKey) return [];
       text = await claudeChat(apiKey, [{ role: 'user', content: prompt }], null, 400, model);
     }
     const jsonMatch = text.match(/\[[\s\S]*\]/);
@@ -866,6 +931,19 @@ export async function InvokeChatWithHistory({ messages, system_prompt = '', auto
       return text;
     }
     const { text, usage } = await openaiChat(oaiKey, filteredMessages, systemBlocks, 4096, model);
+    trackUsage(model, usage.input_tokens, usage.output_tokens);
+    return text;
+  }
+
+  if (provider === 'alibaba') {
+    const aliKey = getAlibabaKey();
+    if (!aliKey) throw new Error('NO_ALIBABA_KEY');
+    if (onToken) {
+      const { text, usage } = await alibabaChatStream(aliKey, filteredMessages, systemBlocks, 4096, onToken, model);
+      trackUsage(model, usage.input_tokens, usage.output_tokens);
+      return text;
+    }
+    const { text, usage } = await alibabaChat(aliKey, filteredMessages, systemBlocks, 4096, model);
     trackUsage(model, usage.input_tokens, usage.output_tokens);
     return text;
   }

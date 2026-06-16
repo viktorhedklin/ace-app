@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Plus, Trash2, Copy } from 'lucide-react';
 import { useAce } from '@/context/AceContext';
-import { cn } from '@/lib/utils';
+
 
 export default function SnippetSearch() {
   const { snippets, addSnippet, removeSnippet, snippetSearchOpen, setSnippetSearchOpen } = useAce();

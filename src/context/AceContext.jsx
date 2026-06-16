@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { BYBIT_KB, parseErrorCodes } from '@/data/bybitKB';
-import { scrubPII } from '@/lib/SecurityModule';
+
 import { toast } from '@/components/ui/use-toast';
-import { syncKnowledgeFromRemote, getKBSyncUrl, setKBSyncUrl } from '@/api/claude';  // kept for optional manual sync
+import { getKBSyncUrl, setKBSyncUrl } from '@/api/claude';  // kept for optional manual sync
 import { get as storageGet, set as storageSet, remove as storageRemove, registerAutoFlush, NAMESPACES } from '@/lib/storage';
 
 // Re-export from SecurityModule — single source of truth for all PII scrubbing.

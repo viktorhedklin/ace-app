@@ -1239,3 +1239,25 @@ src/pages/QuickLookup.jsx      — page-level scrub
 ---
 
 *This file is reviewed by Gemini for strategic directives. Keep entries precise, factual, and verifiable.*
+
+---
+
+## UPDATE — Real auth + serverless LLM proxy (supersedes Terminal Gate)
+
+The client-side `VITE_APP_HASH` "Terminal Gate" has been **removed**. A shared
+SHA-256 passphrase shipped in source is not authentication. Replaced with:
+
+- **Auth:** Supabase magic-link sessions. `src/components/SupabaseAuthGate.jsx`
+  wraps the app in `src/App.jsx`. When Supabase env is absent, the gate is open
+  (local dev). Inactivity (30 min) now triggers `supabase signOut()`.
+- **LLM keys:** all providers (Anthropic / OpenAI / Alibaba DashScope) are proxied
+  through `api/llm.js` (Vercel serverless). Server reads `ANTHROPIC_API_KEY`,
+  `OPENAI_API_KEY`, `DASHSCOPE_API_KEY`; falls back to the client's BYO key sent
+  via the `x-client-key` header. `src/api/proxy.js` exposes `llmFetch()`.
+- **Browse mode:** kept, but is now a one-click no-key mode (no passphrase). See
+  `src/lib/gate.js` (passphrase/master-reset code deleted).
+- **Vault:** `Settings.jsx` snapshot key material now derives from the Supabase
+  user id (per-account), not `VITE_APP_HASH`.
+
+Env: see `.env.example` (`VITE_SUPABASE_*`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`,
+`DASHSCOPE_API_KEY`). `VITE_APP_HASH` is no longer used.

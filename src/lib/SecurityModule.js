@@ -24,7 +24,7 @@ function normalizeDigits(text) {
 // --- PII patterns: ordered from most specific → least specific ---
 const PII_PATTERNS = [
   // Emails — RFC-ish, covers subdomain and plus-addressing
-  { rx: /[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}/gi, tag: '[EMAIL]' },
+  { rx: /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, tag: '[EMAIL]' },
 
   // Names preceded by common CRM labels (capture group replacement)
   {
@@ -117,7 +117,7 @@ export function scrubPIIWithAudit(text) {
       out = out.replace(rx, tag);
     }
     rx.lastIndex = 0;
-    if (out !== before) found.push(tag.replace(/[\[\]]/g, ''));
+    if (out !== before) found.push(tag.replace(/[[\]]/g, ''));
   }
   return { scrubbed: out, found };
 }

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { CheckCircle2, Circle, Loader2, Copy, Check, RotateCcw, AlertTriangle, ChevronRight, Shield, ShieldAlert, ShieldOff, Clock, ArrowLeft } from 'lucide-react';
+import { CheckCircle2, Circle, Loader2, Copy, Check, RotateCcw, AlertTriangle, Shield, ShieldAlert, ShieldOff, Clock } from 'lucide-react';
 import { InvokeLLM } from '@/api/integrations';
 import { hasAnyApiKey } from '@/api/claude';
 import { scrubPII } from '@/lib/SecurityModule';

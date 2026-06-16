@@ -171,7 +171,7 @@ export default function ReferralProgram() {
     setProduct(''); setInquiryType(''); setRole(''); setCodeScenario(''); setInviterBound(''); setHasCardApp('');
   }
 
-  const noAmendmentTemplate = product === 'card' ? TEMPLATES.no_amendment_card : product === 'pay' ? TEMPLATES.no_amendment_pay : TEMPLATES.no_amendment_referral;
+  const _noAmendmentTemplate = product === 'card' ? TEMPLATES.no_amendment_card : product === 'pay' ? TEMPLATES.no_amendment_pay : TEMPLATES.no_amendment_referral;
   const csgoField = product === 'card' ? 'Bybit Card Inviter ID' : product === 'pay' ? 'Pay Inviter ID' : 'Inviter ID';
 
   return (

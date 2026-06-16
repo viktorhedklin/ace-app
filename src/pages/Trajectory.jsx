@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Target, Sparkles, Loader2, CheckCircle2, Circle, ArrowRight, ArrowLeft,
-  RefreshCw, Send, Flame, AlertTriangle, TrendingUp,
+  RefreshCw, Send, Flame, AlertTriangle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { hasAnyApiKey, InvokeChatWithHistory } from '@/api/claude';
@@ -433,13 +433,22 @@ When asked for feedback on a case or message:
 Keep replies under 180 words unless they ask for depth.`;
 
 function CoachChat({ trajectoryGoal }) {
-  const [open, setOpen] = useState(true);
+  // (open/setOpen previously unused — removed)
   const [msgs, setMsgs] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const endRef = useRef(null);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [msgs]);
+
+  // NOTE: All hooks must run unconditionally and in a stable order (Rules of Hooks),
+  // so this useMemo lives above the API-key guard below.
+  const starters = useMemo(() => ([
+    `What should I focus on this week?`,
+    `Am I on track for "${trajectoryGoal.slice(0, 40)}${trajectoryGoal.length > 40 ? '…' : ''}"?`,
+    'Score my last QA performance',
+    'What is my biggest blind spot right now?',
+  ]), [trajectoryGoal]);
 
   if (!hasAnyApiKey()) {
     return (
@@ -467,13 +476,6 @@ function CoachChat({ trajectoryGoal }) {
     }
     setLoading(false);
   }
-
-  const starters = useMemo(() => ([
-    `What should I focus on this week?`,
-    `Am I on track for "${trajectoryGoal.slice(0, 40)}${trajectoryGoal.length > 40 ? '…' : ''}"?`,
-    'Score my last QA performance',
-    'What is my biggest blind spot right now?',
-  ]), [trajectoryGoal]);
 
   return (
     <motion.div

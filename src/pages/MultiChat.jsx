@@ -127,7 +127,7 @@ export default function MultiChat() {
   // ─── Persistence ────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    const configs = tabs.map(({ messages, input, loading, copied, savingMem, memTitle, memSaved, autoSaved, showContext, closingCase, closeSummary, closeSaving, ...rest }) => rest);
+    const configs = tabs.map(({ messages: _messages, input: _input, loading: _loading, copied: _copied, savingMem: _savingMem, memTitle: _memTitle, memSaved: _memSaved, autoSaved: _autoSaved, showContext: _showContext, closingCase: _closingCase, closeSummary: _closeSummary, closeSaving: _closeSaving, ...rest }) => rest);
     localStorage.setItem('multitab_tabs', JSON.stringify({ configs }));
     tabs.forEach(t => {
       // STORAGE SHIELD: scrub ALL messages before persisting
@@ -361,7 +361,7 @@ function TabContent({
     }
   }
 
-  function useQuickPrompt(prompt) {
+  function applyQuickPrompt(prompt) {
     updateTab(tab.id, { input: prompt });
     setTimeout(() => textareaRef.current?.focus(), 30);
   }
@@ -575,7 +575,7 @@ function TabContent({
               {prompts.map(p => (
                 <button
                   key={p}
-                  onClick={() => useQuickPrompt(p)}
+                  onClick={() => applyQuickPrompt(p)}
                   className="text-xs bg-bg-2 hover:bg-bg-3 text-fg-1 hover:text-fg-0 px-2 py-1.5 rounded-lg text-left transition-colors duration-150 border border-border-0"
                 >
                   {p}

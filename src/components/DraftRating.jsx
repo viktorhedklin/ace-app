@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
  * A thumbs-down prompts for a one-line reason (optional) and records as
  * a QA issue so getRecurringQAIssues() will surface the pattern.
  */
-export default function DraftRating({ messageContent, messageIndex, onRate }) {
+export default function DraftRating({ messageContent, onRate }) {
   const [rating, setRating] = useState(null); // 'up' | 'down' | null
   const [reason, setReason] = useState('');
   const [askingReason, setAskingReason] = useState(false);

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { InvokeLLM } from '@/api/claude';
 import { scrubPII } from '@/lib/SecurityModule';
-import { Loader2, Copy, Check, Star } from 'lucide-react';
+import { Loader2, Copy, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 

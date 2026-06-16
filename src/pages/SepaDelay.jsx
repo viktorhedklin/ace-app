@@ -192,7 +192,7 @@ export default function SepaDelay() {
           { n: '01', label: 'Platform first', sub: 'EU or Global?', color: 'yellow' },
           { n: '02', label: 'Collect info', sub: `${checkedCount}/${COLLECT.length} items`, color: checkedCount === COLLECT.length ? 'green' : 'slate' },
           { n: '03', label: 'Triage & act', sub: 'Match condition below', color: 'slate' },
-        ].map((s, i) => (
+        ].map((s) => (
           <div key={s.n} className={cn(
             'rounded-xl p-3 border flex items-center gap-3',
             s.color === 'yellow' ? 'bg-hero/8 border-hero/25' :

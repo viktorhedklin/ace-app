@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, FileText, Loader2, TrendingUp, BarChart3, ChevronLeft, ChevronRight, Calendar, Sparkles, Image as ImageIcon, X, CheckCircle2 } from 'lucide-react';
+import { Plus, FileText, Loader2, TrendingUp, BarChart3, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { getRecentCases } from '@/lib/caseMemory';
 import { InvokeLLM } from '@/api/claude';
 import { cn } from '@/lib/utils';

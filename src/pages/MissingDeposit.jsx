@@ -481,7 +481,7 @@ export default function MissingDeposit() {
             <div className="bg-bg-1 border border-border-0 rounded-xl p-5 space-y-4">
               <p className="font-medium text-fg-0 text-sm">Select chain</p>
               <div className="flex flex-wrap gap-2">
-                {Object.entries(CHAINS).map(([key, c]) => (
+                {Object.entries(CHAINS).map(([key]) => (
                   <button key={key} onClick={() => { setSelectedChain(key); setTxData(null); setTxError(''); }}
                     className={cn('px-3 py-1.5 rounded-lg text-xs border transition-all cursor-pointer', selectedChain === key ? 'bg-hero/15 border-hero/40 text-hero font-semibold' : 'bg-bg-2 border-border-0 text-fg-1 hover:border-border-1')}>
                     {key}

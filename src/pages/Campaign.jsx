@@ -72,16 +72,14 @@ export default function Campaign() {
 
       // Step 1: Search the web via SerpAPI
       let webContext = '';
-      let foundLinks = [];
       if (getSerpApiKey()) {
         try {
           const regionQuery = lookup.region === 'eu' ? 'Bybit EU' : lookup.region === 'global' ? 'Bybit' : 'Bybit';
           const query = `${regionQuery} ${scrubPII(lookup.name)} promotion campaign 2026`;
           const { results, links } = await searchWeb(query);
           webContext = results;
-          foundLinks = links;
           setSearchLinks(links);
-        } catch (searchErr) {
+        } catch {
           // Search failed — fall through to Claude-only mode
           // SerpAPI search failed — fall through to Claude-only mode
         }

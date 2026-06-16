@@ -2,10 +2,11 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { getApiKey, setApiKey, clearApiKey, getCostMode, setCostMode } from '@/api/claude';
 import { getSerpApiKey, setSerpApiKey, clearSerpApiKey } from '@/api/search';
 import { getOpenAIKey, setOpenAIKey, clearOpenAIKey } from '@/api/openai';
-import { Check, Eye, EyeOff, Trash2, AlertTriangle, ShieldCheck, FolderOpen, Loader2, Globe, Zap, Scale, Leaf, Cloud, CloudOff, Mail, LogOut, RefreshCw, Upload } from 'lucide-react';
+import { getAlibabaKey, setAlibabaKey, clearAlibabaKey } from '@/api/alibaba';
+import { Check, Eye, EyeOff, Trash2, AlertTriangle, ShieldCheck, FolderOpen, Loader2, Zap, Scale, Leaf, Cloud, CloudOff, Mail, LogOut, RefreshCw, Upload } from 'lucide-react';
 import KnowledgeManager from '@/components/KnowledgeManager';
 import { getAllCases } from '@/lib/caseMemory';
-import { isConfigured as supabaseConfigured, sendMagicLink, signOut as supabaseSignOut, getSession, getUserEmail, onAuthChange } from '@/lib/supabase';
+import { isConfigured as supabaseConfigured, sendMagicLink, signOut as supabaseSignOut, getSession, getUserId, onAuthChange } from '@/lib/supabase';
 import { pullAll, flushQueue, migrateFromLocalStorage, remove as storageRemove, NAMESPACES } from '@/lib/storage';
 import { clearAllShifts, listShifts } from '@/lib/shifts';
 
@@ -25,9 +26,13 @@ function Section({ title, children }) {
 const VAULT_INTERVAL = 15 * 60 * 1000; // 15 minutes
 
 async function deriveVaultKey() {
-  const hash = import.meta.env.VITE_APP_HASH || '';
-  // Use Terminal Gate hash as key material; fall back to a static salt if no gate
-  const material = hash.length === 64 ? hash : 'ace-vault-default-key-2026';
+  // Key material is the signed-in user's id (per-account, never leaves the device
+  // as plaintext). Falls back to a static salt when running local-only / signed out.
+  let material = 'ace-vault-default-key-2026';
+  try {
+    const uid = await getUserId();
+    if (uid) material = `ace-vault::${uid}`;
+  } catch { /* signed out or supabase not configured → static fallback */ }
   const enc = new TextEncoder();
   const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(material), 'PBKDF2', false, ['deriveKey']);
   return crypto.subtle.deriveKey(
@@ -475,6 +480,13 @@ export default function Settings() {
   const [oaiSaved, setOaiSaved] = useState(false);
   const [oaiError, setOaiError] = useState('');
 
+  // Alibaba Cloud (DashScope)
+  const [aliKey, setAliKeyState] = useState(getAlibabaKey);
+  const [newAliKey, setNewAliKey] = useState('');
+  const [showAliKey, setShowAliKey] = useState(false);
+  const [aliSaved, setAliSaved] = useState(false);
+  const [aliError, setAliError] = useState('');
+
   function saveKey() {
     const trimmed = newKey.trim();
     if (!trimmed.startsWith('sk-ant-')) { setKeyError('Anthropic keys start with sk-ant-'); return; }
@@ -519,6 +531,23 @@ export default function Settings() {
     setOaiSaved(true);
     setOaiError('');
     setTimeout(() => setOaiSaved(false), 2000);
+  }
+
+  function saveAliKey() {
+    const trimmed = newAliKey.trim();
+    if (!trimmed.startsWith('sk-')) { setAliError('DashScope keys start with sk-'); return; }
+    setAlibabaKey(trimmed);
+    setAliKeyState(trimmed);
+    setNewAliKey('');
+    setAliSaved(true);
+    setAliError('');
+    setTimeout(() => setAliSaved(false), 2000);
+  }
+
+  function removeAliKey() {
+    if (!confirm('Remove Alibaba Cloud key? Qwen and DeepSeek models will be unavailable.')) return;
+    clearAlibabaKey();
+    setAliKeyState('');
   }
 
   function removeOaiKey() {
@@ -715,6 +744,54 @@ export default function Settings() {
               </button>
             </div>
             {oaiError && <p className="text-xs text-crit mt-1">{oaiError}</p>}
+          </div>
+        </div>
+      </Section>
+
+      {/* Alibaba Cloud API Key */}
+      <Section title="🔶 Alibaba Cloud API Key">
+        <div className="space-y-4">
+          <p className="text-xs text-fg-2">Enables Qwen3.7 Max/Plus, DeepSeek V4 Flash, Qwen Max and Qwen Plus via DashScope. Switch provider in Models & Usage page.</p>
+          <div className="flex items-center justify-between bg-bg-2 rounded-lg px-4 py-3">
+            <div>
+              <p className="text-xs text-fg-2 mb-0.5">Current key</p>
+              <p className="text-sm font-mono text-fg-1">{aliKey ? (showAliKey ? aliKey : `sk-...${aliKey.slice(-6)}`) : 'Not set'}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              {aliKey && (
+                <>
+                  <button onClick={() => setShowAliKey(!showAliKey)} className="text-fg-2 hover:text-fg-1 transition-colors cursor-pointer" aria-label={showAliKey ? 'Hide Alibaba key' : 'Show Alibaba key'}>
+                    {showAliKey ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                  <button onClick={removeAliKey} className="text-fg-2 hover:text-crit transition-colors cursor-pointer" aria-label="Remove Alibaba key">
+                    <Trash2 size={15} />
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+          <div>
+            <label htmlFor="ali-key-input" className="text-xs text-fg-2 mb-1.5 block">{aliKey ? 'Replace key' : 'Add key'}</label>
+            <div className="flex gap-2">
+              <input
+                id="ali-key-input"
+                type="password"
+                value={newAliKey}
+                onChange={e => { setNewAliKey(e.target.value); setAliError(''); }}
+                onKeyDown={e => e.key === 'Enter' && saveAliKey()}
+                placeholder="sk-..."
+                className="flex-1 bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-sm text-fg-0 placeholder-fg-3 outline-none font-mono"
+              />
+              <button
+                onClick={saveAliKey}
+                disabled={!newAliKey.trim()}
+                className="bg-hero disabled:bg-bg-3 disabled:text-fg-2 text-[#021418] font-medium text-sm px-4 rounded-lg hover:bg-hero transition-colors flex items-center gap-1 cursor-pointer"
+                aria-label="Save Alibaba key"
+              >
+                {aliSaved ? <><Check size={13} /> Saved</> : 'Save'}
+              </button>
+            </div>
+            {aliError && <p className="text-xs text-crit mt-1">{aliError}</p>}
           </div>
         </div>
       </Section>

@@ -440,7 +440,6 @@ export default function KnowledgeBase() {
   const memoryEntries = entries.filter(e => e.source !== 'official');
   const officialCount = entries.filter(e => e.source === 'official').length;
   const memoryActiveCount = memoryEntries.filter(e => e.active !== false).length;
-  const totalActiveCount = entries.filter(e => e.active !== false).length;
 
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-5">

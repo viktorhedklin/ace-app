@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Copy, Check, ChevronDown, ChevronUp, RotateCcw, ExternalLink } from 'lucide-react';
+import { Copy, Check, ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /* ═══ CONSTANTS ═══ */
