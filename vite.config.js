@@ -83,8 +83,15 @@ export default defineConfig({
     },
     extensions: ['.mjs', '.js', '.jsx', '.ts', '.tsx', '.json']
   },
+  // Dev-time transform target. Must match build.target — esbuild 0.28+ (pinned
+  // for GHSA-gv7w-rqvm-qjhr) refuses to down-transpile modern deps (e.g. Radix
+  // destructuring) to Vite's legacy es2020 default, which crashed `npm run dev`.
+  esbuild: {
+    target: 'es2022',
+  },
   optimizeDeps: {
     esbuildOptions: {
+      target: 'es2022',
       loader: {
         '.js': 'jsx',
       },
