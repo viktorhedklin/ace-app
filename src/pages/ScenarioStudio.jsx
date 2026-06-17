@@ -117,28 +117,65 @@ function buildLarkFeedback(result, scenario) {
   if (!result) return '';
   const L = [];
   const id = scenario?.id || 'SC-XXX';
-  const total = Number(result.total_score) || 0;
+  const hasAgentScore = Array.isArray(result.checkpoints) && result.checkpoints.length > 0;
+  const hasBotQa = !!result.bot_qa;
   L.push(`📋 [${id}] Roleplay Feedback Report`);
   L.push(`Case Type: ${scenario?.type || '—'} | Difficulty: ⭐${scenario?.difficulty || '—'} | Emotion: ${scenario?.emotion || '—'}`);
   L.push('');
-  L.push('✅ Check Points Evaluation');
-  (result.checkpoints || []).forEach((c, i) => {
-    const sc = Number(c.score) || 0, mx = Number(c.max) || 0;
-    const mark = mx === 0 ? '•' : sc >= mx ? '✅' : sc <= 0 ? '❌' : '⚠️';
-    const verdict = mx === 0 ? '' : sc >= mx ? 'PASS' : sc <= 0 ? 'FAIL' : 'PARTIAL';
-    L.push(`${i + 1}. ${c.name} (Max ${mx}pts) → ${sc}/${mx} ${mark} ${verdict}`);
-    if (c.rationale) L.push(`   - ${c.rationale}`);
-  });
-  L.push('');
-  L.push(`Base Total: ${total}/100 pts (${total}%)`);
-  if (result.added_value_note) L.push(`(Added-Value +5 bonus, separate from base): ${result.added_value_note}`);
-  if (Array.isArray(result.key_knowledge) && result.key_knowledge.length) {
-    L.push(''); L.push('📖 Key Knowledge');
-    result.key_knowledge.forEach(k => L.push(`• ${k}`));
+  if (hasAgentScore) {
+    const total = Number(result.total_score) || 0;
+    L.push('✅ Check Points Evaluation');
+    (result.checkpoints || []).forEach((c, i) => {
+      const sc = Number(c.score) || 0, mx = Number(c.max) || 0;
+      const mark = mx === 0 ? '•' : sc >= mx ? '✅' : sc <= 0 ? '❌' : '⚠️';
+      const verdict = mx === 0 ? '' : sc >= mx ? 'PASS' : sc <= 0 ? 'FAIL' : 'PARTIAL';
+      L.push(`${i + 1}. ${c.name} (Max ${mx}pts) → ${sc}/${mx} ${mark} ${verdict}`);
+      if (c.rationale) L.push(`   - ${c.rationale}`);
+    });
+    L.push('');
+    L.push(`Base Total: ${total}/100 pts (${total}%)`);
+    if (result.added_value_note) L.push(`(Added-Value +5 bonus, separate from base): ${result.added_value_note}`);
+    if (Array.isArray(result.key_knowledge) && result.key_knowledge.length) {
+      L.push(''); L.push('📖 Key Knowledge');
+      result.key_knowledge.forEach(k => L.push(`• ${k}`));
+    }
+    if (Array.isArray(result.key_takeaways) && result.key_takeaways.length) {
+      L.push(''); L.push('💡 Key Takeaways');
+      result.key_takeaways.forEach((k, i) => L.push(`${i + 1}. ${k}`));
+    }
   }
-  if (Array.isArray(result.key_takeaways) && result.key_takeaways.length) {
-    L.push(''); L.push('💡 Key Takeaways');
-    result.key_takeaways.forEach((k, i) => L.push(`${i + 1}. ${k}`));
+  if (hasBotQa) {
+    const qa = result.bot_qa;
+    if (hasAgentScore) L.push('');
+    L.push('🤖 Bot Customer QA');
+    L.push(`Bot Score: ${Number(qa.score) || 0}/100 · ${qa.verdict || '—'}`);
+    if (qa.summary) L.push(`Summary: ${qa.summary}`);
+    if (Array.isArray(qa.issues) && qa.issues.length) {
+      L.push('');
+      L.push('Bot Fidelity Issues');
+      qa.issues.forEach((it, i) => {
+        L.push(`${i + 1}. ${it.issue}`);
+        if (it.evidence) L.push(`   Evidence: "${it.evidence}"`);
+      });
+    }
+    if (qa.language_quality_score != null || (Array.isArray(qa.language_issues) && qa.language_issues.length)) {
+      L.push('');
+      L.push(`Swedish / Native-Language Quality${qa.language_quality_score != null ? `: ${Number(qa.language_quality_score) || 0}/100` : ''}`);
+      if (Array.isArray(qa.language_issues) && qa.language_issues.length) {
+        qa.language_issues.forEach((it, i) => {
+          L.push(`${i + 1}. ${String(it.severity || 'issue').toUpperCase()}: ${it.issue}`);
+          if (it.evidence) L.push(`   Evidence: "${it.evidence}"`);
+          if (it.correction) L.push(`   Correct Swedish: ${it.correction}`);
+        });
+      } else {
+        L.push('No native-language issues flagged.');
+      }
+    }
+    if (Array.isArray(qa.good_points) && qa.good_points.length) {
+      L.push('');
+      L.push('Bot QA Good Points');
+      qa.good_points.forEach(g => L.push(`• ${g}`));
+    }
   }
   if (scenario?.scope) { L.push(''); L.push(`Scope: ${scenario.scope}`); }
   return L.join('\n');
@@ -309,6 +346,26 @@ function BotQA({ qa }) {
               <div className="text-xs text-fg-0">{it.issue}</div>
               {it.evidence && <div className="text-[11px] text-fg-2 italic mt-1">"{it.evidence}"</div>}
             </div>))}</div></div>
+      )}
+      {(qa.language_quality_score != null || (Array.isArray(qa.language_issues) && qa.language_issues.length > 0)) && (
+        <div>
+          <div className="text-xs font-semibold text-warn mb-1">
+            Swedish / Native-Language Quality{qa.language_quality_score != null ? ` · ${Number(qa.language_quality_score) || 0}/100` : ''}
+          </div>
+          {Array.isArray(qa.language_issues) && qa.language_issues.length > 0 ? (
+            <div className="space-y-1.5">
+              {qa.language_issues.map((it, i) => (
+                <div key={i} className="bg-warn/5 border border-warn/20 rounded-lg p-2.5">
+                  <div className="text-xs text-fg-0">{it.issue}</div>
+                  {it.evidence && <div className="text-[11px] text-fg-2 italic mt-1">"{it.evidence}"</div>}
+                  {it.correction && <div className="text-[11px] text-warn mt-1">Correct Swedish: {it.correction}</div>}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-xs text-fg-2">No native-language issues flagged.</div>
+          )}
+        </div>
       )}
       {Array.isArray(qa.good_points) && qa.good_points.length > 0 && (
         <div><div className="text-xs font-semibold text-ok mb-1">Did well</div>
@@ -1223,9 +1280,9 @@ export default function ScenarioStudio() {
                 {(evResult._mode === 'bot' || evResult._mode === 'both') && evResult.bot_qa && (
                   <div className="pt-1 border-t border-border-0"><div className="text-xs font-semibold text-fg-1 mb-2 uppercase tracking-wide">Bot QA — Customer Fidelity</div><BotQA qa={evResult.bot_qa} /></div>
                 )}
-                {(evResult._mode === 'agent' || evResult._mode === 'both') && evResult.checkpoints && (
+                {(evResult.checkpoints || evResult.bot_qa) && (
                   <div className="pt-3 border-t border-border-0">
-                    <CopyBtn text={buildLarkFeedback(evResult, scenario)} label="Copy Lark feedback report" />
+                    <CopyBtn text={buildLarkFeedback(evResult, scenario)} label="Copy feedback report" />
                   </div>
                 )}
               </motion.div>

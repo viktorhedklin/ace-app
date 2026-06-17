@@ -3,7 +3,7 @@
 // them in future debriefs and scenario builds. Each lesson has a tag, the
 // scenario context it came from, and a timestamp.
 
-import { NAMESPACES, get, set, list, remove } from './storage';
+import { NAMESPACES, get, set } from './storage';
 
 const NS = NAMESPACES.DEBRIEF;
 const LESSONS_KEY = 'lessons';

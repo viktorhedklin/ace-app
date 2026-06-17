@@ -1,5 +1,8 @@
 import { useState, useMemo } from 'react';
-import { MODEL_CATALOG, FEATURE_LABELS, getUsageStats, clearUsage, getCostMode, setCostMode, getProvider, setProvider } from '@/api/claude';
+import {
+  MODEL_CATALOG, FEATURE_LABELS, getUsageStats, clearUsage, getCostMode, setCostMode,
+  getProvider, setProvider, getModelOverrides, setModelOverride, clearModelOverrides, resolveModel,
+} from '@/api/claude';
 import { getApiKey } from '@/api/claude';
 import { getOpenAIKey } from '@/api/openai';
 import { getAlibabaKey } from '@/api/alibaba';
@@ -19,6 +22,12 @@ const PROVIDERS = [
   { key: 'alibaba', label: 'Alibaba Cloud', icon: '🔶', models: 'Qwen3.7 · DeepSeek' },
   { key: 'anthropic', label: 'Anthropic', icon: '🟣', models: 'Opus · Sonnet' },
   { key: 'openai', label: 'OpenAI', icon: '🟢', models: 'GPT-5.4 · GPT-5.4 Mini · GPT-4.1' },
+];
+
+const MODEL_TIERS = [
+  { key: 'chat', label: 'Chat', hint: 'Main conversation' },
+  { key: 'utility', label: 'Utility', hint: 'Scenario Studio, QC, tools' },
+  { key: 'routing', label: 'Routing', hint: 'NBA suggestions' },
 ];
 
 function providerIcon(p) {
@@ -164,31 +173,35 @@ function UsageSection() {
 export default function Models() {
   const [costMode, setCostModeState] = useState(getCostMode);
   const [provider, setProviderState] = useState(getProvider);
+  const [modelOverrides, setModelOverridesState] = useState(getModelOverrides);
   const hasAnthropicKey = !!getApiKey();
   const hasOpenAIKey = !!getOpenAIKey();
   const hasAlibabaKey = !!getAlibabaKey();
 
   function pickMode(key) { setCostMode(key); setCostModeState(key); }
   function pickProvider(key) { setProvider(key); setProviderState(key); }
+  function pickModelOverride(tier, modelId) {
+    setModelOverride(tier, modelId);
+    setModelOverridesState(getModelOverrides());
+  }
+  function resetModelOverrides() {
+    clearModelOverrides();
+    setModelOverridesState({});
+  }
+  function avoidQwenMax() {
+    setModelOverride('chat', 'qwen3.7-plus');
+    setModelOverride('utility', 'qwen3.7-plus');
+    setModelOverride('routing', 'deepseek-v4-flash');
+    setModelOverridesState(getModelOverrides());
+  }
 
-  // Determine active models based on current settings
-  const activeModels = useMemo(() => {
-    const p = provider;
-    const m = costMode;
-    if (p === 'openai') {
-      if (m === 'performance') return { chat: 'gpt-5.4', utility: 'gpt-5.4', routing: 'gpt-5.4' };
-      if (m === 'economy') return { chat: 'gpt-5.4-mini', utility: 'gpt-5.4-mini', routing: 'gpt-5.4-mini' };
-      return { chat: 'gpt-5.4', utility: 'gpt-5.4-mini', routing: 'gpt-5.4-mini' };
-    }
-    if (p === 'alibaba') {
-      if (m === 'performance') return { chat: 'qwen3.7-max', utility: 'qwen3.7-max', routing: 'qwen3.7-max' };
-      if (m === 'economy') return { chat: 'deepseek-v4-flash', utility: 'deepseek-v4-flash', routing: 'deepseek-v4-flash' };
-      return { chat: 'qwen3.7-max', utility: 'qwen3.7-plus', routing: 'qwen3.7-plus' };
-    }
-    if (m === 'performance') return { chat: 'claude-opus-4-6', utility: 'claude-opus-4-6', routing: 'claude-opus-4-6' };
-    if (m === 'economy') return { chat: 'claude-sonnet-4-6', utility: 'claude-sonnet-4-6', routing: 'claude-sonnet-4-6' };
-    return { chat: 'claude-opus-4-6', utility: 'claude-sonnet-4-6', routing: 'claude-sonnet-4-6' };
-  }, [provider, costMode]);
+  // Reads from localStorage-backed router settings; state changes above trigger re-render.
+  const activeModels = {
+    chat: resolveModel('chat'),
+    utility: resolveModel('utility'),
+    routing: resolveModel('routing'),
+  };
+  const usesQwenMax = Object.values(activeModels).includes('qwen3.7-max');
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
@@ -291,6 +304,52 @@ export default function Models() {
                 </div>
               );
             })}
+          </div>
+
+          <div className="bg-bg-2/50 rounded-lg px-4 py-3 space-y-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs text-fg-2 font-medium">Direct model override</p>
+                <p className="text-[11px] text-fg-3 mt-0.5">Use this when a specific model hits quota or needs to be avoided.</p>
+              </div>
+              <div className="flex items-center gap-2">
+                {usesQwenMax && (
+                  <button
+                    onClick={avoidQwenMax}
+                    className="text-[11px] px-2.5 py-1.5 rounded-lg bg-warn/10 hover:bg-warn/20 text-warn border border-warn/25 transition-colors"
+                  >
+                    Avoid Qwen3.7 Max
+                  </button>
+                )}
+                <button
+                  onClick={resetModelOverrides}
+                  className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-lg bg-bg-1 hover:bg-bg-2 text-fg-2 border border-border-0 transition-colors"
+                >
+                  <Trash2 size={11} /> Reset
+                </button>
+              </div>
+            </div>
+            <div className="grid gap-2 md:grid-cols-3">
+              {MODEL_TIERS.map(tier => {
+                const selected = modelOverrides[tier.key] || '';
+                return (
+                  <label key={tier.key} className="block">
+                    <span className="text-[11px] text-fg-2">{tier.label}</span>
+                    <select
+                      value={selected}
+                      onChange={e => pickModelOverride(tier.key, e.target.value)}
+                      className="mt-1 w-full bg-bg-1 border border-border-0 focus:border-hero/50 rounded-lg px-2.5 py-2 text-xs text-fg-0 outline-none transition-colors"
+                    >
+                      <option value="">Auto — {MODEL_CATALOG.find(m => m.id === activeModels[tier.key])?.name || activeModels[tier.key]}</option>
+                      {MODEL_CATALOG.map(m => (
+                        <option key={m.id} value={m.id}>{providerIcon(m.provider)} {m.name}</option>
+                      ))}
+                    </select>
+                    <span className="block text-[10px] text-fg-3 mt-1">{tier.hint}</span>
+                  </label>
+                );
+              })}
+            </div>
           </div>
         </div>
       </Section>

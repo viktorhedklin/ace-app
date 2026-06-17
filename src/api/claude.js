@@ -459,6 +459,7 @@ export const FEATURE_LABELS = {
 
 const COST_MODE_KEY = 'ace_cost_mode';
 const PROVIDER_KEY = 'ace_provider';
+const MODEL_OVERRIDES_KEY = 'ace_model_overrides';
 
 export function getCostMode() {
   return localStorage.getItem(COST_MODE_KEY) || 'balanced';
@@ -476,8 +477,39 @@ export function setProvider(provider) {
   localStorage.setItem(PROVIDER_KEY, provider);
 }
 
+export function getModelOverrides() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(MODEL_OVERRIDES_KEY) || '{}');
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+export function getModelOverride(tier) {
+  const modelId = getModelOverrides()[tier];
+  return MODEL_CATALOG.some(m => m.id === modelId) ? modelId : '';
+}
+
+export function setModelOverride(tier, modelId) {
+  const overrides = getModelOverrides();
+  if (!modelId) {
+    delete overrides[tier];
+  } else if (MODEL_CATALOG.some(m => m.id === modelId)) {
+    overrides[tier] = modelId;
+  }
+  localStorage.setItem(MODEL_OVERRIDES_KEY, JSON.stringify(overrides));
+}
+
+export function clearModelOverrides() {
+  localStorage.removeItem(MODEL_OVERRIDES_KEY);
+}
+
 // tier: 'chat' (main conversation), 'utility' (tools/features), 'routing' (NBA)
-function resolveModel(tier = 'utility') {
+export function resolveModel(tier = 'utility') {
+  const override = getModelOverride(tier);
+  if (override) return override;
+
   const mode = getCostMode();
   const provider = getProvider();
 
@@ -501,6 +533,17 @@ function resolveModel(tier = 'utility') {
   // balanced: Opus for chat, Sonnet for tools + routing
   if (tier === 'chat') return MODELS.opus;
   return MODELS.sonnet;
+}
+
+function isQuotaOrRateLimitError(error) {
+  return /quota|rate.?limit|429|insufficient|exceed|exceeded|balance|credit/i.test(error?.message || '');
+}
+
+function alibabaFallbackModel(model) {
+  if (model === MODELS['qwen3.7-max']) return MODELS['qwen3.7-plus'];
+  if (model === MODELS['qwen3.7-plus']) return MODELS['qwen-plus'];
+  if (model === MODELS['deepseek-v4-flash']) return MODELS['qwen-plus'];
+  return '';
 }
 
 // Determine provider from model ID
@@ -719,9 +762,18 @@ export async function InvokeLLM({
   if (provider === 'alibaba') {
     const aliKey = getAlibabaKey();
     if (!aliKey) throw new Error('NO_ALIBABA_KEY');
-    const { text, usage } = await alibabaChat(aliKey, [{ role: 'user', content: prompt }], systemBlocks, maxTokens, model, aliOpts);
-    trackUsage(model, usage.input_tokens, usage.output_tokens);
-    return text;
+    try {
+      const { text, usage } = await alibabaChat(aliKey, [{ role: 'user', content: prompt }], systemBlocks, maxTokens, model, aliOpts);
+      trackUsage(model, usage.input_tokens, usage.output_tokens);
+      return text;
+    } catch (e) {
+      const fallback = isQuotaOrRateLimitError(e) ? alibabaFallbackModel(model) : '';
+      if (!fallback) throw e;
+      const { text, usage } = await alibabaChat(aliKey, [{ role: 'user', content: prompt }], systemBlocks, maxTokens, fallback, aliOpts);
+      trackUsage(fallback, usage.input_tokens, usage.output_tokens);
+      setModelOverride('utility', fallback);
+      return text;
+    }
   }
 
   const apiKey = getApiKey();
@@ -787,8 +839,17 @@ Rules: "critical" only for VIP 3+ or active financial emergencies. Labels under 
     } else if (provider === 'alibaba') {
       const aliKey = getAlibabaKey();
       if (!aliKey) return [];
-      const result = await alibabaChat(aliKey, [{ role: 'user', content: prompt }], null, 400, model);
-      trackUsage(model, result.usage.input_tokens, result.usage.output_tokens);
+      let result;
+      try {
+        result = await alibabaChat(aliKey, [{ role: 'user', content: prompt }], null, 400, model);
+        trackUsage(model, result.usage.input_tokens, result.usage.output_tokens);
+      } catch (e) {
+        const fallback = isQuotaOrRateLimitError(e) ? alibabaFallbackModel(model) : '';
+        if (!fallback) return [];
+        result = await alibabaChat(aliKey, [{ role: 'user', content: prompt }], null, 400, fallback);
+        trackUsage(fallback, result.usage.input_tokens, result.usage.output_tokens);
+        setModelOverride('routing', fallback);
+      }
       text = result.text;
     } else {
       if (!apiKey) return [];
@@ -943,14 +1004,29 @@ export async function InvokeChatWithHistory({ messages, system_prompt = '', auto
   if (provider === 'alibaba') {
     const aliKey = getAlibabaKey();
     if (!aliKey) throw new Error('NO_ALIBABA_KEY');
-    if (onToken) {
-      const { text, usage } = await alibabaChatStream(aliKey, filteredMessages, systemBlocks, 4096, onToken, model);
+    try {
+      if (onToken) {
+        const { text, usage } = await alibabaChatStream(aliKey, filteredMessages, systemBlocks, 4096, onToken, model);
+        trackUsage(model, usage.input_tokens, usage.output_tokens);
+        return text;
+      }
+      const { text, usage } = await alibabaChat(aliKey, filteredMessages, systemBlocks, 4096, model);
       trackUsage(model, usage.input_tokens, usage.output_tokens);
       return text;
+    } catch (e) {
+      const fallback = isQuotaOrRateLimitError(e) ? alibabaFallbackModel(model) : '';
+      if (!fallback) throw e;
+      if (onToken) {
+        const { text, usage } = await alibabaChatStream(aliKey, filteredMessages, systemBlocks, 4096, onToken, fallback);
+        trackUsage(fallback, usage.input_tokens, usage.output_tokens);
+        setModelOverride('chat', fallback);
+        return text;
+      }
+      const { text, usage } = await alibabaChat(aliKey, filteredMessages, systemBlocks, 4096, fallback);
+      trackUsage(fallback, usage.input_tokens, usage.output_tokens);
+      setModelOverride('chat', fallback);
+      return text;
     }
-    const { text, usage } = await alibabaChat(aliKey, filteredMessages, systemBlocks, 4096, model);
-    trackUsage(model, usage.input_tokens, usage.output_tokens);
-    return text;
   }
 
   const apiKey = getApiKey();

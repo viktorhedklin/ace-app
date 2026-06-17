@@ -190,12 +190,20 @@ export function CANONICAL_CHECKPOINTS() {
   ];
 }
 
+const SWEDISH_LANGUAGE_QUALITY_RULES = `SWEDISH LANGUAGE QUALITY — HIGH PRIORITY:
+- If the customer's native language is Swedish/Svenska, all customer-facing scenario text, bot opening lines, quoted customer dialogue, practice suggestions and feedback about Swedish wording must be idiomatic Swedish.
+- Use professional Swedish support register by default: direct, factual, natural, and not over-warm. Avoid literal English calques, awkward word order, mixed English/Swedish phrasing, and unnatural customer-service filler.
+- Preserve Bybit/product terms when they are normally left in English, but the surrounding grammar must still be Swedish.
+- If a bot-customer reply in Swedish has bad grammar, incorrect wording, unnatural phrasing, wrong formality, mistranslation, or mixed-language leakage, flag it explicitly as a language-quality issue with the exact quote and a corrected Swedish version.`;
+
 // ── BUILDER ─────────────────────────────────────────────────────────────────
 const BUILDER_SYSTEM = `You are an expert Bybit Customer Support Training Manager. You convert a RAW support chat transcript into a high-quality role-play training scenario that follows the OFFICIAL "CS Training — Role-play Scenario Creation Guide". The output must be copy-paste ready into the Scenario DB, with ALL management fields and ALL 9 content sections.
 
 You have been given an AUTHORITATIVE BYBIT SOP REFERENCE for this case. Build the scenario FROM those SOPs — the Ideal Agent Flow, Answer Key, Feedback Notes, escalation paths and timeframes MUST match the real Bybit SOPs and must NOT contradict them. If the reference lists an escalation path or error-code action, use it verbatim in the relevant field.
 
 OUTPUT VOICE — CRITICAL: This scenario is pasted directly into the official company training database. It must read as standalone, official Bybit CS training material. NEVER mention or reference any tool, assistant, or internal system. NEVER write phrases like "as of ACE's knowledge", "according to ACE", "ACE knowledge base", "the knowledge pack", "ACE's brain", "per the SOP reference provided", "based on the reference given", or any meta-reference to how you were built or what you were given. State SOPs and policies DIRECTLY as Bybit policy (e.g. "BankID is supported for Swedish customers" — not "ACE's knowledge says BankID is supported"). The reader must never know an AI or any named tool produced this.
+
+${SWEDISH_LANGUAGE_QUALITY_RULES}
 
 HOW TO READ THE RAW TRANSCRIPT (it is messy):
 - Ignore timestamps ("( 1m 9s )", "Chat Started:", ISO times), routing notes, inactivity warnings, and canned bot menus.
@@ -270,23 +278,25 @@ Ideal Agent Flow: ${scenario.flow || ''}
 Bot Acting Instructions: ${scenario.bot || ''}` : '(no scenario provided — evaluate against the knowledge pack + general SOP)';
 
   const agentSchema = `"checkpoints":[{"name":"...","max":<int>,"score":<int>,"evidence":"<exact transcript quote>","rationale":"..."}],"total_score":<int 0-100>,"key_knowledge":["..."],"key_takeaways":["..."],"added_value_note":"<+5 bonus note, separate from the 100 base>"`;
-  const botSchema = `"bot_qa":{"score":<int 0-100>,"verdict":"PASS|NEEDS_WORK|FAIL","issues":[{"issue":"...","evidence":"<quote>"}],"good_points":["..."],"summary":"..."}`;
+  const botSchema = `"bot_qa":{"score":<int 0-100>,"verdict":"PASS|NEEDS_WORK|FAIL","issues":[{"issue":"...","evidence":"<quote>"}],"language_quality_score":<int 0-100>,"language_issues":[{"issue":"...","evidence":"<exact Swedish quote>","correction":"<idiomatic Swedish correction>","severity":"minor|major|critical"}],"good_points":["..."],"summary":"..."}`;
 
   let schema, task;
   if (mode === 'bot') {
-    task = `QA how well the in-house BOT played the CUSTOMER (not the agent). Judge fidelity to the Empathy-Information Loop: stayed in the customer's native language, did NOT leak hidden context prematurely, revealed only ONE clue at a time and only when earned, emotion shifted correctly (rose on bad handling, dropped on good), applied termination rules (3 wrong answers → end; give-up → end; correct resolution → end), mentioned the scenario date in the opening if specified, and stayed dialogue-only (no narration/labels).`;
+    task = `QA how well the in-house BOT played the CUSTOMER (not the agent). Judge fidelity to the Empathy-Information Loop: stayed in the customer's native language, did NOT leak hidden context prematurely, revealed only ONE clue at a time and only when earned, emotion shifted correctly (rose on bad handling, dropped on good), applied termination rules (3 wrong answers → end; give-up → end; correct resolution → end), mentioned the scenario date in the opening if specified, and stayed dialogue-only (no narration/labels). If the scenario or transcript is Swedish, language quality is part of the score: flag every bad Swedish grammar, unnatural wording, mistranslation, wrong formality/register, or mixed-language slip in language_issues with exact evidence and a corrected Swedish version.`;
     schema = `{${botSchema}}`;
   } else if (mode === 'both') {
-    task = `Do BOTH: (A) grade the AGENT against the checkpoints, AND (B) QA how the BOT played the customer (Empathy-Information Loop fidelity).`;
+    task = `Do BOTH: (A) grade the AGENT against the checkpoints, AND (B) QA how the BOT played the customer (Empathy-Information Loop fidelity). If the scenario or transcript is Swedish, language quality is part of both evaluations: punish bad customer-facing Swedish in the relevant checkpoint, and for bot-customer slips flag every bad Swedish grammar, unnatural wording, mistranslation, wrong formality/register, or mixed-language slip in bot_qa.language_issues with exact evidence and a corrected Swedish version.`;
     schema = `{${agentSchema},${botSchema}}`;
   } else {
-    task = `Grade the AGENT's performance against the checkpoints below.`;
+    task = `Grade the AGENT's performance against the checkpoints below. If the scenario or transcript is Swedish, treat grammar, wording, register and idiomatic Swedish as part of Soft Skills and Empathy; bad Swedish must be explicitly mentioned in the checkpoint rationale and takeaways.`;
     schema = `{${agentSchema}}`;
   }
 
   const EVAL_SYSTEM = `You are a STRICT but FAIR Bybit CS Training Evaluator. You grade against the OFFICIAL rubric and the AUTHORITATIVE BYBIT SOP REFERENCE provided. Use that reference as ground truth — if the agent gave info that contradicts the SOPs, that is an Accuracy failure; if they followed them, credit it. In your written output (rationale, key knowledge, takeaways), state SOPs directly as Bybit policy — never name or quote any tool, assistant, or "knowledge pack".
 
 NUMBER & RANGE INTEGRITY: When you quote numbers, timeframes or SLAs from the transcript/scenario, reproduce them EXACTLY (e.g. "1-72 hours" stays "1-72 hours", never "172h"). Keep the hyphen/word in ranges and the unit. Wrong numbers in feedback are dangerous.
+
+${SWEDISH_LANGUAGE_QUALITY_RULES}
 
 ${pack}
 
@@ -325,6 +335,8 @@ const REFINER_SYSTEM = `You are an expert Bybit CS Training Manager refining a r
 You are given an AUTHORITATIVE BYBIT SOP REFERENCE — keep every fix consistent with it. This reference is internal scaffolding; NEVER name or quote it in the output.
 
 OUTPUT VOICE — CRITICAL: The refined scenario is pasted directly into the official company training database. It must read as standalone, official Bybit CS training material. NEVER mention any tool, assistant, or internal system, and NEVER write phrases like "as of ACE's knowledge", "according to ACE", "ACE knowledge base", "the knowledge pack", "per the reference provided", etc. State all SOPs/policies DIRECTLY as Bybit policy. If the current scenario already contains such a self-reference, REMOVE it as part of the refinement.
+
+${SWEDISH_LANGUAGE_QUALITY_RULES}
 
 HARD RULES:
 - DO NOT change the core case facts: keep UID, order/TXID, amounts, coin, chain/contract type, dates, error codes, region/site and the real root cause EXACTLY as in the current scenario. Only fix what the feedback flags (clarity, probing/reveal order, emotion changes, escalation path, timeframe wording, checkpoint measurability, de-escalation, missing detail).
@@ -373,6 +385,7 @@ STYLE:
 - When useful, give a ready-to-send reply the agent can paste, in the CUSTOMER'S language, professional and empathetic. Mark it clearly (e.g. "Say this:").
 - Keep numbers, ranges and timeframes EXACT (e.g. "1-72 hours" stays "1-72 hours", never "172h").
 - Respect SOP: don't overpromise, don't guarantee recovery/refunds, escalate when the SOP says to.
+- If the customer language is Swedish, the ready-to-send reply must be idiomatic Swedish with correct grammar, natural word order and professional Swedish support register.
 - Short. No filler. Bullet points over paragraphs.`;
 
 function copilotContext({ scenario, transcript, evalResult }) {
