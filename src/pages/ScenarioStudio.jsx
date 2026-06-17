@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { Loader2, Copy, Check, Wand2, ClipboardCheck, FileText, Brain, AlertTriangle, Sparkles } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Loader2, Copy, Check, Wand2, ClipboardCheck, FileText, Brain, AlertTriangle, Sparkles, MessageSquare, ChevronDown, Send, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  buildScenario, evaluateTranscript, refineScenario, CANONICAL_CHECKPOINTS,
+  buildScenario, evaluateTranscript, refineScenario, copilotAsk, CANONICAL_CHECKPOINTS,
 } from '@/lib/scenarioStudio';
 
 // ── official enums (from the CS Training — Role-play Scenario Creation Guide) ──
@@ -295,6 +295,107 @@ function BotQA({ qa }) {
         <div><div className="text-xs font-semibold text-ok mb-1">Did well</div>
           <ul className="text-xs text-fg-2 list-disc pl-5 space-y-0.5">{qa.good_points.map((g, i) => <li key={i}>{g}</li>)}</ul></div>
       )}
+    </div>
+  );
+}
+
+// ── Co-pilot chat (collapsible, bottom of Evaluate step) ──────────────────────
+function CoPilot({ scenario, transcript, evalResult }) {
+  const [open, setOpen] = useState(false);
+  const [msgs, setMsgs] = useState([]);
+  const [input, setInput] = useState('');
+  const [busy, setBusy] = useState(false);
+  const scrollRef = useRef(null);
+  const taRef = useRef(null);
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [msgs, busy]);
+
+  async function send() {
+    const q = input.trim();
+    if (!q || busy) return;
+    const next = [...msgs, { role: 'user', content: q }];
+    setMsgs(next); setInput(''); setBusy(true);
+    try {
+      const reply = await copilotAsk({ messages: next, scenario, transcript, evalResult });
+      setMsgs(m => [...m, { role: 'assistant', content: reply }]);
+    } catch (e) {
+      const msg = ['NO_ALIBABA_KEY', 'NO_API_KEY', 'NO_OPENAI_KEY'].includes(e.message)
+        ? 'No LLM key configured — set it in Settings.' : ('Error: ' + e.message);
+      setMsgs(m => [...m, { role: 'assistant', content: msg, error: true }]);
+    }
+    setBusy(false);
+  }
+
+  function onKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  }
+
+  return (
+    <div className="mt-4 border border-border-0 rounded-2xl bg-bg-0 overflow-hidden">
+      <button onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-4 py-3 hover:bg-bg-1 transition-colors">
+        <span className="flex items-center gap-2 text-sm font-medium text-fg-0">
+          <MessageSquare className="w-4 h-4 text-hero" /> Ask ACE — live co-pilot
+          <span className="text-[11px] font-normal text-fg-3">grounded in the KB · knows this scenario & transcript</span>
+        </span>
+        <ChevronDown className={cn('w-4 h-4 text-fg-2 transition-transform', open && 'rotate-180')} />
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+            className="border-t border-border-0">
+            <div ref={scrollRef} className="max-h-80 overflow-y-auto px-4 py-3 space-y-3">
+              {msgs.length === 0 && (
+                <div className="text-xs text-fg-2 bg-bg-1 border border-border-0 rounded-xl p-3">
+                  You're the agent — the bot's pushing you. Ask me anything mid-conversation, e.g. <span className="text-fg-1">"the customer is asking why their withdrawal is stuck, how do I respond?"</span> I'll give you the SOP-correct reply (in the customer's language) using this scenario + ACE's knowledge.
+                </div>
+              )}
+              {msgs.map((m, i) => (
+                <div key={i} className={cn('flex', m.role === 'user' ? 'justify-end' : 'justify-start')}>
+                  <div className={cn('max-w-[85%] rounded-2xl px-3.5 py-2 text-sm whitespace-pre-wrap break-words',
+                    m.role === 'user' ? 'bg-hero text-white rounded-br-sm'
+                      : m.error ? 'bg-crit/10 text-crit border border-crit/20 rounded-bl-sm'
+                        : 'bg-bg-1 text-fg-0 border border-border-0 rounded-bl-sm')}>
+                    {m.content}
+                  </div>
+                </div>
+              ))}
+              {busy && (
+                <div className="flex justify-start">
+                  <div className="bg-bg-1 border border-border-0 rounded-2xl rounded-bl-sm px-3.5 py-2.5">
+                    <Loader2 className="w-4 h-4 animate-spin text-hero" />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="border-t border-border-0 p-3 flex items-end gap-2">
+              <textarea
+                ref={taRef}
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={onKey}
+                rows={1}
+                placeholder="Ask ACE how to handle the customer… (Enter to send, Shift+Enter for newline)"
+                className="flex-1 bg-bg-1 border border-border-0 focus:border-hero/50 rounded-xl px-3 py-2 text-sm text-fg-0 placeholder-fg-2 outline-none resize-none max-h-32 transition-colors"
+              />
+              {msgs.length > 0 && (
+                <button onClick={() => setMsgs([])} title="Clear chat"
+                  className="p-2.5 rounded-xl bg-bg-2 hover:bg-bg-3 text-fg-2 border border-border-0 transition-colors">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+              <button onClick={send} disabled={busy || !input.trim()}
+                className="p-2.5 rounded-xl bg-hero text-white hover:bg-hero/90 disabled:opacity-40 transition-colors">
+                <Send className="w-4 h-4" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -591,6 +692,8 @@ export default function ScenarioStudio() {
                 )}
               </motion.div>
             )}
+
+            <CoPilot scenario={scenario} transcript={evTranscript} evalResult={evResult} />
           </motion.div>
         )}
       </AnimatePresence>

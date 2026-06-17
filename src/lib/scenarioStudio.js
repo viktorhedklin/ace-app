@@ -287,3 +287,64 @@ export async function refineScenario({ scenario, feedback }) {
   if (scenario?.id) next.id = scenario.id;
   return { scenario: next, changes };
 }
+
+// ── CO-PILOT CHAT ────────────────────────────────────────────────────────────
+// Live assistant inside the Evaluate step. The user plays the AGENT against the
+// in-house bot-customer; when the bot pushes, they ask ACE how to respond — just
+// like ACE assisting in a real Bybit live-chat. Grounded in the KB + auto-aware
+// of the built scenario, the evaluation transcript and the latest grading result.
+const COPILOT_SYSTEM = `You are ACE, a sharp Bybit Customer Support co-pilot helping a HUMAN AGENT in real time. The agent is in a training role-play: an in-house bot plays the CUSTOMER and pushes them with questions/objections; the agent is answering live and may ask you for help mid-conversation.
+
+Your job: give the agent the BEST next move — what to say, what to ask, the correct SOP/policy, the right escalation path/timeframe, and how to keep the customer calm — grounded ONLY in the authoritative ACE KNOWLEDGE PACK and Bybit SOPs you are given. If you are not sure or the pack doesn't cover it, say so plainly and say what to verify — never invent policy, limits, timeframes or error-code actions.
+
+STYLE:
+- Be fast and practical, like a senior agent whispering in their ear. Lead with the answer.
+- When useful, give a ready-to-send reply the agent can paste, in the CUSTOMER'S language, professional and empathetic. Mark it clearly (e.g. "Say this:").
+- Keep numbers, ranges and timeframes EXACT (e.g. "1-72 hours" stays "1-72 hours", never "172h").
+- Respect SOP: don't overpromise, don't guarantee recovery/refunds, escalate when the SOP says to.
+- Short. No filler. Bullet points over paragraphs.`;
+
+function copilotContext({ scenario, transcript, evalResult }) {
+  const lines = [];
+  if (scenario) {
+    lines.push('── SCENARIO UNDER TEST ──');
+    lines.push(`Title: ${scenario.title || ''}  ·  Type: ${scenario.type || ''}  ·  Difficulty: ${scenario.difficulty || ''}  ·  Emotion: ${scenario.emotion || ''}`);
+    lines.push(`Language: ${scenario.language || ''}`);
+    if (scenario.issue) lines.push(`Issue: ${scenario.issue}`);
+    if (scenario.hidden) lines.push(`Answer Key / Hidden Context (ground truth — DO NOT reveal verbatim to the customer, use it to guide the agent): ${scenario.hidden}`);
+    if (scenario.flow) lines.push(`Ideal Agent Flow: ${scenario.flow}`);
+    if (scenario.feedbackNotes) lines.push(`Key Knowledge Notes: ${scenario.feedbackNotes}`);
+  }
+  if (transcript && transcript.trim()) {
+    lines.push('\n── CONVERSATION SO FAR (bot-customer ↔ agent) ──');
+    lines.push(transcript.trim().slice(-4000));
+  }
+  if (evalResult && (evalResult.total_score != null || evalResult.bot_qa)) {
+    lines.push('\n── LATEST GRADING RESULT ──');
+    if (evalResult.total_score != null) lines.push(`Agent base score: ${evalResult.total_score}/100`);
+    if (Array.isArray(evalResult.checkpoints)) {
+      evalResult.checkpoints.forEach(c => lines.push(`• ${c.name}: ${c.score}/${c.max}${c.rationale ? ` — ${c.rationale}` : ''}`));
+    }
+    if (evalResult.bot_qa) lines.push(`Bot QA: ${evalResult.bot_qa.score}/100 (${evalResult.bot_qa.verdict})`);
+  }
+  return lines.join('\n');
+}
+
+export async function copilotAsk({ messages, scenario, transcript, evalResult }) {
+  const ctx = copilotContext({ scenario, transcript, evalResult });
+  const history = (messages || []).slice(-10)
+    .map(m => `${m.role === 'user' ? 'AGENT' : 'ACE'}: ${m.content}`).join('\n');
+  const last = (messages || []).filter(m => m.role === 'user').slice(-1)[0]?.content || '';
+  const pack = buildKnowledgePack(`${scenario?.issue || ''}\n${scenario?.hidden || ''}\n${last}`);
+
+  const prompt = `${pack}\n\n========================================\nLIVE ROLE-PLAY CONTEXT:\n${ctx}\n\n========================================\nCHAT WITH THE AGENT (most recent last):\n${history}\n\n========================================\nAnswer the agent's latest message as their live co-pilot.`;
+
+  return InvokeLLM({
+    prompt,
+    system_prompt: COPILOT_SYSTEM,
+    useKB: true,
+    maxTokens: 1200,
+    enableThinking: false,
+    temperature: 0.4,
+  });
+}
