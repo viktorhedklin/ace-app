@@ -23,6 +23,7 @@ export const NAMESPACES = {
   SHIFTS: 'shifts',
   QA_MEMORY: 'qa_memory',
   SAVED_CASES: 'saved_cases',
+  SCENARIOS: 'scenarios',
   KB: 'kb_articles',
   SETTINGS: 'settings',
   CHAT: 'chat',

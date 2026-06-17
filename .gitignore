@@ -30,3 +30,4 @@ dist-ssr
 .claude/settings.local.json
 .vercel
 .playwright-mcp/
+.git-pat.env
