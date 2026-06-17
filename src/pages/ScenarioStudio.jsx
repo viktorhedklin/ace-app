@@ -1,27 +1,33 @@
 import { useState, useRef, useEffect } from 'react';
-import { Loader2, Copy, Check, Wand2, ClipboardCheck, FileText, Brain, AlertTriangle, Sparkles, MessageSquare, ChevronDown, Send, Trash2 } from 'lucide-react';
+import { Loader2, Copy, Check, Wand2, ClipboardCheck, FileText, Brain, AlertTriangle, Sparkles, MessageSquare, ChevronDown, Send, Trash2, Pencil, MessagesSquare, Library as LibraryIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   buildScenario, evaluateTranscript, refineScenario, copilotAsk, CANONICAL_CHECKPOINTS,
 } from '@/lib/scenarioStudio';
+import {
+  listScenarios, saveScenario, updateScenario, renameScenario, deleteScenario,
+} from '@/lib/scenarioLibrary';
 
 // ── official enums (from the CS Training — Role-play Scenario Creation Guide) ──
 const SCOPE_OPTIONS = ['Non-tech', 'Tech', 'MT5'];
 const CASE_TYPE_OPTIONS = ['MT5', 'Bybit Card', 'Deposit & Withdrawal', 'Account Matters', 'Spot Trading', 'C&B', 'Others'];
 const EMOTION_OPTIONS = ['Low (Calm)', 'Medium (Dissatisfied)', 'High (Angry)'];
-const CP_CATEGORIES = ['Probing Questions', 'Accuracy and Product Knowledge', 'Process Handling and Escalation', 'Soft Skills and Empathy', 'Added-Value Support'];
+const CP_CATEGORIES = ['Probing Questions', 'Accuracy and Product Knowledge', 'Process Handling and Escalation', 'Soft Skills and Empathy', 'Added-Value Support', 'Deductions'];
 
 function cpCategory(c) {
   if (c.category) return c.category;
   const d = (c.desc || '').toLowerCase();
   if (/added.?value|bonus/.test(d) || c.bonus) return 'Added-Value Support';
-  if (/probing|ask|question/.test(d)) return 'Probing Questions';
-  if (/accuracy|product|sop|root cause|policy/.test(d)) return 'Accuracy and Product Knowledge';
-  if (/process|escalat|timeframe|document/.test(d)) return 'Process Handling and Escalation';
-  if (/soft|empath|tone|frustrat/.test(d)) return 'Soft Skills and Empathy';
+  if (/deduction|deduct|penalt/.test(d) || c.deduction) return 'Deductions';
+  if (/probing|probe|ask|question/.test(d)) return 'Probing Questions';
+  if (/process|escalat|timeframe|document|self.?correct|pushback/.test(d)) return 'Process Handling and Escalation';
+  if (/soft|empath|tone|frustrat|polite/.test(d)) return 'Soft Skills and Empathy';
+  if (/accuracy|product|sop|root cause|policy|correct|faq|link/.test(d)) return 'Accuracy and Product Knowledge';
   return 'Accuracy and Product Knowledge';
 }
+function isBonusCp(c) { return !!(c.bonus || /added.?value|bonus/i.test(c.desc || '') || /added.?value/i.test(c.category || '')); }
+function isDeductionCp(c) { return !!(c.deduction || /deduction|deduct|penalt/i.test(c.desc || '') || /deduction/i.test(c.category || '')); }
 
 // ── helpers ─────────────────────────────────────────────────────────────────
 const FIELD_LABELS = {
@@ -36,19 +42,23 @@ const FIELD_LABELS = {
 };
 const ORDER = ['issue', 'hidden', 'flow', 'bot', 'deescalation', 'feedbackNotes', 'screenshots', 'references'];
 
+// Base = everything except bonus (Added-Value) and deduction items.
 function baseTotal(cps) {
-  return (cps || []).filter(c => !(c.bonus || /added.?value|bonus/i.test(c.desc || '')))
+  return (cps || []).filter(c => !isBonusCp(c) && !isDeductionCp(c))
     .reduce((t, c) => t + (Number(c.max) || 0), 0);
 }
 
-// per-category point subtotals (base categories only; Added-Value is bonus)
+// per-category point subtotals (base categories only; Added-Value & Deductions are separate)
 function categorySubtotals(cps) {
-  const sums = { 'Probing Questions': 0, 'Accuracy and Product Knowledge': 0, 'Process Handling and Escalation': 0, 'Soft Skills and Empathy': 0, 'Added-Value Support': 0 };
+  const sums = { 'Probing Questions': 0, 'Accuracy and Product Knowledge': 0, 'Process Handling and Escalation': 0, 'Soft Skills and Empathy': 0, 'Added-Value Support': 0, 'Deductions': 0 };
   (cps || []).forEach(c => { const cat = cpCategory(c); if (cat in sums) sums[cat] += Number(c.max) || 0; });
   return sums;
 }
+// Guide weights — these are RECOMMENDED weights, not hard requirements. A scenario
+// may legitimately re-weight categories (e.g. core-knowledge case → Accuracy 60,
+// Probing 10, Soft 10). We surface deviation as a soft hint, never an error.
 const CAT_TARGET = { 'Probing Questions': 20, 'Accuracy and Product Knowledge': 40, 'Process Handling and Escalation': 20, 'Soft Skills and Empathy': 20 };
-const CAT_SHORT = { 'Probing Questions': 'Probing', 'Accuracy and Product Knowledge': 'Accuracy', 'Process Handling and Escalation': 'Process', 'Soft Skills and Empathy': 'Soft', 'Added-Value Support': 'Added-Value' };
+const CAT_SHORT = { 'Probing Questions': 'Probing', 'Accuracy and Product Knowledge': 'Accuracy', 'Process Handling and Escalation': 'Process', 'Soft Skills and Empathy': 'Soft', 'Added-Value Support': 'Added-Value', 'Deductions': 'Deductions' };
 
 // pre-Lark readiness check — these break the bot's filtering / won't run if wrong
 function readiness(s) {
@@ -64,9 +74,12 @@ function readiness(s) {
   for (const k of ['issue', 'hidden', 'flow', 'bot']) {
     if (!s[k] || !s[k].trim()) errors.push(`${FIELD_LABELS[k]} is empty.`);
   }
+  // Soft guidance only: note categories that deviate a lot from the guide weights,
+  // and categories with zero coverage. Re-weighting is allowed as long as base==100.
   const subs = categorySubtotals(s.checkpoints);
   Object.entries(CAT_TARGET).forEach(([cat, tgt]) => {
-    if (subs[cat] !== tgt) warnings.push(`${CAT_SHORT[cat]} is ${subs[cat]} pts (guide weights it ${tgt}).`);
+    if (subs[cat] === 0) warnings.push(`${CAT_SHORT[cat]} has no checkpoint — make sure that's intentional (guide weights it ${tgt}).`);
+    else if (Math.abs(subs[cat] - tgt) > 10) warnings.push(`${CAT_SHORT[cat]} is ${subs[cat]} pts vs guide weight ${tgt} — fine if the case justifies it.`);
   });
   if (!s.testCompleted) warnings.push('Test Completed is unchecked — tick it only after the bot test passes.');
   return { errors, warnings };
@@ -88,10 +101,11 @@ function scenarioToLark(s) {
   for (const k of ORDER) { L.push(`【${FIELD_LABELS[k]}】`); L.push(s[k] || ''); L.push(''); }
   L.push('【6 · Evaluation Checkpoints】');
   (s.checkpoints || []).forEach(c => {
-    const bonus = c.bonus || /added.?value|bonus/i.test(c.desc || '');
-    L.push(`[${cpCategory(c)}] ${c.desc}  → ${c.max}${bonus ? ' BONUS' : ''} pts`);
+    const tag = isBonusCp(c) ? ' BONUS' : isDeductionCp(c) ? ' DEDUCTION' : '';
+    L.push(`[${cpCategory(c)}] ${c.desc}  → ${isDeductionCp(c) ? '-' : ''}${c.max}${tag} pts`);
   });
-  L.push(`Base total: ${baseTotal(s.checkpoints)}/100 (+5 Added-Value bonus, excluded from base)`);
+  const bonusPts = (s.checkpoints || []).filter(isBonusCp).reduce((t, c) => t + (Number(c.max) || 0), 0);
+  L.push(`Base total: ${baseTotal(s.checkpoints)}/100${bonusPts ? ` (+${bonusPts} Added-Value bonus, excluded from base)` : ''}`);
   return L.join('\n');
 }
 
@@ -211,6 +225,7 @@ function StepRail({ step }) {
     { n: 1, label: 'Build', icon: Wand2 },
     { n: 2, label: 'Review', icon: FileText },
     { n: 3, label: 'Evaluate', icon: ClipboardCheck },
+    { n: 4, label: 'Practice', icon: MessagesSquare },
   ];
   return (
     <div className="flex items-center gap-2 mb-6">
@@ -400,6 +415,232 @@ function CoPilot({ scenario, transcript, evalResult }) {
   );
 }
 
+// ── Practice chat (Step 4) ────────────────────────────────────────────────────
+// The agent practices replying to the in-house bot-customer. They paste what the
+// customer (bot) just said; ACE — who knows the full scenario incl. the hidden
+// answer key — coaches the ideal reply. Builds a running transcript so ACE has
+// full conversation context, and reuses copilotAsk() from the engine.
+function PracticeChat({ scenario }) {
+  const [msgs, setMsgs] = useState([]);          // {role:'customer'|'agent'|'ace', content, error?}
+  const [input, setInput] = useState('');
+  const [mode, setMode] = useState('customer');  // 'customer' = paste bot line · 'agent' = log my own reply
+  const [busy, setBusy] = useState(false);
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [msgs, busy]);
+
+  // Flatten the running convo into the transcript copilotAsk expects.
+  function transcriptText(list) {
+    return list
+      .filter(m => m.role === 'customer' || m.role === 'agent')
+      .map(m => `${m.role === 'customer' ? 'Customer' : 'Agent'}: ${m.content}`)
+      .join('\n');
+  }
+  // copilotAsk treats role:'user' as the agent and everything else as ACE.
+  function copilotMessages(list) {
+    return list
+      .filter(m => m.role === 'agent' || m.role === 'ace' || m.role === 'customer')
+      .map(m => m.role === 'ace'
+        ? { role: 'assistant', content: m.content }
+        : m.role === 'customer'
+          ? { role: 'user', content: `The customer just said: "${m.content}". How should I reply?` }
+          : { role: 'user', content: `(I replied: ${m.content})` });
+  }
+
+  async function askAce(list) {
+    setBusy(true);
+    try {
+      const reply = await copilotAsk({
+        messages: copilotMessages(list),
+        scenario,
+        transcript: transcriptText(list),
+      });
+      setMsgs(m => [...m, { role: 'ace', content: reply }]);
+    } catch (e) {
+      const msg = ['NO_ALIBABA_KEY', 'NO_API_KEY', 'NO_OPENAI_KEY'].includes(e.message)
+        ? 'No LLM key configured — set it in Settings.' : ('Error: ' + e.message);
+      setMsgs(m => [...m, { role: 'ace', content: msg, error: true }]);
+    }
+    setBusy(false);
+  }
+
+  async function send() {
+    const q = input.trim();
+    if (!q || busy) return;
+    const entry = { role: mode, content: q };
+    const next = [...msgs, entry];
+    setMsgs(next); setInput('');
+    // When the customer (bot) speaks, ACE coaches a reply. Logging my own reply is silent.
+    if (mode === 'customer') await askAce(next);
+  }
+
+  function onKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  }
+
+  const bubble = {
+    customer: 'bg-bg-2 text-fg-0 border border-border-0 rounded-bl-sm',
+    agent: 'bg-hero text-white rounded-br-sm',
+    ace: 'bg-ok/10 text-fg-0 border border-ok/25 rounded-bl-sm',
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="bg-ok/5 border border-ok/20 rounded-xl p-3 text-xs text-fg-1 flex gap-2">
+        <MessageSquare className="w-4 h-4 text-ok shrink-0 mt-0.5" />
+        <span>
+          Practice this scenario live. Paste what the <span className="text-fg-0 font-medium">bot-customer</span> says and ACE — who knows the full answer key &amp; hidden context — coaches your ideal reply. Switch to <span className="text-fg-0 font-medium">My reply</span> to log what you actually sent so ACE keeps the thread.
+        </span>
+      </div>
+
+      {!scenario && (
+        <div className="flex items-start gap-2 bg-warn/10 border border-warn/30 rounded-xl p-3 text-xs text-fg-1">
+          <AlertTriangle className="w-4 h-4 text-warn shrink-0 mt-0.5" />
+          <span>No scenario loaded — build or open one first so ACE knows the answer key. You can still ask general questions.</span>
+        </div>
+      )}
+
+      {scenario && (
+        <div className="text-xs text-fg-2">
+          Practicing: <span className="text-fg-1 font-medium">{scenario.title || scenario.id}</span>
+          {scenario.emotion ? <span className="text-fg-3"> · {scenario.emotion}</span> : null}
+        </div>
+      )}
+
+      <div className="border border-border-0 rounded-2xl bg-bg-0 overflow-hidden">
+        <div ref={scrollRef} className="min-h-[18rem] max-h-[28rem] overflow-y-auto px-4 py-3 space-y-3">
+          {msgs.length === 0 && (
+            <div className="text-xs text-fg-2 bg-bg-1 border border-border-0 rounded-xl p-3">
+              Start by pasting the customer's opening line (mode <span className="text-fg-1">Customer says</span>). ACE will reply with the SOP-correct move and a ready-to-send message in the customer's language.
+            </div>
+          )}
+          {msgs.map((m, i) => (
+            <div key={i} className={cn('flex', m.role === 'agent' ? 'justify-end' : 'justify-start')}>
+              <div className="max-w-[85%]">
+                <div className={cn('text-[10px] mb-0.5 px-1',
+                  m.role === 'agent' ? 'text-right text-fg-3' : m.role === 'ace' ? 'text-ok' : 'text-fg-3')}>
+                  {m.role === 'customer' ? 'Customer (bot)' : m.role === 'agent' ? 'You' : 'ACE'}
+                </div>
+                <div className={cn('rounded-2xl px-3.5 py-2 text-sm whitespace-pre-wrap break-words',
+                  m.error ? 'bg-crit/10 text-crit border border-crit/20 rounded-bl-sm' : bubble[m.role])}>
+                  {m.content}
+                </div>
+              </div>
+            </div>
+          ))}
+          {busy && (
+            <div className="flex justify-start">
+              <div className="bg-ok/10 border border-ok/25 rounded-2xl rounded-bl-sm px-3.5 py-2.5">
+                <Loader2 className="w-4 h-4 animate-spin text-ok" />
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="border-t border-border-0 p-3 space-y-2">
+          <div className="flex items-center gap-1.5">
+            <button onClick={() => setMode('customer')}
+              className={cn('text-[11px] px-2.5 py-1 rounded-full border transition-colors',
+                mode === 'customer' ? 'bg-bg-2 text-fg-0 border-border-1' : 'bg-bg-1 text-fg-2 border-border-0 hover:text-fg-1')}>
+              Customer says
+            </button>
+            <button onClick={() => setMode('agent')}
+              className={cn('text-[11px] px-2.5 py-1 rounded-full border transition-colors',
+                mode === 'agent' ? 'bg-hero/15 text-hero border-hero/30' : 'bg-bg-1 text-fg-2 border-border-0 hover:text-fg-1')}>
+              My reply
+            </button>
+            <span className="text-[10px] text-fg-3 ml-1">
+              {mode === 'customer' ? 'ACE will coach your response' : 'logged silently — ACE keeps the thread'}
+            </span>
+          </div>
+          <div className="flex items-end gap-2">
+            <textarea
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={onKey}
+              rows={1}
+              placeholder={mode === 'customer'
+                ? 'Paste what the bot-customer just said… (Enter to send)'
+                : 'What you actually replied… (Enter to log)'}
+              className="flex-1 bg-bg-1 border border-border-0 focus:border-hero/50 rounded-xl px-3 py-2 text-sm text-fg-0 placeholder-fg-2 outline-none resize-none max-h-32 transition-colors"
+            />
+            {msgs.length > 0 && (
+              <button onClick={() => setMsgs([])} title="Clear practice"
+                className="p-2.5 rounded-xl bg-bg-2 hover:bg-bg-3 text-fg-2 border border-border-0 transition-colors">
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
+            <button onClick={send} disabled={busy || !input.trim()}
+              className="p-2.5 rounded-xl bg-hero text-white hover:bg-hero/90 disabled:opacity-40 transition-colors">
+              <Send className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Saved scenarios library ───────────────────────────────────────────────────
+function Library({ items, activeId, onOpen, onRename, onDelete, onRefresh }) {
+  const [editing, setEditing] = useState(null);
+  const [name, setName] = useState('');
+
+  function startRename(rec) { setEditing(rec.recordId); setName(rec.name); }
+  async function commitRename(rec) {
+    await onRename(rec.recordId, name);
+    setEditing(null);
+    onRefresh();
+  }
+
+  if (!items.length) {
+    return (
+      <div className="text-xs text-fg-2 bg-bg-1 border border-border-0 rounded-xl p-3">
+        No saved scenarios yet. Build one — it auto-saves here so you can reopen, practice, rename or delete it later.
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-2">
+      {items.map(rec => (
+        <div key={rec.recordId}
+          className={cn('flex items-center gap-2 rounded-xl border px-3 py-2.5',
+            rec.recordId === activeId ? 'bg-hero/10 border-hero/30' : 'bg-bg-1 border-border-0')}>
+          <FileText className={cn('w-4 h-4 shrink-0', rec.recordId === activeId ? 'text-hero' : 'text-fg-3')} />
+          <div className="flex-1 min-w-0">
+            {editing === rec.recordId ? (
+              <input
+                autoFocus value={name} onChange={e => setName(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') commitRename(rec); if (e.key === 'Escape') setEditing(null); }}
+                onBlur={() => commitRename(rec)}
+                className="w-full bg-bg-2 border border-hero/40 rounded-lg px-2 py-1 text-sm text-fg-0 outline-none" />
+            ) : (
+              <button onClick={() => onOpen(rec)} className="block w-full text-left">
+                <div className="text-sm text-fg-0 truncate">{rec.name}</div>
+                <div className="text-[10px] text-fg-3">
+                  {rec.scenario?.type || '—'} · updated {new Date(rec.updatedAt || rec.createdAt || Date.now()).toLocaleDateString()}
+                </div>
+              </button>
+            )}
+          </div>
+          <button onClick={() => onOpen(rec)} title="Open"
+            className="text-[11px] px-2 py-1 rounded-lg bg-hero/15 text-hero border border-hero/30 hover:bg-hero/25 transition-colors">Open</button>
+          <button onClick={() => startRename(rec)} title="Rename"
+            className="p-1.5 rounded-lg bg-bg-2 hover:bg-bg-3 text-fg-2 border border-border-0 transition-colors">
+            <Pencil className="w-3.5 h-3.5" />
+          </button>
+          <button onClick={async () => { await onDelete(rec.recordId); onRefresh(); }} title="Delete"
+            className="p-1.5 rounded-lg bg-bg-2 hover:bg-crit/15 text-fg-2 hover:text-crit border border-border-0 transition-colors">
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ── main page ─────────────────────────────────────────────────────────────────
 export default function ScenarioStudio() {
   const [step, setStep] = useState(1);
@@ -421,12 +662,42 @@ export default function ScenarioStudio() {
   const [refErr, setRefErr] = useState('');
   const [refNote, setRefNote] = useState('');
 
+  // saved-scenario library state
+  const [library, setLibrary] = useState([]);
+  const [activeRecordId, setActiveRecordId] = useState(null);
+  const [libOpen, setLibOpen] = useState(false);
+  const saveTimer = useRef(null);
+
+  const refreshLibrary = () => setLibrary(listScenarios());
+  useEffect(() => { refreshLibrary(); }, []);
+
+  // Auto-save: debounce edits to the active scenario record so renames/tweaks persist.
+  useEffect(() => {
+    if (!scenario || !activeRecordId) return;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      updateScenario(activeRecordId, scenario).then(refreshLibrary);
+    }, 800);
+    return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
+  }, [scenario, activeRecordId]);
+
+  function openSaved(rec) {
+    setScenario(rec.scenario);
+    setActiveRecordId(rec.recordId);
+    setLibOpen(false);
+    setStep(2);
+  }
+
   async function runBuild() {
     if (!transcript.trim()) return;
     setBuilding(true); setErr(''); setScenario(null);
     try {
       const s = await buildScenario(transcript.trim());
       setScenario(s);
+      // Auto-save the freshly built scenario into the library.
+      const recordId = await saveScenario(s);
+      setActiveRecordId(recordId);
+      refreshLibrary();
       setStep(2);
     } catch (e) {
       setErr(e.message === 'NO_ALIBABA_KEY' || e.message === 'NO_API_KEY' || e.message === 'NO_OPENAI_KEY'
@@ -477,10 +748,37 @@ export default function ScenarioStudio() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <div className="mb-5">
-        <h1 className="text-xl font-bold text-fg-0 flex items-center gap-2"><Brain className="w-5 h-5 text-hero" /> Scenario Studio</h1>
-        <p className="text-sm text-fg-2">Turn a real chat transcript into a spec-perfect role-play scenario — grounded in ACE's Bybit knowledge. Then grade agent or bot transcripts against the official rubric.</p>
+      <div className="mb-5 flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold text-fg-0 flex items-center gap-2"><Brain className="w-5 h-5 text-hero" /> Scenario Studio</h1>
+          <p className="text-sm text-fg-2">Turn a real chat transcript into a spec-perfect role-play scenario — grounded in ACE's Bybit knowledge. Then grade agent or bot transcripts against the official rubric.</p>
+        </div>
+        <button onClick={() => setLibOpen(o => !o)}
+          className={cn('shrink-0 inline-flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-xl border transition-colors',
+            libOpen ? 'bg-hero/15 text-hero border-hero/30' : 'bg-bg-1 text-fg-1 border-border-0 hover:bg-bg-2')}>
+          <LibraryIcon className="w-4 h-4" /> Library
+          {library.length > 0 && <span className="text-[10px] bg-bg-2 text-fg-2 rounded-full px-1.5 py-0.5">{library.length}</span>}
+        </button>
       </div>
+
+      <AnimatePresence initial={false}>
+        {libOpen && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden mb-5">
+            <div className="bg-bg-0 border border-border-0 rounded-2xl p-3 space-y-2">
+              <div className="text-xs font-semibold text-fg-1 mb-1">Saved scenarios</div>
+              <Library
+                items={library}
+                activeId={activeRecordId}
+                onOpen={openSaved}
+                onRename={renameScenario}
+                onDelete={async (id) => { await deleteScenario(id); if (id === activeRecordId) setActiveRecordId(null); }}
+                onRefresh={refreshLibrary}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <StepRail step={step} />
 
@@ -550,19 +848,21 @@ export default function ScenarioStudio() {
               <div className="flex flex-wrap gap-1.5 mb-2">
                 {Object.entries(categorySubtotals(scenario.checkpoints)).map(([cat, pts]) => {
                   const tgt = CAT_TARGET[cat];
-                  const bonus = cat === 'Added-Value Support';
-                  const ok = bonus ? true : pts === tgt;
+                  const special = cat === 'Added-Value Support' || cat === 'Deductions';
+                  if (special && pts === 0) return null; // hide unused special buckets
+                  // Soft check: within ±10 of guide weight is "ok"; bigger gap = gentle hint.
+                  const ok = special ? true : Math.abs(pts - tgt) <= 10;
                   return (
                     <span key={cat} className={cn('text-[10px] px-2 py-0.5 rounded-full border',
-                      bonus ? 'text-hero border-hero/30 bg-hero/10' : ok ? 'text-ok border-ok/25 bg-ok/10' : 'text-warn border-warn/30 bg-warn/10')}>
-                      {CAT_SHORT[cat]} {pts}{bonus ? ' (bonus)' : `/${tgt}`}
+                      special ? 'text-hero border-hero/30 bg-hero/10' : ok ? 'text-ok border-ok/25 bg-ok/10' : 'text-warn border-warn/30 bg-warn/10')}>
+                      {CAT_SHORT[cat]} {pts}{cat === 'Added-Value Support' ? ' (bonus)' : cat === 'Deductions' ? ' (deduct)' : `/${tgt}`}
                     </span>
                   );
                 })}
               </div>
               <div className="space-y-2">
                 {(scenario.checkpoints || []).map((c, i) => {
-                  const bonus = c.bonus || /added.?value|bonus/i.test(c.desc || '');
+                  const bonus = isBonusCp(c);
                   return (
                     <div key={i} className="flex gap-2 items-start">
                       <div className="flex-1 space-y-1">
@@ -694,6 +994,24 @@ export default function ScenarioStudio() {
             )}
 
             <CoPilot scenario={scenario} transcript={evTranscript} evalResult={evResult} />
+
+            <div className="flex justify-end pt-2">
+              <button onClick={() => setStep(4)}
+                className="inline-flex items-center gap-2 bg-ok/15 text-ok border border-ok/30 text-sm font-medium px-5 py-2.5 rounded-xl hover:bg-ok/25 transition-colors">
+                <MessagesSquare className="w-4 h-4" /> Practice with ACE →
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* STEP 4 — PRACTICE */}
+        {step === 4 && (
+          <motion.div key="s4" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="space-y-3">
+            <PracticeChat scenario={scenario} />
+            <div className="flex justify-between pt-2 border-t border-border-0">
+              <button onClick={() => setStep(3)} className="text-xs px-3 py-1.5 rounded-lg bg-bg-2 hover:bg-bg-3 text-fg-1 border border-border-0">← Back to Evaluator</button>
+              <button onClick={() => setStep(scenario ? 2 : 1)} className="text-xs px-3 py-1.5 rounded-lg bg-bg-2 hover:bg-bg-3 text-fg-1 border border-border-0">Edit scenario →</button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
