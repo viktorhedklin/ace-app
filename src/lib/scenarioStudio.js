@@ -419,3 +419,75 @@ export async function copilotAsk({ messages, scenario, transcript, evalResult })
     temperature: 0.4,
   });
 }
+
+// ── DEBRIEF CHAT ─────────────────────────────────────────────────────────────
+// Step 5: Viktor pastes real bot feedback after a live session, then has a
+// real conversation with ACE to process it. ACE always trusts Viktor over the
+// bot (when Viktor says the bot is wrong, ACE acknowledges and pivots). The
+// conversation result is persisted to a lessons memory store.
+
+const DEBRIEF_SYSTEM = `You are ACE, a sharp and honest Bybit CS Training co-pilot. Viktor (the trainer) is debriefing after a real training session: he'll paste the bot's feedback and discuss it with you. Your job is to:
+
+1. Help Viktor analyze the feedback — what's correct, what's worth keeping, what patterns to avoid next time.
+2. ALWAYS trust Viktor over the bot. If Viktor says the bot was wrong (about a policy, a timeframe, a BankID flow, anything), accept it immediately and pivot. You never defend bot errors or say "the bot may be right". Viktor is the subject-matter authority.
+3. Help Viktor extract clear, actionable lessons he can store for future training. Suggest concise lesson bullets he can save.
+4. Be direct and practical — no filler. Short paragraphs or bullets, never walls of text.
+5. NEVER reference ACE, any tool, or any system as the source. State Bybit policy directly.`;
+
+function debriefContext({ scenario, savedLessons }) {
+  const lines = [];
+  if (scenario) {
+    lines.push('── SCENARIO THIS DEBRIEF IS ABOUT ──');
+    lines.push(`Title: ${scenario.title || scenario.id || 'Unknown'}  ·  Type: ${scenario.type || ''}  ·  Emotion: ${scenario.emotion || ''}`);
+    if (scenario.issue) lines.push(`Issue: ${scenario.issue}`);
+    if (scenario.hidden) lines.push(`Answer Key (hidden context): ${scenario.hidden}`);
+    if (scenario.flow) lines.push(`Ideal Agent Flow: ${scenario.flow}`);
+    if (scenario.feedbackNotes) lines.push(`Key Knowledge Notes: ${scenario.feedbackNotes}`);
+  }
+  if (savedLessons && savedLessons.length > 0) {
+    lines.push('\n── PREVIOUSLY SAVED LESSONS (from past debriefs) ──');
+    savedLessons.slice(-20).forEach((l, i) => lines.push(`${i + 1}. [${l.tag || 'general'}] ${l.lesson}`));
+  }
+  return lines.join('\n');
+}
+
+export async function debriefAsk({ messages, scenario, savedLessons }) {
+  const ctx = debriefContext({ scenario, savedLessons });
+  const history = (messages || []).slice(-14)
+    .map(m => `${m.role === 'user' ? 'VIKTOR' : 'ACE'}: ${m.content}`).join('\n');
+  const last = (messages || []).filter(m => m.role === 'user').slice(-1)[0]?.content || '';
+  const pack = buildKnowledgePack(`${scenario?.issue || ''} ${scenario?.hidden || ''} ${last}`);
+
+  const prompt = `${pack}\n\n========================================\nDEBRIEF CONTEXT:\n${ctx}\n\n========================================\nCONVERSATION (most recent last):\n${history}\n\n========================================\nRespond to Viktor's latest message. Be honest, direct, practical.`;
+
+  return InvokeLLM({
+    prompt,
+    system_prompt: DEBRIEF_SYSTEM,
+    useKB: true,
+    maxTokens: 1400,
+    enableThinking: false,
+    temperature: 0.4,
+  });
+}
+
+export async function extractDebriefLessons({ conversation, scenario, userNotes }) {
+  const ctx = scenario
+    ? `Scenario: ${scenario.title || scenario.id}  ·  Type: ${scenario.type || ''}  ·  Issue: ${scenario.issue || ''}`
+    : '';
+  const convText = (conversation || [])
+    .filter(m => m.role === 'user' || m.role === 'assistant')
+    .map(m => `${m.role === 'user' ? 'Viktor' : 'ACE'}: ${m.content}`)
+    .join('\n');
+
+  const prompt = `${ctx ? ctx + '\n\n' : ''}DEBRIEF CONVERSATION:\n${convText}\n\n${userNotes ? `Viktor's own notes: ${userNotes}\n\n` : ''}Extract 2–6 concise, actionable lessons from this debrief. Each lesson should be something a future trainer or scenario-builder should know and avoid repeating. Format as JSON array: [{"lesson":"...","tag":"policy|scenario|soft-skill|escalation|general"}]. Output only valid JSON, no extra text.`;
+
+  const raw = await InvokeLLM({
+    prompt,
+    system_prompt: 'You are an expert Bybit CS training analyst. Extract concise, reusable training lessons from a debrief conversation. Output only valid JSON.',
+    useKB: false,
+    maxTokens: 800,
+    enableThinking: false,
+    temperature: 0.2,
+  });
+  return parseLLMJson(raw);
+}

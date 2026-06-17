@@ -1,13 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
-import { Loader2, Copy, Check, Wand2, ClipboardCheck, FileText, Brain, AlertTriangle, Sparkles, MessageSquare, ChevronDown, Send, Trash2, Pencil, MessagesSquare, Library as LibraryIcon } from 'lucide-react';
+import { Loader2, Copy, Check, Wand2, ClipboardCheck, FileText, Brain, AlertTriangle, Sparkles, MessageSquare, ChevronDown, Send, Trash2, Pencil, MessagesSquare, Library as LibraryIcon, BookOpen, Lightbulb, Tag, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  buildScenario, evaluateTranscript, refineScenario, copilotAsk, CANONICAL_CHECKPOINTS,
+  buildScenario, evaluateTranscript, refineScenario, copilotAsk, debriefAsk, extractDebriefLessons, CANONICAL_CHECKPOINTS,
 } from '@/lib/scenarioStudio';
 import {
   listScenarios, saveScenario, updateScenario, renameScenario, deleteScenario,
 } from '@/lib/scenarioLibrary';
+import {
+  listLessons, saveLessons, deleteLesson,
+} from '@/lib/debriefMemory';
 
 // ── official enums (from the CS Training — Role-play Scenario Creation Guide) ──
 const SCOPE_OPTIONS = ['Non-tech', 'Tech', 'MT5'];
@@ -226,6 +229,7 @@ function StepRail({ step }) {
     { n: 2, label: 'Review', icon: FileText },
     { n: 3, label: 'Evaluate', icon: ClipboardCheck },
     { n: 4, label: 'Practice', icon: MessagesSquare },
+    { n: 5, label: 'Debrief', icon: BookOpen },
   ];
   return (
     <div className="flex items-center gap-2 mb-6">
@@ -641,6 +645,240 @@ function Library({ items, activeId, onOpen, onRename, onDelete, onRefresh }) {
   );
 }
 
+// ── Debrief chat (Step 5) ─────────────────────────────────────────────────────
+// Viktor pastes real bot feedback and debriefs with ACE. ACE always sides with
+// Viktor over the bot. At the end, extract lessons and save to memory.
+function DebriefChat({ scenario, onLessonsSaved }) {
+  const [msgs, setMsgs] = useState([]);
+  const [input, setInput] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [extracting, setExtracting] = useState(false);
+  const [userNotes, setUserNotes] = useState('');
+  const [savedLessons, setSavedLessons] = useState(() => listLessons());
+  const [showMemory, setShowMemory] = useState(false);
+  const [saveNote, setSaveNote] = useState('');
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [msgs, busy]);
+
+  function refreshLessons() {
+    setSavedLessons(listLessons());
+  }
+
+  async function send() {
+    const q = input.trim();
+    if (!q || busy) return;
+    const next = [...msgs, { role: 'user', content: q }];
+    setMsgs(next); setInput(''); setBusy(true);
+    try {
+      const reply = await debriefAsk({
+        messages: next,
+        scenario,
+        savedLessons: listLessons(),
+      });
+      setMsgs(m => [...m, { role: 'assistant', content: reply }]);
+    } catch (e) {
+      const msg = ['NO_ALIBABA_KEY', 'NO_API_KEY', 'NO_OPENAI_KEY'].includes(e.message)
+        ? 'No LLM key configured — set it in Settings.' : ('Error: ' + e.message);
+      setMsgs(m => [...m, { role: 'assistant', content: msg, error: true }]);
+    }
+    setBusy(false);
+  }
+
+  async function handleSaveLessons() {
+    if (!msgs.length) return;
+    setExtracting(true); setSaveNote('');
+    try {
+      const extracted = await extractDebriefLessons({
+        conversation: msgs,
+        scenario,
+        userNotes: userNotes.trim(),
+      });
+      await saveLessons(extracted, {
+        scenarioId: scenario?.id,
+        scenarioTitle: scenario?.title,
+      });
+      refreshLessons();
+      setSaveNote(`Saved ${extracted.length} lesson${extracted.length !== 1 ? 's' : ''} to memory.`);
+      if (onLessonsSaved) onLessonsSaved();
+    } catch (e) {
+      setSaveNote('Failed to extract lessons: ' + e.message);
+    }
+    setExtracting(false);
+  }
+
+  function onKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  }
+
+  const TAG_COLOR = {
+    policy: 'text-hero border-hero/30 bg-hero/10',
+    scenario: 'text-ok border-ok/25 bg-ok/10',
+    'soft-skill': 'text-warn border-warn/30 bg-warn/10',
+    escalation: 'text-crit border-crit/25 bg-crit/10',
+    general: 'text-fg-2 border-border-0 bg-bg-2',
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Intro banner */}
+      <div className="bg-hero/5 border border-hero/20 rounded-xl p-3 text-xs text-fg-1 flex gap-2">
+        <BookOpen className="w-4 h-4 text-hero shrink-0 mt-0.5" />
+        <span>
+          Paste the bot's feedback and discuss it with ACE. ACE <span className="text-fg-0 font-medium">always trusts you over the bot</span> — if the bot was wrong (policy, timeframe, flow), just say so and ACE will pivot. When you're done, save the lessons to memory so future sessions don't repeat the same mistakes.
+        </span>
+      </div>
+
+      {scenario && (
+        <div className="text-xs text-fg-2">
+          Debriefing: <span className="text-fg-1 font-medium">{scenario.title || scenario.id}</span>
+          {scenario.type ? <span className="text-fg-3"> · {scenario.type}</span> : null}
+        </div>
+      )}
+
+      {/* Chat window */}
+      <div className="border border-border-0 rounded-2xl bg-bg-0 overflow-hidden">
+        <div ref={scrollRef} className="min-h-[20rem] max-h-[32rem] overflow-y-auto px-4 py-3 space-y-3">
+          {msgs.length === 0 && (
+            <div className="text-xs text-fg-2 bg-bg-1 border border-border-0 rounded-xl p-3 space-y-1.5">
+              <div className="font-medium text-fg-1">How to start</div>
+              <div>• Paste the full bot feedback — e.g. <span className="text-fg-1 italic">"Key knowledge: BankID withdrawals require 24h cooldown. Key takeaway: agent didn't ask for UID."</span></div>
+              <div>• Or ask about a specific point — e.g. <span className="text-fg-1 italic">"the bot said the timeframe is 48h but I thought it was 1-72h, who's right?"</span></div>
+              <div>• ACE will help you figure out what's correct, what to fix in the scenario, and what to log as a lesson.</div>
+            </div>
+          )}
+          {msgs.map((m, i) => (
+            <div key={i} className={cn('flex', m.role === 'user' ? 'justify-end' : 'justify-start')}>
+              <div className="max-w-[88%]">
+                <div className={cn('text-[10px] mb-0.5 px-1', m.role === 'user' ? 'text-right text-fg-3' : 'text-hero')}>
+                  {m.role === 'user' ? 'You' : 'ACE'}
+                </div>
+                <div className={cn('rounded-2xl px-3.5 py-2 text-sm whitespace-pre-wrap break-words',
+                  m.role === 'user'
+                    ? 'bg-hero text-white rounded-br-sm'
+                    : m.error
+                      ? 'bg-crit/10 text-crit border border-crit/20 rounded-bl-sm'
+                      : 'bg-bg-1 text-fg-0 border border-border-0 rounded-bl-sm')}>
+                  {m.content}
+                </div>
+              </div>
+            </div>
+          ))}
+          {busy && (
+            <div className="flex justify-start">
+              <div className="bg-bg-1 border border-border-0 rounded-2xl rounded-bl-sm px-3.5 py-2.5">
+                <Loader2 className="w-4 h-4 animate-spin text-hero" />
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="border-t border-border-0 p-3 flex items-end gap-2">
+          <textarea
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={onKey}
+            rows={1}
+            placeholder="Paste bot feedback or ask ACE about it… (Enter to send)"
+            className="flex-1 bg-bg-1 border border-border-0 focus:border-hero/50 rounded-xl px-3 py-2 text-sm text-fg-0 placeholder-fg-2 outline-none resize-none max-h-32 transition-colors"
+          />
+          {msgs.length > 0 && (
+            <button onClick={() => { setMsgs([]); setSaveNote(''); }} title="Clear chat"
+              className="p-2.5 rounded-xl bg-bg-2 hover:bg-bg-3 text-fg-2 border border-border-0 transition-colors">
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+          <button onClick={send} disabled={busy || !input.trim()}
+            className="p-2.5 rounded-xl bg-hero text-white hover:bg-hero/90 disabled:opacity-40 transition-colors">
+            <Send className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Save lessons section */}
+      {msgs.length >= 2 && (
+        <div className="bg-bg-1 border border-border-0 rounded-xl p-3 space-y-2">
+          <div className="flex items-center gap-1.5 text-xs font-medium text-fg-1">
+            <Lightbulb className="w-3.5 h-3.5 text-warn" /> Save lessons to memory
+          </div>
+          <p className="text-[11px] text-fg-2">ACE will extract key lessons from this conversation and save them. They'll be referenced in future debriefs to avoid repeating mistakes.</p>
+          <textarea
+            value={userNotes}
+            onChange={e => setUserNotes(e.target.value)}
+            rows={2}
+            placeholder="(Optional) Add your own notes before saving — e.g. 'bot was wrong about BankID, correct policy is X'"
+            className="w-full bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-xs text-fg-0 placeholder-fg-2 outline-none resize-y transition-colors"
+          />
+          {saveNote && (
+            <div className={cn('flex items-start gap-2 rounded-lg p-2.5 text-xs',
+              saveNote.startsWith('Failed') ? 'bg-crit/10 border border-crit/20 text-crit' : 'bg-ok/10 border border-ok/20 text-fg-1')}>
+              {!saveNote.startsWith('Failed') && <Check className="w-3.5 h-3.5 text-ok shrink-0 mt-0.5" />}
+              {saveNote}
+            </div>
+          )}
+          <button onClick={handleSaveLessons} disabled={extracting}
+            className="inline-flex items-center gap-2 text-xs bg-warn/15 text-warn border border-warn/30 font-medium px-3 py-1.5 rounded-lg hover:bg-warn/25 disabled:opacity-40 transition-colors">
+            {extracting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Lightbulb className="w-3.5 h-3.5" />}
+            {extracting ? 'Extracting lessons…' : 'Extract & save lessons'}
+          </button>
+        </div>
+      )}
+
+      {/* Lesson memory viewer */}
+      <div className="border border-border-0 rounded-xl overflow-hidden">
+        <button onClick={() => setShowMemory(o => !o)}
+          className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-bg-1 transition-colors">
+          <span className="flex items-center gap-2 text-xs font-medium text-fg-1">
+            <BookOpen className="w-3.5 h-3.5 text-hero" /> Saved lessons memory
+            {savedLessons.length > 0 && (
+              <span className="text-[10px] bg-bg-2 text-fg-2 rounded-full px-1.5 py-0.5">{savedLessons.length}</span>
+            )}
+          </span>
+          <ChevronDown className={cn('w-4 h-4 text-fg-2 transition-transform', showMemory && 'rotate-180')} />
+        </button>
+        <AnimatePresence initial={false}>
+          {showMemory && (
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+              className="border-t border-border-0">
+              <div className="p-3 space-y-2 max-h-72 overflow-y-auto">
+                {savedLessons.length === 0 ? (
+                  <div className="text-xs text-fg-2 bg-bg-1 border border-border-0 rounded-xl p-3">
+                    No lessons saved yet. Complete a debrief and save lessons — they'll appear here and be referenced in future sessions.
+                  </div>
+                ) : (
+                  savedLessons.map(l => (
+                    <div key={l.id} className="flex items-start gap-2 bg-bg-1 border border-border-0 rounded-xl p-2.5">
+                      <Tag className="w-3.5 h-3.5 text-fg-3 shrink-0 mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs text-fg-0">{l.lesson}</div>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <span className={cn('text-[10px] px-1.5 py-0.5 rounded-full border', TAG_COLOR[l.tag] || TAG_COLOR.general)}>
+                            {l.tag}
+                          </span>
+                          {l.scenarioTitle && <span className="text-[10px] text-fg-3 truncate">{l.scenarioTitle}</span>}
+                          <span className="text-[10px] text-fg-3 ml-auto shrink-0">
+                            {new Date(l.savedAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                      <button onClick={async () => { await deleteLesson(l.id); refreshLessons(); }}
+                        className="p-1 rounded-lg hover:bg-crit/10 hover:text-crit text-fg-3 transition-colors">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
+
 // ── main page ─────────────────────────────────────────────────────────────────
 export default function ScenarioStudio() {
   const [step, setStep] = useState(1);
@@ -1010,6 +1248,20 @@ export default function ScenarioStudio() {
             <PracticeChat scenario={scenario} />
             <div className="flex justify-between pt-2 border-t border-border-0">
               <button onClick={() => setStep(3)} className="text-xs px-3 py-1.5 rounded-lg bg-bg-2 hover:bg-bg-3 text-fg-1 border border-border-0">← Back to Evaluator</button>
+              <button onClick={() => setStep(5)}
+                className="inline-flex items-center gap-2 bg-hero/15 text-hero border border-hero/30 text-sm font-medium px-5 py-2.5 rounded-xl hover:bg-hero/25 transition-colors">
+                <BookOpen className="w-4 h-4" /> Debrief with ACE →
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* STEP 5 — DEBRIEF */}
+        {step === 5 && (
+          <motion.div key="s5" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="space-y-3">
+            <DebriefChat scenario={scenario} onLessonsSaved={() => {}} />
+            <div className="flex justify-between pt-2 border-t border-border-0">
+              <button onClick={() => setStep(4)} className="text-xs px-3 py-1.5 rounded-lg bg-bg-2 hover:bg-bg-3 text-fg-1 border border-border-0">← Back to Practice</button>
               <button onClick={() => setStep(scenario ? 2 : 1)} className="text-xs px-3 py-1.5 rounded-lg bg-bg-2 hover:bg-bg-3 text-fg-1 border border-border-0">Edit scenario →</button>
             </div>
           </motion.div>

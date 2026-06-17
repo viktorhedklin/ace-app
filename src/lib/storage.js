@@ -24,6 +24,7 @@ export const NAMESPACES = {
   QA_MEMORY: 'qa_memory',
   SAVED_CASES: 'saved_cases',
   SCENARIOS: 'scenarios',
+  DEBRIEF: 'debrief',
   KB: 'kb_articles',
   SETTINGS: 'settings',
   CHAT: 'chat',
