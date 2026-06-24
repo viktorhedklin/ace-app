@@ -23,7 +23,7 @@ const PROVIDERS = [
   { key: 'alibaba', label: 'Alibaba Cloud', icon: '🔶', models: 'Qwen3.7 · DeepSeek' },
   { key: 'anthropic', label: 'Anthropic', icon: '🟣', models: 'Opus · Sonnet' },
   { key: 'openai', label: 'OpenAI', icon: '🟢', models: 'GPT-5.4 · GPT-5.4 Mini · GPT-4.1' },
-  { key: 'gemini', label: 'Google Gemini', icon: '🔵', models: 'Gemini 2.5 Pro · Flash' },
+  { key: 'gemini', label: 'Google Gemini', icon: '🔵', models: 'Gemini 3.1 Pro · Flash' },
 ];
 
 const MODEL_TIERS = [

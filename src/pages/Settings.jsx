@@ -859,7 +859,7 @@ export default function Settings() {
       {/* Google Gemini API Key */}
       <Section title="🔵 Google Gemini API Key">
         <div className="space-y-4">
-          <p className="text-xs text-fg-2">Enables Gemini 2.5 Pro/Flash via Google's API. Switch provider in Models & Usage page.</p>
+          <p className="text-xs text-fg-2">Enables Gemini 3.1 Pro/Flash via Google's API. Switch provider in Models & Usage page.</p>
           <div className="flex items-center justify-between bg-bg-2 rounded-lg px-4 py-3">
             <div>
               <p className="text-xs text-fg-2 mb-0.5">Current key</p>
