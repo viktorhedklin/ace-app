@@ -34,6 +34,8 @@ const DOMAIN_HINTS = {
   Fiat: ['sepa', 'bank', 'eur', 'fiat', 'iban', 'swift', 'payment provider'],
   Card: ['card', 'decline', 'bybit card', 'apple pay', 'google pay', 'visa', 'mastercard'],
   Account: ['login', 'access', 'suspended', 'limits', 'email change', 'phone change', 'close account'],
+  Compliance: ['aml', 'money laundering', 'sanctions', 'travel rule', 'source of funds', 'sof', 'mica', 'suspicious activity'],
+  SupportTechnique: ['de-escalation', 'tone', 'angry customer', 'frustrated', 'venting'],
 };
 
 // Tokenize and normalize text

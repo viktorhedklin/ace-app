@@ -53,6 +53,14 @@ const PROVIDERS = {
     envKey: 'NVIDIA_API_KEY',
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
   },
+  // Google Gemini — via Google's OpenAI-compatibility endpoint, not the native
+  // Gemini API. Keeps this proxy a uniform OpenAI-shaped pipe across every
+  // provider rather than special-casing Gemini's native contents/parts format.
+  gemini: {
+    url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+    envKey: 'GEMINI_API_KEY',
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+  },
 };
 
 function resolveKey(provider, req) {

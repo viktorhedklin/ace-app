@@ -6,6 +6,7 @@ import {
 import { getApiKey } from '@/api/claude';
 import { getOpenAIKey } from '@/api/openai';
 import { getAlibabaKey } from '@/api/alibaba';
+import { getGeminiKey } from '@/api/gemini';
 import { Check, Trash2, Zap, Scale, Leaf, BarChart3, DollarSign, Clock, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -22,6 +23,7 @@ const PROVIDERS = [
   { key: 'alibaba', label: 'Alibaba Cloud', icon: '🔶', models: 'Qwen3.7 · DeepSeek' },
   { key: 'anthropic', label: 'Anthropic', icon: '🟣', models: 'Opus · Sonnet' },
   { key: 'openai', label: 'OpenAI', icon: '🟢', models: 'GPT-5.4 · GPT-5.4 Mini · GPT-4.1' },
+  { key: 'gemini', label: 'Google Gemini', icon: '🔵', models: 'Gemini 2.5 Pro · Flash' },
 ];
 
 const MODEL_TIERS = [
@@ -33,6 +35,7 @@ const MODEL_TIERS = [
 function providerIcon(p) {
   if (p === 'openai') return '🟢';
   if (p === 'alibaba') return '🔶';
+  if (p === 'gemini') return '🔵';
   return '🟣';
 }
 
@@ -177,6 +180,7 @@ export default function Models() {
   const hasAnthropicKey = !!getApiKey();
   const hasOpenAIKey = !!getOpenAIKey();
   const hasAlibabaKey = !!getAlibabaKey();
+  const hasGeminiKey = !!getGeminiKey();
 
   function pickMode(key) { setCostMode(key); setCostModeState(key); }
   function pickProvider(key) { setProvider(key); setProviderState(key); }
@@ -215,13 +219,15 @@ export default function Models() {
         const missingActive =
           (provider === 'anthropic' && !hasAnthropicKey) ||
           (provider === 'openai' && !hasOpenAIKey) ||
-          (provider === 'alibaba' && !hasAlibabaKey);
-        const noneSet = !hasAnthropicKey && !hasOpenAIKey && !hasAlibabaKey;
+          (provider === 'alibaba' && !hasAlibabaKey) ||
+          (provider === 'gemini' && !hasGeminiKey);
+        const noneSet = !hasAnthropicKey && !hasOpenAIKey && !hasAlibabaKey && !hasGeminiKey;
         if (!missingActive && !noneSet) return null;
         const msg = noneSet
           ? 'No API keys set. Add them in Settings to start using models.'
           : provider === 'anthropic' ? 'No Anthropic key set — Claude models unavailable. Add one in Settings.'
           : provider === 'openai' ? 'No OpenAI key set — GPT models unavailable. Add one in Settings.'
+          : provider === 'gemini' ? 'No Gemini key set — Gemini models unavailable. Add one in Settings.'
           : 'No Alibaba Cloud key set — Qwen/DeepSeek models unavailable. Add one in Settings.';
         return (
         <div className="flex items-start gap-2 bg-hero/5 border border-hero/20 rounded-xl px-4 py-3">
@@ -236,7 +242,7 @@ export default function Models() {
         <div className="space-y-4">
           <div>
             <p className="text-xs text-fg-2 mb-2">Provider</p>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {PROVIDERS.map(p => (
                 <button
                   key={p.key}
