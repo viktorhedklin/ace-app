@@ -342,7 +342,7 @@ const MODELS = {
   'deepseek-v4-flash': 'deepseek-v4-flash',
   'qwen-max': 'qwen-max',
   'qwen-plus': 'qwen-plus',
-  'gemini-2.5-pro': 'gemini-2.5-pro',
+  'gemini-3.1-pro': 'gemini-3.1-pro-preview',
   'gemini-2.5-flash': 'gemini-2.5-flash',
 };
 
@@ -460,11 +460,11 @@ export const MODEL_CATALOG = [
     features: { chat: 4, campaign: 4, followUp: 4, qualityCheck: 4, translate: 4, csat: 3, escalation: 4, hackCase: 3, quickLookup: 4, nba: 4 },
   },
   {
-    id: 'gemini-2.5-pro',
-    name: 'Gemini 2.5 Pro',
+    id: 'gemini-3.1-pro-preview',
+    name: 'Gemini 3.1 Pro',
     provider: 'gemini',
-    inputPrice: 1.25,
-    outputPrice: 10,
+    inputPrice: 2,
+    outputPrice: 12,
     speed: 'Fast',
     strengths: ['Strong reasoning', 'Very large context window', 'Good multilingual support', 'Competitive pricing'],
     weaknesses: ['Less battle-tested on support tone than Anthropic/OpenAI', 'Newer to this stack'],
@@ -570,10 +570,10 @@ export function resolveModel(tier = 'utility') {
   }
 
   if (provider === 'gemini') {
-    if (mode === 'performance') return MODELS['gemini-2.5-pro'];
+    if (mode === 'performance') return MODELS['gemini-3.1-pro'];
     if (mode === 'economy') return MODELS['gemini-2.5-flash'];
     // balanced: pro for chat, flash for utility/routing
-    return tier === 'chat' ? MODELS['gemini-2.5-pro'] : MODELS['gemini-2.5-flash'];
+    return tier === 'chat' ? MODELS['gemini-3.1-pro'] : MODELS['gemini-2.5-flash'];
   }
 
   // Anthropic (default) — Sonnet default, Opus only for heavy tasks
