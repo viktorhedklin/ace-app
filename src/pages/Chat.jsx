@@ -9,16 +9,15 @@ import { useAce, scrubPII, recordCaseEvent } from '@/context/AceContext';
 import { scrubMessagesForStorage, scrubForStorage } from '@/lib/SecurityModule';
 import { saveCase } from '@/lib/caseMemory';
 import { get as storageGet, set as storageSet, remove as storageRemove, NAMESPACES } from '@/lib/storage';
-import { Send, Trash2, Copy, Check, Brain, X, Zap, ChevronDown, ChevronUp, XCircle, ArrowDownToLine, ImagePlus, Languages, Gauge, Globe as Globe2 } from 'lucide-react';
+import { Send, Trash2, Copy, Check, Brain, X, Zap, ChevronDown, ChevronUp, XCircle, ArrowDownToLine, ImagePlus, Languages, Gauge } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import EscalationBuilder from './EscalationBuilder.jsx';
 import QuickReplies from '@/components/QuickReplies';
 import LinkHealthBadge from '@/components/LinkHealthBadge';
 import DraftRating from '@/components/DraftRating';
 import AceAvatar from '@/components/AceAvatar';
-import QaCriticPanel from '@/components/QaCriticPanel';
-import { critiqueDraft } from '@/lib/qaCritic';
-import WebKnowledgePanel from '@/components/WebKnowledgePanel';
+import CouncilBadge from '@/components/CouncilBadge';
+import { critiqueDraft, crossCheckDraft } from '@/lib/qaCritic';
 import { fetchWebKnowledge, isKbConfident } from '@/lib/webKnowledge';
 import { isQaCriticEnabled, isWebKnowledgeEnabled } from '@/lib/nvidiaFeatures';
 
@@ -516,12 +515,13 @@ export default function Chat({ channel }) {
   // Quick Replies panel
   const [showQuickReplies, setShowQuickReplies] = useState(false);
 
-  // NVIDIA QA critic — opt-in, off by default (Settings → NVIDIA NIM)
-  const [qaCritiques, setQaCritiques] = useState({}); // { msgIndex: { loading, text, error } }
+  // The Council — NVIDIA QA critic + second-opinion cross-check + live web
+  // knowledge, opt-in, off by default (Settings → NVIDIA NIM)
+  const [qaCritiques, setQaCritiques] = useState({}); // { msgIndex: { loading, text, risk, error } }
+  const [councilCrossChecks, setCouncilCrossChecks] = useState({}); // { msgIndex: { loading, text, error } }
 
-  // Live web-knowledge injector — opt-in, offered only when the local KB has
-  // no confident match (Settings → NVIDIA NIM → "Live web-knowledge injection")
-  const [webKnowledgeEligible, setWebKnowledgeEligible] = useState({}); // { msgIndex: customerQuestion }
+  // Live web-knowledge injector — opt-in, auto-fires only when the local KB
+  // has no confident match (Settings → NVIDIA NIM → "Live web-knowledge injection")
   const [webKnowledgeResults, setWebKnowledgeResults] = useState({}); // { msgIndex: { loading, data, error } }
 
   // Auto-CSAT prediction
@@ -674,19 +674,35 @@ export default function Chat({ channel }) {
   // NVIDIA QA critic — opt-in side critique of the drafted reply (tone, gaps,
   // policy risk). Advisory only, never auto-inserted. Both args are already
   // scrubbed — Chat state only ever holds scrubbed text (see GDPR note above).
+  // When the critic itself flags non-low risk, automatically pulls in a
+  // second, independent NVIDIA voice (the Council's cross-check member).
   async function runQaCritic(msgIndex, draftContent, customerContent) {
     if (!isQaCriticEnabled() || draftContent.length < 20) return;
     setQaCritiques(prev => ({ ...prev, [msgIndex]: { loading: true } }));
     try {
-      const text = await critiqueDraft(customerContent, draftContent);
-      setQaCritiques(prev => ({ ...prev, [msgIndex]: { loading: false, text } }));
+      const { text, risk } = await critiqueDraft(customerContent, draftContent);
+      setQaCritiques(prev => ({ ...prev, [msgIndex]: { loading: false, text, risk } }));
+      if (risk !== 'low') runCrossCheck(msgIndex, draftContent, customerContent);
     } catch (e) {
       setQaCritiques(prev => ({ ...prev, [msgIndex]: { loading: false, error: e.message || 'request failed' } }));
     }
   }
 
-  // Live web-knowledge injector — manual trigger only (agent clicks the
-  // button), never auto-run, never auto-inserted into the outgoing message.
+  // Second-opinion cross-check — only invoked when the QA critic flags risk,
+  // to keep the extra NVIDIA call cheap and targeted.
+  async function runCrossCheck(msgIndex, draftContent, customerContent) {
+    setCouncilCrossChecks(prev => ({ ...prev, [msgIndex]: { loading: true } }));
+    try {
+      const text = await crossCheckDraft(customerContent, draftContent);
+      setCouncilCrossChecks(prev => ({ ...prev, [msgIndex]: { loading: false, text } }));
+    } catch (e) {
+      setCouncilCrossChecks(prev => ({ ...prev, [msgIndex]: { loading: false, error: e.message || 'request failed' } }));
+    }
+  }
+
+  // Live web-knowledge injector — auto-fires when the local KB has no
+  // confident match (see call site below), never auto-inserted into the
+  // outgoing message.
   async function runWebKnowledge(msgIndex, customerQuestion) {
     setWebKnowledgeResults(prev => ({ ...prev, [msgIndex]: { loading: true } }));
     try {
@@ -866,7 +882,7 @@ export default function Chat({ channel }) {
       runAutoCsat(updatedMessages.length, clean);
       runQaCritic(updatedMessages.length, clean, safeContent);
       if (isWebKnowledgeEnabled() && !isKbConfident(safeContent)) {
-        setWebKnowledgeEligible(prev => ({ ...prev, [updatedMessages.length]: safeContent }));
+        runWebKnowledge(updatedMessages.length, safeContent);
       }
 
     } catch (e) {
@@ -1347,31 +1363,9 @@ export default function Chat({ channel }) {
                   />
                 )}
 
-                {/* NVIDIA QA critic — opt-in, dismissible, advisory only */}
-                {m.role === 'assistant' && !m.streaming && m.content && qaCritiques[i] && (
-                  <QaCriticPanel
-                    loading={qaCritiques[i].loading}
-                    text={qaCritiques[i].text}
-                    error={qaCritiques[i].error}
-                  />
-                )}
-
-                {/* Live web-knowledge injector — manual trigger, KB had no confident match */}
-                {m.role === 'assistant' && !m.streaming && m.content
-                  && webKnowledgeEligible[i] && !webKnowledgeResults[i] && (
-                  <button
-                    onClick={() => runWebKnowledge(i, webKnowledgeEligible[i])}
-                    className="self-start text-[11px] text-info/80 hover:text-info px-1 flex items-center gap-1 transition-colors duration-150"
-                  >
-                    <Globe2 size={11} /> No confident KB match — search the web (external, unverified)
-                  </button>
-                )}
-                {m.role === 'assistant' && !m.streaming && m.content && webKnowledgeResults[i] && (
-                  <WebKnowledgePanel
-                    loading={webKnowledgeResults[i].loading}
-                    data={webKnowledgeResults[i].data}
-                    error={webKnowledgeResults[i].error}
-                  />
+                {/* The Council — unified QA critic + cross-check + web-sourcing badge */}
+                {m.role === 'assistant' && !m.streaming && m.content && (
+                  <CouncilBadge qa={qaCritiques[i]} web={webKnowledgeResults[i]} crossCheck={councilCrossChecks[i]} />
                 )}
 
                 {/* Auto-CSAT badge */}

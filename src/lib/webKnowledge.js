@@ -8,7 +8,7 @@
 // strict reject-list check) → Brave Search → NVIDIA synthesizes a grounded
 // answer from the snippets. The result is always returned with its sources
 // and is the caller's job to label "external/unverified" and never
-// auto-insert into a customer-facing reply (see WebKnowledgePanel.jsx).
+// auto-insert into a customer-facing reply (see CouncilBadge.jsx).
 
 import { scrubPII } from '@/lib/SecurityModule';
 import { braveSearch } from '@/api/braveSearch';
