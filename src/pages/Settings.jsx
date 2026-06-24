@@ -28,7 +28,7 @@ function Section({ title, children }) {
 // Visual grouping for clusters of related API-key Sections (Ace brain vs. QA vs. search).
 function GroupHeader({ icon, title, desc }) {
   return (
-    <div className="pt-2 first:pt-0 space-y-0.5">
+    <div className="pt-2 space-y-0.5">
       <div className="flex items-center gap-2">
         <span className="text-base">{icon}</span>
         <h2 className="text-xs font-bold text-fg-1 uppercase tracking-wider">{title}</h2>
@@ -905,7 +905,7 @@ export default function Settings() {
       </Section>
 
       {/* QA & Web Knowledge — opt-in side features */}
-      <GroupHeader icon="🔬" title="QA & Web Knowledge (opt-in)" desc="Separate from Ace's main brain — these route scrubbed text to NVIDIA's NIM endpoint for response review and live web context." />
+      <GroupHeader icon="🔬" title="QA & Web Knowledge (opt-in)" desc="Separate from Ace's main brain — these route scrubbed text to NVIDIA's NIM endpoint for response review and Brave Search for live web context." />
 
       {/* NVIDIA NIM — opt-in side features */}
       <Section title="🟩 NVIDIA NIM — QA Critic & Web Knowledge (opt-in)">
@@ -1033,7 +1033,7 @@ export default function Settings() {
       {/* SerpAPI Key */}
       <Section title="🌐 SerpAPI Key (Web Search)">
         <div className="space-y-4">
-          <p className="text-xs text-fg-2">Powers live web search in Campaign lookup and other tools. Get a key at serpapi.com.</p>
+          <p className="text-xs text-fg-2">Get a key at serpapi.com.</p>
           <div className="flex items-center justify-between bg-bg-2 rounded-lg px-4 py-3">
             <div>
               <p className="text-xs text-fg-2 mb-0.5">Current key</p>
