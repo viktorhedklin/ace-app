@@ -25,6 +25,19 @@ function Section({ title, children }) {
   );
 }
 
+// Visual grouping for clusters of related API-key Sections (Ace brain vs. QA vs. search).
+function GroupHeader({ icon, title, desc }) {
+  return (
+    <div className="pt-2 first:pt-0 space-y-0.5">
+      <div className="flex items-center gap-2">
+        <span className="text-base">{icon}</span>
+        <h2 className="text-xs font-bold text-fg-1 uppercase tracking-wider">{title}</h2>
+      </div>
+      {desc && <p className="text-xs text-fg-2">{desc}</p>}
+    </div>
+  );
+}
+
 // ── Auto-Vault — encrypted local snapshots ──────────────────────────────────
 
 const VAULT_INTERVAL = 15 * 60 * 1000; // 15 minutes
@@ -699,6 +712,9 @@ export default function Settings() {
         <p className="text-sm text-fg-2">API key, data management and app preferences</p>
       </div>
 
+      {/* Ace Brain — LLM providers */}
+      <GroupHeader icon="🧠" title="Ace Brain — LLM Providers" desc="Pick which model powers Ace's drafting and chat. Switch the active provider in Models & Usage." />
+
       {/* API Key */}
       <Section title="🔑 Anthropic API Key">
         <div className="space-y-4">
@@ -741,54 +757,6 @@ export default function Settings() {
           </div>
 
           <p className="text-xs text-fg-2">Key is stored only in your browser's localStorage. Never sent anywhere except Anthropic's API.</p>
-        </div>
-      </Section>
-
-      {/* SerpAPI Key */}
-      <Section title="🌐 SerpAPI Key (Web Search)">
-        <div className="space-y-4">
-          <p className="text-xs text-fg-2">Powers live web search in Campaign lookup and other tools. Get a key at serpapi.com.</p>
-          <div className="flex items-center justify-between bg-bg-2 rounded-lg px-4 py-3">
-            <div>
-              <p className="text-xs text-fg-2 mb-0.5">Current key</p>
-              <p className="text-sm font-mono text-fg-1">{serpKey ? (showSerpKey ? serpKey : `...${serpKey.slice(-6)}`) : 'Not set'}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              {serpKey && (
-                <>
-                  <button onClick={() => setShowSerpKey(!showSerpKey)} className="text-fg-2 hover:text-fg-1 transition-colors cursor-pointer" aria-label={showSerpKey ? 'Hide SerpAPI key' : 'Show SerpAPI key'}>
-                    {showSerpKey ? <EyeOff size={15} /> : <Eye size={15} />}
-                  </button>
-                  <button onClick={removeSerpKey} className="text-fg-2 hover:text-crit transition-colors cursor-pointer" aria-label="Remove SerpAPI key">
-                    <Trash2 size={15} />
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-          <div>
-            <label htmlFor="serp-key-input" className="text-xs text-fg-2 mb-1.5 block">{serpKey ? 'Replace key' : 'Add key'}</label>
-            <div className="flex gap-2">
-              <input
-                id="serp-key-input"
-                type="password"
-                value={newSerpKey}
-                onChange={e => { setNewSerpKey(e.target.value); setSerpError(''); }}
-                onKeyDown={e => e.key === 'Enter' && saveSerpKey()}
-                placeholder="Paste SerpAPI key..."
-                className="flex-1 bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-sm text-fg-0 placeholder-fg-3 outline-none font-mono"
-              />
-              <button
-                onClick={saveSerpKey}
-                disabled={!newSerpKey.trim()}
-                className="bg-hero disabled:bg-bg-3 disabled:text-fg-2 text-[#021418] font-medium text-sm px-4 rounded-lg hover:bg-hero transition-colors flex items-center gap-1 cursor-pointer"
-                aria-label="Save SerpAPI key"
-              >
-                {serpSaved ? <><Check size={13} /> Saved</> : 'Save'}
-              </button>
-            </div>
-            {serpError && <p className="text-xs text-crit mt-1">{serpError}</p>}
-          </div>
         </div>
       </Section>
 
@@ -936,6 +904,9 @@ export default function Settings() {
         </div>
       </Section>
 
+      {/* QA & Web Knowledge — opt-in side features */}
+      <GroupHeader icon="🔬" title="QA & Web Knowledge (opt-in)" desc="Separate from Ace's main brain — these route scrubbed text to NVIDIA's NIM endpoint for response review and live web context." />
+
       {/* NVIDIA NIM — opt-in side features */}
       <Section title="🟩 NVIDIA NIM — QA Critic & Web Knowledge (opt-in)">
         <div className="space-y-4">
@@ -1052,6 +1023,57 @@ export default function Settings() {
               </div>
               {braveError && <p className="text-xs text-crit mt-1">{braveError}</p>}
             </div>
+          </div>
+        </div>
+      </Section>
+
+      {/* Search */}
+      <GroupHeader icon="🔎" title="Search" desc="Powers live web search used by Campaign lookup and other tools." />
+
+      {/* SerpAPI Key */}
+      <Section title="🌐 SerpAPI Key (Web Search)">
+        <div className="space-y-4">
+          <p className="text-xs text-fg-2">Powers live web search in Campaign lookup and other tools. Get a key at serpapi.com.</p>
+          <div className="flex items-center justify-between bg-bg-2 rounded-lg px-4 py-3">
+            <div>
+              <p className="text-xs text-fg-2 mb-0.5">Current key</p>
+              <p className="text-sm font-mono text-fg-1">{serpKey ? (showSerpKey ? serpKey : `...${serpKey.slice(-6)}`) : 'Not set'}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              {serpKey && (
+                <>
+                  <button onClick={() => setShowSerpKey(!showSerpKey)} className="text-fg-2 hover:text-fg-1 transition-colors cursor-pointer" aria-label={showSerpKey ? 'Hide SerpAPI key' : 'Show SerpAPI key'}>
+                    {showSerpKey ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                  <button onClick={removeSerpKey} className="text-fg-2 hover:text-crit transition-colors cursor-pointer" aria-label="Remove SerpAPI key">
+                    <Trash2 size={15} />
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+          <div>
+            <label htmlFor="serp-key-input" className="text-xs text-fg-2 mb-1.5 block">{serpKey ? 'Replace key' : 'Add key'}</label>
+            <div className="flex gap-2">
+              <input
+                id="serp-key-input"
+                type="password"
+                value={newSerpKey}
+                onChange={e => { setNewSerpKey(e.target.value); setSerpError(''); }}
+                onKeyDown={e => e.key === 'Enter' && saveSerpKey()}
+                placeholder="Paste SerpAPI key..."
+                className="flex-1 bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-sm text-fg-0 placeholder-fg-3 outline-none font-mono"
+              />
+              <button
+                onClick={saveSerpKey}
+                disabled={!newSerpKey.trim()}
+                className="bg-hero disabled:bg-bg-3 disabled:text-fg-2 text-[#021418] font-medium text-sm px-4 rounded-lg hover:bg-hero transition-colors flex items-center gap-1 cursor-pointer"
+                aria-label="Save SerpAPI key"
+              >
+                {serpSaved ? <><Check size={13} /> Saved</> : 'Save'}
+              </button>
+            </div>
+            {serpError && <p className="text-xs text-crit mt-1">{serpError}</p>}
           </div>
         </div>
       </Section>
