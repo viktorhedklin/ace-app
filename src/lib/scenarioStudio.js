@@ -14,6 +14,24 @@ import {
   ESCALATION_TABLE, REGIONAL_POLICIES, parseErrorCodes,
 } from '@/data/bybitKB';
 
+// ── Timeout wrapper for LLM calls ───────────────────────────────────────────
+// Without this, a hung provider request leaves the caller's loading state
+// (building/evaluating/busy) stuck forever with no way to recover but a full
+// reload. Aborts the underlying fetch after `ms` and throws a clear error so
+// callers can reset their state and offer Retry.
+export async function withLLMTimeout(invoke, ms = 45000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  try {
+    return await invoke(controller.signal);
+  } catch (e) {
+    if (controller.signal.aborted) throw new Error(`Request timed out after ${Math.round(ms / 1000)}s — try again.`);
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // ── Tolerant JSON extraction from an LLM response ───────────────────────────
 export function parseLLMJson(raw) {
   let s = String(raw || '').trim();
@@ -148,9 +166,7 @@ export function normalizeBuiltScenario(raw) {
   // We DO NOT force exactly 4 categories and we NEVER silently wipe a valid,
   // hand/AI-weighted rubric back to the generic canonical one.
   const cps = Array.isArray(s.checkpoints) ? s.checkpoints.filter(c => c && typeof c === 'object') : [];
-  const isBonus = c => !!(c.bonus || /added.?value|bonus/i.test(c.desc || '') || /added.?value/i.test(c.category || ''));
-  const isDeduction = c => !!(c.deduction || /deduction|deduct|penalt/i.test(c.desc || '') || /deduction/i.test(c.category || ''));
-  const base = cps.filter(c => !isBonus(c) && !isDeduction(c));
+  const base = cps.filter(c => !isBonusCp(c) && !isDeductionCp(c));
   const baseTotal = base.reduce((t, c) => t + (Number(c.max) || 0), 0);
   const valid = base.length >= 1 && baseTotal === 100;
   if (!valid) {
@@ -160,13 +176,18 @@ export function normalizeBuiltScenario(raw) {
       desc: scrubSelfReference(String(c.desc || '')),
       max: Number(c.max) || 0,
       category: String(c.category || inferCheckpointCategory(c)),
-      ...(isBonus(c) ? { bonus: true } : {}),
-      ...(isDeduction(c) ? { deduction: true } : {}),
+      ...(isBonusCp(c) ? { bonus: true } : {}),
+      ...(isDeductionCp(c) ? { deduction: true } : {}),
     }));
   }
   if (!s.id) s.id = 'SC-' + Math.floor(Math.random() * 1000);
   return s;
 }
+
+// Canonical bonus/deduction checkpoint classifiers — single source of truth,
+// shared by the normalizer, evaluator and the Scenario Studio page UI.
+export function isBonusCp(c) { return !!(c.bonus || /added.?value|bonus/i.test(c.desc || '') || /added.?value/i.test(c.category || '')); }
+export function isDeductionCp(c) { return !!(c.deduction || /deduction|deduct|penalt/i.test(c.desc || '') || /deduction/i.test(c.category || '')); }
 
 // Infer a checkpoint's official category from its text when the model didn't tag one.
 export function inferCheckpointCategory(c) {
@@ -241,7 +262,7 @@ Output ONLY a JSON object (no markdown fences) with EXACTLY these keys:
 export async function buildScenario(transcript) {
   const pack = buildKnowledgePack(transcript);
   const prompt = `${pack}\n\n========================================\nRAW TRANSCRIPT TO CONVERT:\n\n${transcript}`;
-  const raw = await InvokeLLM({
+  const raw = await withLLMTimeout(signal => InvokeLLM({
     prompt,
     system_prompt: BUILDER_SYSTEM,
     useKB: true,            // ACE also auto-injects retrieved KB into the system block
@@ -249,7 +270,8 @@ export async function buildScenario(transcript) {
     json: true,
     enableThinking: false,  // keeps build ~17s, under the serverless time limit
     temperature: 0.4,
-  });
+    signal,
+  }));
   return normalizeBuiltScenario(parseLLMJson(raw));
 }
 
@@ -259,11 +281,9 @@ export async function evaluateTranscript({ transcript, scenario, mode = 'agent' 
   const pack = buildKnowledgePack(`${scenario?.issue || ''}\n${scenario?.hidden || ''}\n${transcript}`);
   const cps = Array.isArray(scenario?.checkpoints) && scenario.checkpoints.length
     ? scenario.checkpoints : CANONICAL_CHECKPOINTS();
-  const isBonus = c => !!(c.bonus || /added.?value|bonus/i.test(c.desc || '') || /added.?value/i.test(c.category || ''));
-  const isDeduction = c => !!(c.deduction || /deduction|deduct|penalt/i.test(c.desc || '') || /deduction/i.test(c.category || ''));
-  const baseCps = cps.filter(c => !isBonus(c) && !isDeduction(c));
-  const bonusCps = cps.filter(isBonus);
-  const dedCps = cps.filter(isDeduction);
+  const baseCps = cps.filter(c => !isBonusCp(c) && !isDeductionCp(c));
+  const bonusCps = cps.filter(isBonusCp);
+  const dedCps = cps.filter(isDeductionCp);
   const cpList = baseCps.map((c, i) => `${i + 1}. [${c.category || 'Accuracy and Product Knowledge'}] (${c.max} pts) ${c.desc}`).join('\n');
   const bonusList = bonusCps.length ? '\nSEPARATE BONUS (added on top, not in the /100):\n' + bonusCps.map(c => `• (+${c.max} max) ${c.desc}`).join('\n') : '';
   const dedList = dedCps.length ? '\nSEPARATE DEDUCTIONS (subtract from the base if the mistake occurred):\n' + dedCps.map(c => `• (−${c.max} max) ${c.desc}`).join('\n') : '';
@@ -312,7 +332,7 @@ TASK: ${task}
 Be evidence-based: quote EXACT lines from the transcript to justify every score. Reason step by step BEFORE assigning numbers, but output ONLY the final JSON. Never inflate scores. Output ONLY a JSON object matching:
 ${schema}`;
 
-  const raw = await InvokeLLM({
+  const raw = await withLLMTimeout(signal => InvokeLLM({
     prompt: `Here is the transcript to evaluate:\n\n${transcript}`,
     system_prompt: EVAL_SYSTEM,
     useKB: true,
@@ -320,7 +340,8 @@ ${schema}`;
     json: true,
     enableThinking: false,
     temperature: 0.1,
-  });
+    signal,
+  }));
   const result = parseLLMJson(raw);
   result._mode = mode;
   return result;
@@ -353,7 +374,7 @@ export async function refineScenario({ scenario, feedback }) {
   const pack = buildKnowledgePack(`${scenario?.issue || ''}\n${scenario?.hidden || ''}\n${scenario?.bot || ''}`);
   const current = JSON.stringify(scenario, null, 2);
   const prompt = `${pack}\n\n========================================\nCURRENT SCENARIO (JSON):\n${current}\n\n========================================\nROLE-PLAY BOT TEST FEEDBACK (fix the scenario to address this):\n${feedback}`;
-  const raw = await InvokeLLM({
+  const raw = await withLLMTimeout(signal => InvokeLLM({
     prompt,
     system_prompt: REFINER_SYSTEM,
     useKB: true,
@@ -361,7 +382,8 @@ export async function refineScenario({ scenario, feedback }) {
     json: true,
     enableThinking: false,
     temperature: 0.3,
-  });
+    signal,
+  }));
   const parsed = parseLLMJson(raw);
   const changes = parsed._changes || '';
   delete parsed._changes;
@@ -423,14 +445,15 @@ export async function copilotAsk({ messages, scenario, transcript, evalResult })
 
   const prompt = `${pack}\n\n========================================\nLIVE ROLE-PLAY CONTEXT:\n${ctx}\n\n========================================\nCHAT WITH THE AGENT (most recent last):\n${history}\n\n========================================\nAnswer the agent's latest message as their live co-pilot.`;
 
-  return InvokeLLM({
+  return withLLMTimeout(signal => InvokeLLM({
     prompt,
     system_prompt: COPILOT_SYSTEM,
     useKB: true,
     maxTokens: 1200,
     enableThinking: false,
     temperature: 0.4,
-  });
+    signal,
+  }));
 }
 
 // ── DEBRIEF CHAT ─────────────────────────────────────────────────────────────
@@ -473,14 +496,15 @@ export async function debriefAsk({ messages, scenario, savedLessons }) {
 
   const prompt = `${pack}\n\n========================================\nDEBRIEF CONTEXT:\n${ctx}\n\n========================================\nCONVERSATION (most recent last):\n${history}\n\n========================================\nRespond to Viktor's latest message. Be honest, direct, practical.`;
 
-  return InvokeLLM({
+  return withLLMTimeout(signal => InvokeLLM({
     prompt,
     system_prompt: DEBRIEF_SYSTEM,
     useKB: true,
     maxTokens: 1400,
     enableThinking: false,
     temperature: 0.4,
-  });
+    signal,
+  }));
 }
 
 export async function extractDebriefLessons({ conversation, scenario, userNotes }) {
@@ -494,13 +518,14 @@ export async function extractDebriefLessons({ conversation, scenario, userNotes 
 
   const prompt = `${ctx ? ctx + '\n\n' : ''}DEBRIEF CONVERSATION:\n${convText}\n\n${userNotes ? `Viktor's own notes: ${userNotes}\n\n` : ''}Extract 2–6 concise, actionable lessons from this debrief. Each lesson should be something a future trainer or scenario-builder should know and avoid repeating. Format as JSON array: [{"lesson":"...","tag":"policy|scenario|soft-skill|escalation|general"}]. Output only valid JSON, no extra text.`;
 
-  const raw = await InvokeLLM({
+  const raw = await withLLMTimeout(signal => InvokeLLM({
     prompt,
     system_prompt: 'You are an expert Bybit CS training analyst. Extract concise, reusable training lessons from a debrief conversation. Output only valid JSON.',
     useKB: false,
     maxTokens: 800,
     enableThinking: false,
     temperature: 0.2,
-  });
+    signal,
+  }));
   return parseLLMJson(raw);
 }

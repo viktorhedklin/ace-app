@@ -174,14 +174,10 @@ function articleMatchesTags(article, tagList) {
 //
 // Returns: ranked array of KB articles (length ≤ limit).
 
-export function retrieveArticles(query, options = {}) {
-  const {
-    domains,
-    tags,
-    caseType,
-    limit = 5,
-    minCandidates = 3,
-  } = options;
+// Shared scoring pipeline behind retrieveArticles/topMatchScore — domain/tag/
+// caseType filtering + TF-IDF cosine rank, sorted descending, unsliced.
+function scoreCandidates(query, options = {}) {
+  const { domains, tags, caseType, minCandidates = 3 } = options;
 
   if (!query?.trim()) return [];
 
@@ -222,9 +218,20 @@ export function retrieveArticles(query, options = {}) {
   return candidates
     .map(({ article, vector }) => ({ article, score: cosineSim(qv, vector) }))
     .filter(r => r.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, limit)
-    .map(r => r.article);
+    .sort((a, b) => b.score - a.score);
+}
+
+export function retrieveArticles(query, options = {}) {
+  const { limit = 5 } = options;
+  return scoreCandidates(query, options).slice(0, limit).map(r => r.article);
+}
+
+// Top cosine-similarity score for a query against the local KB, 0 if nothing
+// matched. Used to gate the opt-in web-knowledge injector — only offered when
+// the local KB clearly has no confident answer.
+export function topMatchScore(query, options = {}) {
+  const scored = scoreCandidates(query, options);
+  return scored.length ? scored[0].score : 0;
 }
 
 // Legacy export — unchanged signature for existing callers (semanticSearch(query, limit))

@@ -1,27 +1,32 @@
-// ─── Alibaba Cloud Model Studio (DashScope) client ──────────────────────────
-// INTERNATIONAL region, OpenAI-compatible endpoint. Mirrors openai.js.
-// All requests go through the serverless proxy (/api/llm) so the DashScope key
-// can live server-side (DASHSCOPE_API_KEY). If no server key is set, the user's
-// locally-stored key is sent via the BYO-key header.
+// ─── NVIDIA NIM (build.nvidia.com) client ───────────────────────────────────
+// Free-tier OpenAI-compatible endpoint hosting 80+ open models. Mirrors
+// alibaba.js / openai.js patterns exactly. All requests go through the
+// serverless proxy (/api/llm) so the NVIDIA key can live server-side
+// (NVIDIA_API_KEY). If no server key is set, the user's locally-stored key
+// is sent via the BYO-key header.
 //
-// Models (per Viktor's setup): qwen3.7-max, qwen3.7-plus, deepseek-v4-flash,
-// qwen-max, qwen-plus.
+// IMPORTANT — this provider is intentionally scoped to two side-features only
+// (QA critic pass, web-knowledge synthesis), never the primary scenario or
+// co-pilot path. NVIDIA's free tier logs and trains on all inputs/outputs and
+// explicitly disclaims customer-facing production use — every call here MUST
+// scrub PII first (same boundary as every other provider) and the caller is
+// responsible for gating these features behind an explicit opt-in toggle.
 
 import { scrubPII } from '@/lib/SecurityModule';
 import { llmFetch } from '@/api/proxy';
 
-const ALIBABA_KEY_SLOT = 'alibaba_api_key';
+const NVIDIA_KEY_SLOT = 'nvidia_api_key';
 
-export function getAlibabaKey() {
-  return localStorage.getItem(ALIBABA_KEY_SLOT) || '';
+export function getNvidiaKey() {
+  return localStorage.getItem(NVIDIA_KEY_SLOT) || '';
 }
 
-export function setAlibabaKey(key) {
-  localStorage.setItem(ALIBABA_KEY_SLOT, key.trim());
+export function setNvidiaKey(key) {
+  localStorage.setItem(NVIDIA_KEY_SLOT, key.trim());
 }
 
-export function clearAlibabaKey() {
-  localStorage.removeItem(ALIBABA_KEY_SLOT);
+export function clearNvidiaKey() {
+  localStorage.removeItem(NVIDIA_KEY_SLOT);
 }
 
 // Scrub message content — handles both string and content-array formats.
@@ -50,10 +55,10 @@ function buildSystemMessages(systemPrompt) {
 }
 
 /**
- * Non-streaming DashScope chat completion.
+ * Non-streaming NVIDIA NIM chat completion.
  * Returns { text, usage } where usage = { input_tokens, output_tokens }.
  */
-export async function alibabaChat(apiKey, messages, systemPrompt, maxTokens = 2048, model = 'qwen-plus', opts = {}) {
+export async function nvidiaChat(apiKey, messages, systemPrompt, maxTokens = 1024, model = 'meta/llama-4-maverick-17b-128e-instruct', opts = {}) {
   const safeMessages = messages.map(m => ({
     ...m,
     content: m.role === 'user' ? scrubContent(m.content) : m.content,
@@ -65,18 +70,13 @@ export async function alibabaChat(apiKey, messages, systemPrompt, maxTokens = 20
     messages: allMessages,
     max_tokens: maxTokens,
   };
-  // Strict JSON output (Auto-Builder / Evaluator need parseable JSON).
-  if (opts.json) payload.response_format = { type: 'json_object' };
-  // Qwen reasoning toggle — turning OFF extended thinking massively cuts latency
-  // on structured generations and keeps us under the serverless time limit.
-  if (opts.enableThinking === false) payload.enable_thinking = false;
   if (opts.temperature != null) payload.temperature = opts.temperature;
 
-  const res = await llmFetch('alibaba', apiKey, payload, opts.signal);
+  const res = await llmFetch('nvidia', apiKey, payload, opts.signal);
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err?.error?.message || err?.message || `Alibaba error ${res.status}`);
+    throw new Error(err?.error?.message || err?.message || `NVIDIA error ${res.status}`);
   }
 
   const data = await res.json();
@@ -89,17 +89,17 @@ export async function alibabaChat(apiKey, messages, systemPrompt, maxTokens = 20
 }
 
 /**
- * Streaming DashScope chat completion.
+ * Streaming NVIDIA NIM chat completion.
  * Calls onToken(token, accumulated) for each chunk. Returns { text, usage }.
  */
-export async function alibabaChatStream(apiKey, messages, systemPrompt, maxTokens, onToken, model = 'qwen-plus') {
+export async function nvidiaChatStream(apiKey, messages, systemPrompt, maxTokens, onToken, model = 'meta/llama-4-maverick-17b-128e-instruct') {
   const safeMessages = messages.map(m => ({
     ...m,
     content: m.role === 'user' ? scrubContent(m.content) : m.content,
   }));
   const allMessages = [...buildSystemMessages(systemPrompt), ...safeMessages];
 
-  const res = await llmFetch('alibaba', apiKey, {
+  const res = await llmFetch('nvidia', apiKey, {
     model,
     messages: allMessages,
     max_tokens: maxTokens,
@@ -109,7 +109,7 @@ export async function alibabaChatStream(apiKey, messages, systemPrompt, maxToken
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err?.error?.message || err?.message || `Alibaba error ${res.status}`);
+    throw new Error(err?.error?.message || err?.message || `NVIDIA error ${res.status}`);
   }
 
   const reader = res.body.getReader();

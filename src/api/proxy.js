@@ -18,9 +18,10 @@ const PROXY_URL = '/api/llm';
  * @param {'anthropic'|'openai'|'alibaba'} provider
  * @param {string} clientKey  locally-stored key (sent only if present; ignored when server has env key)
  * @param {object} payload    provider-native request body
+ * @param {AbortSignal} [signal]  optional — aborts the request (e.g. on caller timeout)
  * @returns {Promise<Response>} raw fetch Response (caller reads .json() or .body stream)
  */
-export async function llmFetch(provider, clientKey, payload) {
+export async function llmFetch(provider, clientKey, payload, signal) {
   const headers = { 'Content-Type': 'application/json' };
   if (clientKey) headers['x-client-key'] = clientKey;
 
@@ -28,5 +29,6 @@ export async function llmFetch(provider, clientKey, payload) {
     method: 'POST',
     headers,
     body: JSON.stringify({ provider, payload }),
+    signal,
   });
 }

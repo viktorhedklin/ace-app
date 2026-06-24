@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   buildScenario, evaluateTranscript, refineScenario, copilotAsk, debriefAsk, extractDebriefLessons, CANONICAL_CHECKPOINTS,
+  isBonusCp, isDeductionCp, inferCheckpointCategory,
 } from '@/lib/scenarioStudio';
 import {
   listScenarios, saveScenario, updateScenario, renameScenario, deleteScenario,
@@ -11,6 +12,7 @@ import {
 import {
   listLessons, saveLessons, deleteLesson,
 } from '@/lib/debriefMemory';
+import { NAMESPACES, get as storageGet, set as storageSet } from '@/lib/storage';
 
 // ── official enums (from the CS Training — Role-play Scenario Creation Guide) ──
 const SCOPE_OPTIONS = ['Non-tech', 'Tech', 'MT5'];
@@ -18,19 +20,9 @@ const CASE_TYPE_OPTIONS = ['MT5', 'Bybit Card', 'Deposit & Withdrawal', 'Account
 const EMOTION_OPTIONS = ['Low (Calm)', 'Medium (Dissatisfied)', 'High (Angry)'];
 const CP_CATEGORIES = ['Probing Questions', 'Accuracy and Product Knowledge', 'Process Handling and Escalation', 'Soft Skills and Empathy', 'Added-Value Support', 'Deductions'];
 
-function cpCategory(c) {
-  if (c.category) return c.category;
-  const d = (c.desc || '').toLowerCase();
-  if (/added.?value|bonus/.test(d) || c.bonus) return 'Added-Value Support';
-  if (/deduction|deduct|penalt/.test(d) || c.deduction) return 'Deductions';
-  if (/probing|probe|ask|question/.test(d)) return 'Probing Questions';
-  if (/process|escalat|timeframe|document|self.?correct|pushback/.test(d)) return 'Process Handling and Escalation';
-  if (/soft|empath|tone|frustrat|polite/.test(d)) return 'Soft Skills and Empathy';
-  if (/accuracy|product|sop|root cause|policy|correct|faq|link/.test(d)) return 'Accuracy and Product Knowledge';
-  return 'Accuracy and Product Knowledge';
-}
-function isBonusCp(c) { return !!(c.bonus || /added.?value|bonus/i.test(c.desc || '') || /added.?value/i.test(c.category || '')); }
-function isDeductionCp(c) { return !!(c.deduction || /deduction|deduct|penalt/i.test(c.desc || '') || /deduction/i.test(c.category || '')); }
+// Category for display: trust an explicit category, else infer it via the
+// canonical lib classifier (same patterns the builder/evaluator use).
+function cpCategory(c) { return c.category || inferCheckpointCategory(c); }
 
 // ── helpers ─────────────────────────────────────────────────────────────────
 const FIELD_LABELS = {
@@ -269,17 +261,17 @@ function StepRail({ step }) {
     { n: 5, label: 'Debrief', icon: BookOpen },
   ];
   return (
-    <div className="flex items-center gap-2 mb-6">
+    <div className="flex items-center gap-2 mb-6 overflow-x-auto -mx-6 px-6 sm:mx-0 sm:px-0">
       {steps.map((s, i) => (
-        <div key={s.n} className="flex items-center gap-2">
+        <div key={s.n} className="flex items-center gap-2 shrink-0">
           <div className={cn(
-            'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border',
+            'flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium border whitespace-nowrap',
             step === s.n ? 'bg-hero/15 text-hero border-hero/30'
               : step > s.n ? 'bg-ok/10 text-ok border-ok/20' : 'bg-bg-1 text-fg-3 border-border-0'
           )}>
             <s.icon className="w-3.5 h-3.5" />{s.label}
           </div>
-          {i < steps.length - 1 && <div className={cn('w-6 h-px', step > s.n ? 'bg-ok/40' : 'bg-border-0')} />}
+          {i < steps.length - 1 && <div className={cn('w-4 sm:w-6 h-px shrink-0', step > s.n ? 'bg-ok/40' : 'bg-border-0')} />}
         </div>
       ))}
     </div>
@@ -388,20 +380,30 @@ function CoPilot({ scenario, transcript, evalResult }) {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [msgs, busy]);
 
-  async function send() {
-    const q = input.trim();
-    if (!q || busy) return;
-    const next = [...msgs, { role: 'user', content: q }];
-    setMsgs(next); setInput(''); setBusy(true);
+  async function runAsk(list) {
+    setBusy(true);
     try {
-      const reply = await copilotAsk({ messages: next, scenario, transcript, evalResult });
+      const reply = await copilotAsk({ messages: list, scenario, transcript, evalResult });
       setMsgs(m => [...m, { role: 'assistant', content: reply }]);
     } catch (e) {
       const msg = ['NO_ALIBABA_KEY', 'NO_API_KEY', 'NO_OPENAI_KEY'].includes(e.message)
         ? 'No LLM key configured — set it in Settings.' : ('Error: ' + e.message);
-      setMsgs(m => [...m, { role: 'assistant', content: msg, error: true }]);
+      setMsgs(m => [...m, { role: 'assistant', content: msg, error: true, retryList: list }]);
     }
     setBusy(false);
+  }
+
+  async function send() {
+    const q = input.trim();
+    if (!q || busy) return;
+    const next = [...msgs, { role: 'user', content: q }];
+    setMsgs(next); setInput('');
+    await runAsk(next);
+  }
+
+  async function retry(list) {
+    if (busy) return;
+    await runAsk(list);
   }
 
   function onKey(e) {
@@ -423,20 +425,26 @@ function CoPilot({ scenario, transcript, evalResult }) {
         {open && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
             className="border-t border-border-0">
-            <div ref={scrollRef} className="max-h-80 overflow-y-auto px-4 py-3 space-y-3">
+            <div ref={scrollRef} className="max-h-[50vh] sm:max-h-80 overflow-y-auto px-4 py-3 space-y-3">
               {msgs.length === 0 && (
                 <div className="text-xs text-fg-2 bg-bg-1 border border-border-0 rounded-xl p-3">
                   You're the agent — the bot's pushing you. Ask me anything mid-conversation, e.g. <span className="text-fg-1">"the customer is asking why their withdrawal is stuck, how do I respond?"</span> I'll give you the SOP-correct reply (in the customer's language) using this scenario + ACE's knowledge.
                 </div>
               )}
               {msgs.map((m, i) => (
-                <div key={i} className={cn('flex', m.role === 'user' ? 'justify-end' : 'justify-start')}>
+                <div key={i} className={cn('flex flex-col', m.role === 'user' ? 'items-end' : 'items-start')}>
                   <div className={cn('max-w-[85%] rounded-2xl px-3.5 py-2 text-sm whitespace-pre-wrap break-words',
                     m.role === 'user' ? 'bg-hero text-white rounded-br-sm'
                       : m.error ? 'bg-crit/10 text-crit border border-crit/20 rounded-bl-sm'
                         : 'bg-bg-1 text-fg-0 border border-border-0 rounded-bl-sm')}>
                     {m.content}
                   </div>
+                  {m.error && m.retryList && (
+                    <button onClick={() => retry(m.retryList)} disabled={busy}
+                      className="mt-1 text-[11px] text-hero hover:underline disabled:opacity-40">
+                      Retry
+                    </button>
+                  )}
                 </div>
               ))}
               {busy && (
@@ -481,12 +489,30 @@ function CoPilot({ scenario, transcript, evalResult }) {
 // customer (bot) just said; ACE — who knows the full scenario incl. the hidden
 // answer key — coaches the ideal reply. Builds a running transcript so ACE has
 // full conversation context, and reuses copilotAsk() from the engine.
-function PracticeChat({ scenario }) {
+function PracticeChat({ scenario, recordId }) {
   const [msgs, setMsgs] = useState([]);          // {role:'customer'|'agent'|'ace', content, error?}
   const [input, setInput] = useState('');
   const [mode, setMode] = useState('customer');  // 'customer' = paste bot line · 'agent' = log my own reply
   const [busy, setBusy] = useState(false);
   const scrollRef = useRef(null);
+  const saveTimer = useRef(null);
+  const storageKey = recordId || scenario?.id || null;
+
+  // Rehydrate the transcript for this scenario record on mount / record switch.
+  useEffect(() => {
+    const saved = storageKey ? storageGet(NAMESPACES.CHAT, `practice_${storageKey}`) : null;
+    setMsgs(Array.isArray(saved) ? saved : []);
+  }, [storageKey]);
+
+  // Debounced persist so refresh/navigation doesn't lose the transcript.
+  useEffect(() => {
+    if (!storageKey) return;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      storageSet(NAMESPACES.CHAT, `practice_${storageKey}`, msgs);
+    }, 500);
+    return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
+  }, [msgs, storageKey]);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -522,9 +548,14 @@ function PracticeChat({ scenario }) {
     } catch (e) {
       const msg = ['NO_ALIBABA_KEY', 'NO_API_KEY', 'NO_OPENAI_KEY'].includes(e.message)
         ? 'No LLM key configured — set it in Settings.' : ('Error: ' + e.message);
-      setMsgs(m => [...m, { role: 'ace', content: msg, error: true }]);
+      setMsgs(m => [...m, { role: 'ace', content: msg, error: true, retryList: list }]);
     }
     setBusy(false);
+  }
+
+  async function retry(list) {
+    if (busy) return;
+    await askAce(list);
   }
 
   async function send() {
@@ -571,7 +602,7 @@ function PracticeChat({ scenario }) {
       )}
 
       <div className="border border-border-0 rounded-2xl bg-bg-0 overflow-hidden">
-        <div ref={scrollRef} className="min-h-[18rem] max-h-[28rem] overflow-y-auto px-4 py-3 space-y-3">
+        <div ref={scrollRef} className="min-h-[14rem] max-h-[55vh] sm:min-h-[18rem] sm:max-h-[28rem] overflow-y-auto px-4 py-3 space-y-3">
           {msgs.length === 0 && (
             <div className="text-xs text-fg-2 bg-bg-1 border border-border-0 rounded-xl p-3">
               Start by pasting the customer's opening line (mode <span className="text-fg-1">Customer says</span>). ACE will reply with the SOP-correct move and a ready-to-send message in the customer's language.
@@ -588,6 +619,12 @@ function PracticeChat({ scenario }) {
                   m.error ? 'bg-crit/10 text-crit border border-crit/20 rounded-bl-sm' : bubble[m.role])}>
                   {m.content}
                 </div>
+                {m.error && m.retryList && (
+                  <button onClick={() => retry(m.retryList)} disabled={busy}
+                    className="mt-1 text-[11px] text-hero hover:underline disabled:opacity-40">
+                    Retry
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -705,7 +742,7 @@ function Library({ items, activeId, onOpen, onRename, onDelete, onRefresh }) {
 // ── Debrief chat (Step 5) ─────────────────────────────────────────────────────
 // Viktor pastes real bot feedback and debriefs with ACE. ACE always sides with
 // Viktor over the bot. At the end, extract lessons and save to memory.
-function DebriefChat({ scenario, onLessonsSaved }) {
+function DebriefChat({ scenario, recordId, onLessonsSaved }) {
   const [msgs, setMsgs] = useState([]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
@@ -715,6 +752,24 @@ function DebriefChat({ scenario, onLessonsSaved }) {
   const [showMemory, setShowMemory] = useState(false);
   const [saveNote, setSaveNote] = useState('');
   const scrollRef = useRef(null);
+  const saveTimer = useRef(null);
+  const storageKey = recordId || scenario?.id || null;
+
+  // Rehydrate the debrief transcript for this scenario record on mount / record switch.
+  useEffect(() => {
+    const saved = storageKey ? storageGet(NAMESPACES.DEBRIEF, `transcript_${storageKey}`) : null;
+    setMsgs(Array.isArray(saved) ? saved : []);
+  }, [storageKey]);
+
+  // Debounced persist so refresh/navigation doesn't lose the transcript.
+  useEffect(() => {
+    if (!storageKey) return;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      storageSet(NAMESPACES.DEBRIEF, `transcript_${storageKey}`, msgs);
+    }, 500);
+    return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
+  }, [msgs, storageKey]);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -724,14 +779,11 @@ function DebriefChat({ scenario, onLessonsSaved }) {
     setSavedLessons(listLessons());
   }
 
-  async function send() {
-    const q = input.trim();
-    if (!q || busy) return;
-    const next = [...msgs, { role: 'user', content: q }];
-    setMsgs(next); setInput(''); setBusy(true);
+  async function runAsk(list) {
+    setBusy(true);
     try {
       const reply = await debriefAsk({
-        messages: next,
+        messages: list,
         scenario,
         savedLessons: listLessons(),
       });
@@ -739,9 +791,22 @@ function DebriefChat({ scenario, onLessonsSaved }) {
     } catch (e) {
       const msg = ['NO_ALIBABA_KEY', 'NO_API_KEY', 'NO_OPENAI_KEY'].includes(e.message)
         ? 'No LLM key configured — set it in Settings.' : ('Error: ' + e.message);
-      setMsgs(m => [...m, { role: 'assistant', content: msg, error: true }]);
+      setMsgs(m => [...m, { role: 'assistant', content: msg, error: true, retryList: list }]);
     }
     setBusy(false);
+  }
+
+  async function send() {
+    const q = input.trim();
+    if (!q || busy) return;
+    const next = [...msgs, { role: 'user', content: q }];
+    setMsgs(next); setInput('');
+    await runAsk(next);
+  }
+
+  async function retry(list) {
+    if (busy) return;
+    await runAsk(list);
   }
 
   async function handleSaveLessons() {
@@ -797,7 +862,7 @@ function DebriefChat({ scenario, onLessonsSaved }) {
 
       {/* Chat window */}
       <div className="border border-border-0 rounded-2xl bg-bg-0 overflow-hidden">
-        <div ref={scrollRef} className="min-h-[20rem] max-h-[32rem] overflow-y-auto px-4 py-3 space-y-3">
+        <div ref={scrollRef} className="min-h-[16rem] max-h-[60vh] sm:min-h-[20rem] sm:max-h-[32rem] overflow-y-auto px-4 py-3 space-y-3">
           {msgs.length === 0 && (
             <div className="text-xs text-fg-2 bg-bg-1 border border-border-0 rounded-xl p-3 space-y-1.5">
               <div className="font-medium text-fg-1">How to start</div>
@@ -820,6 +885,12 @@ function DebriefChat({ scenario, onLessonsSaved }) {
                       : 'bg-bg-1 text-fg-0 border border-border-0 rounded-bl-sm')}>
                   {m.content}
                 </div>
+                {m.error && m.retryList && (
+                  <button onClick={() => retry(m.retryList)} disabled={busy}
+                    className="mt-1 text-[11px] text-hero hover:underline disabled:opacity-40">
+                    Retry
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -961,6 +1032,7 @@ export default function ScenarioStudio() {
   const [library, setLibrary] = useState([]);
   const [activeRecordId, setActiveRecordId] = useState(null);
   const [libOpen, setLibOpen] = useState(false);
+  const [saveStatus, setSaveStatus] = useState('idle'); // 'idle' | 'saving' | 'saved'
   const saveTimer = useRef(null);
 
   const refreshLibrary = () => setLibrary(listScenarios());
@@ -969,9 +1041,13 @@ export default function ScenarioStudio() {
   // Auto-save: debounce edits to the active scenario record so renames/tweaks persist.
   useEffect(() => {
     if (!scenario || !activeRecordId) return;
+    setSaveStatus('saving');
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      updateScenario(activeRecordId, scenario).then(refreshLibrary);
+      updateScenario(activeRecordId, scenario).then(() => {
+        refreshLibrary();
+        setSaveStatus('saved');
+      });
     }, 800);
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
   }, [scenario, activeRecordId]);
@@ -979,19 +1055,21 @@ export default function ScenarioStudio() {
   function openSaved(rec) {
     setScenario(rec.scenario);
     setActiveRecordId(rec.recordId);
+    setSaveStatus('saved');
     setLibOpen(false);
     setStep(2);
   }
 
   async function runBuild() {
     if (!transcript.trim()) return;
-    setBuilding(true); setErr(''); setScenario(null);
+    setBuilding(true); setErr(''); setScenario(null); setActiveRecordId(null); setSaveStatus('idle');
     try {
       const s = await buildScenario(transcript.trim());
       setScenario(s);
       // Auto-save the freshly built scenario into the library.
       const recordId = await saveScenario(s);
       setActiveRecordId(recordId);
+      setSaveStatus('saved');
       refreshLibrary();
       setStep(2);
     } catch (e) {
@@ -1042,18 +1120,25 @@ export default function ScenarioStudio() {
   const ready = readiness(scenario);
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="mb-5 flex items-start justify-between gap-3">
+    <div className="p-4 sm:p-6 max-w-4xl mx-auto">
+      <div className="mb-5 flex items-start justify-between gap-3 flex-wrap">
         <div>
           <h1 className="text-xl font-bold text-fg-0 flex items-center gap-2"><Brain className="w-5 h-5 text-hero" /> Scenario Studio</h1>
           <p className="text-sm text-fg-2">Turn a real chat transcript into a spec-perfect role-play scenario — grounded in ACE's Bybit knowledge. Then grade agent or bot transcripts against the official rubric.</p>
         </div>
-        <button onClick={() => setLibOpen(o => !o)}
-          className={cn('shrink-0 inline-flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-xl border transition-colors',
-            libOpen ? 'bg-hero/15 text-hero border-hero/30' : 'bg-bg-1 text-fg-1 border-border-0 hover:bg-bg-2')}>
-          <LibraryIcon className="w-4 h-4" /> Library
-          {library.length > 0 && <span className="text-[10px] bg-bg-2 text-fg-2 rounded-full px-1.5 py-0.5">{library.length}</span>}
-        </button>
+        <div className="shrink-0 flex items-center gap-2">
+          {activeRecordId && saveStatus !== 'idle' && (
+            <span className="text-[11px] text-fg-3 flex items-center gap-1">
+              {saveStatus === 'saving' ? <><Loader2 className="w-3 h-3 animate-spin" /> Saving…</> : 'Saved'}
+            </span>
+          )}
+          <button onClick={() => setLibOpen(o => !o)}
+            className={cn('inline-flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-xl border transition-colors',
+              libOpen ? 'bg-hero/15 text-hero border-hero/30' : 'bg-bg-1 text-fg-1 border-border-0 hover:bg-bg-2')}>
+            <LibraryIcon className="w-4 h-4" /> Library
+            {library.length > 0 && <span className="text-[10px] bg-bg-2 text-fg-2 rounded-full px-1.5 py-0.5">{library.length}</span>}
+          </button>
+        </div>
       </div>
 
       <AnimatePresence initial={false}>
@@ -1091,9 +1176,15 @@ export default function ScenarioStudio() {
               onChange={e => setTranscript(e.target.value)}
               placeholder={'Chat Started: ...\n( 10s ) Visitor: ...\nGustavo: ...'}
               rows={14}
-              className="w-full bg-bg-1 border border-border-0 focus:border-hero/50 rounded-xl px-4 py-3 text-[12px] font-mono text-fg-0 placeholder-fg-2 outline-none resize-y transition-colors"
+              className="w-full h-40 sm:h-64 md:h-80 bg-bg-1 border border-border-0 focus:border-hero/50 rounded-xl px-4 py-3 text-[12px] font-mono text-fg-0 placeholder-fg-2 outline-none resize-y transition-colors"
             />
-            {err && <div className="text-xs text-crit">{err}</div>}
+            {err && (
+              <div className="flex items-center gap-2 text-xs text-crit">
+                <span>{err}</span>
+                <button onClick={runBuild} disabled={building || !transcript.trim()}
+                  className="text-hero hover:underline disabled:opacity-40">Retry</button>
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <span className="text-xs text-fg-3">{transcript.trim() ? `${transcript.length.toLocaleString()} chars` : 'Messy is fine — timestamps & bot menus are handled.'}</span>
               <button onClick={runBuild} disabled={building || !transcript.trim()}
@@ -1193,7 +1284,13 @@ export default function ScenarioStudio() {
               <textarea value={feedback} onChange={e => setFeedback(e.target.value)} rows={4}
                 placeholder={'Paste the bot\u2019s test feedback / issues found (e.g. "hidden context leaked too early", "emotion never rose", "timeframe wrong")\u2026'}
                 className="w-full bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-xs text-fg-0 placeholder-fg-2 outline-none resize-y transition-colors" />
-              {refErr && <div className="text-xs text-crit">{refErr}</div>}
+              {refErr && (
+                <div className="flex items-center gap-2 text-xs text-crit">
+                  <span>{refErr}</span>
+                  <button onClick={runRefine} disabled={refining || !feedback.trim()}
+                    className="text-hero hover:underline disabled:opacity-40">Retry</button>
+                </div>
+              )}
               {refNote && (
                 <div className="flex items-start gap-2 bg-ok/10 border border-ok/20 rounded-lg p-2.5 text-xs text-fg-1">
                   <Check className="w-3.5 h-3.5 text-ok shrink-0 mt-0.5" />
@@ -1260,9 +1357,15 @@ export default function ScenarioStudio() {
               onChange={e => setEvTranscript(e.target.value)}
               placeholder={'Customer: ...\nAgent: ...\nCustomer: ...'}
               rows={10}
-              className="w-full bg-bg-1 border border-border-0 focus:border-hero/50 rounded-xl px-4 py-3 text-[12px] font-mono text-fg-0 placeholder-fg-2 outline-none resize-y transition-colors"
+              className="w-full h-32 sm:h-48 md:h-56 bg-bg-1 border border-border-0 focus:border-hero/50 rounded-xl px-4 py-3 text-[12px] font-mono text-fg-0 placeholder-fg-2 outline-none resize-y transition-colors"
             />
-            {evErr && <div className="text-xs text-crit">{evErr}</div>}
+            {evErr && (
+              <div className="flex items-center gap-2 text-xs text-crit">
+                <span>{evErr}</span>
+                <button onClick={runEval} disabled={evaluating || !evTranscript.trim()}
+                  className="text-hero hover:underline disabled:opacity-40">Retry</button>
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <button onClick={() => setStep(scenario ? 2 : 1)} className="text-xs px-3 py-1.5 rounded-lg bg-bg-2 hover:bg-bg-3 text-fg-1 border border-border-0">← Back</button>
               <button onClick={runEval} disabled={evaluating || !evTranscript.trim()}
@@ -1302,7 +1405,7 @@ export default function ScenarioStudio() {
         {/* STEP 4 — PRACTICE */}
         {step === 4 && (
           <motion.div key="s4" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="space-y-3">
-            <PracticeChat scenario={scenario} />
+            <PracticeChat scenario={scenario} recordId={activeRecordId} />
             <div className="flex justify-between pt-2 border-t border-border-0">
               <button onClick={() => setStep(3)} className="text-xs px-3 py-1.5 rounded-lg bg-bg-2 hover:bg-bg-3 text-fg-1 border border-border-0">← Back to Evaluator</button>
               <button onClick={() => setStep(5)}
@@ -1316,7 +1419,7 @@ export default function ScenarioStudio() {
         {/* STEP 5 — DEBRIEF */}
         {step === 5 && (
           <motion.div key="s5" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="space-y-3">
-            <DebriefChat scenario={scenario} onLessonsSaved={() => {}} />
+            <DebriefChat scenario={scenario} recordId={activeRecordId} onLessonsSaved={() => {}} />
             <div className="flex justify-between pt-2 border-t border-border-0">
               <button onClick={() => setStep(4)} className="text-xs px-3 py-1.5 rounded-lg bg-bg-2 hover:bg-bg-3 text-fg-1 border border-border-0">← Back to Practice</button>
               <button onClick={() => setStep(scenario ? 2 : 1)} className="text-xs px-3 py-1.5 rounded-lg bg-bg-2 hover:bg-bg-3 text-fg-1 border border-border-0">Edit scenario →</button>

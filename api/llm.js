@@ -42,6 +42,17 @@ const PROVIDERS = {
     envKey: 'DASHSCOPE_API_KEY',
     authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
   },
+  // NVIDIA NIM (build.nvidia.com) — free-tier OpenAI-compatible endpoint hosting
+  // 80+ open models. Used for the QA critic pass and web-knowledge synthesis only
+  // (never on the primary scenario/co-pilot path) — see src/api/nvidia.js.
+  // NOTE: NVIDIA's free tier logs/trains on all inputs+outputs and disclaims
+  // customer-facing use; callers must scrub PII before this ever fires (same
+  // SecurityModule.scrubPII boundary as every other provider).
+  nvidia: {
+    url: 'https://integrate.api.nvidia.com/v1/chat/completions',
+    envKey: 'NVIDIA_API_KEY',
+    authHeader: (key) => ({ Authorization: `Bearer ${key}` }),
+  },
 };
 
 function resolveKey(provider, req) {
