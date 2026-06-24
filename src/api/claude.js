@@ -694,7 +694,7 @@ async function claudeChatStream(apiKey, messages, systemPrompt, maxTokens, onTok
   return fullText;
 }
 
-async function claudeChat(apiKey, messages, systemPrompt, maxTokens = 2048, model = MODELS.sonnet) {
+async function claudeChat(apiKey, messages, systemPrompt, maxTokens = 2048, model = MODELS.sonnet, opts = {}) {
   // GDPR gate — scrub all user messages before they leave the browser
   const safeMessages = messages.map(m => ({
     ...m,
@@ -708,7 +708,7 @@ async function claudeChat(apiKey, messages, systemPrompt, maxTokens = 2048, mode
   };
   if (systemPrompt) body.system = systemPrompt;
 
-  const res = await llmFetch('anthropic', apiKey, body);
+  const res = await llmFetch('anthropic', apiKey, body, opts.signal);
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -732,7 +732,7 @@ async function claudeChat(apiKey, messages, systemPrompt, maxTokens = 2048, mode
 
 export async function InvokeLLM({
   prompt, system_prompt = '', useKB = false, kbDomains, kbTags, kbCaseType,
-  maxTokens = 2048, json = false, enableThinking, temperature,
+  maxTokens = 2048, json = false, enableThinking, temperature, signal,
 }) {
   const model = resolveModel('utility');
   const provider = getModelProvider(model);
@@ -748,8 +748,8 @@ export async function InvokeLLM({
   const dynamicText = [retrieved, system_prompt].filter(Boolean).join('\n\n');
 
   const systemBlocks = buildCachedSystem(stableText, dynamicText);
-  const aliOpts = { json, enableThinking, temperature };
-  const oaiOpts = { json, temperature };
+  const aliOpts = { json, enableThinking, temperature, signal };
+  const oaiOpts = { json, temperature, signal };
 
   if (provider === 'openai') {
     const oaiKey = getOpenAIKey();
@@ -767,7 +767,7 @@ export async function InvokeLLM({
       trackUsage(model, usage.input_tokens, usage.output_tokens);
       return text;
     } catch (e) {
-      const fallback = isQuotaOrRateLimitError(e) ? alibabaFallbackModel(model) : '';
+      const fallback = !signal?.aborted && isQuotaOrRateLimitError(e) ? alibabaFallbackModel(model) : '';
       if (!fallback) throw e;
       const { text, usage } = await alibabaChat(aliKey, [{ role: 'user', content: prompt }], systemBlocks, maxTokens, fallback, aliOpts);
       trackUsage(fallback, usage.input_tokens, usage.output_tokens);
@@ -778,7 +778,7 @@ export async function InvokeLLM({
 
   const apiKey = getApiKey();
   if (!apiKey) throw new Error('NO_API_KEY');
-  return claudeChat(apiKey, [{ role: 'user', content: prompt }], systemBlocks, maxTokens, model);
+  return claudeChat(apiKey, [{ role: 'user', content: prompt }], systemBlocks, maxTokens, model, { signal });
 }
 
 // ─── PLAN instruction (injected by Chat when planMode is true) ─────────────────

@@ -67,7 +67,7 @@ export async function openaiChat(apiKey, messages, systemPrompt, maxTokens = 204
     model, ...tokenLimitField(model, maxTokens), messages: allMessages,
     ...(opts.json ? { response_format: { type: 'json_object' } } : {}),
     ...(opts.temperature != null ? { temperature: opts.temperature } : {}),
-  });
+  }, opts.signal);
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));

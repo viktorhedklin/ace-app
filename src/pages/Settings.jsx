@@ -3,6 +3,9 @@ import { getApiKey, setApiKey, clearApiKey, getCostMode, setCostMode } from '@/a
 import { getSerpApiKey, setSerpApiKey, clearSerpApiKey } from '@/api/search';
 import { getOpenAIKey, setOpenAIKey, clearOpenAIKey } from '@/api/openai';
 import { getAlibabaKey, setAlibabaKey, clearAlibabaKey } from '@/api/alibaba';
+import { getNvidiaKey, setNvidiaKey, clearNvidiaKey } from '@/api/nvidia';
+import { getBraveKey, setBraveKey, clearBraveKey } from '@/api/braveSearch';
+import { isQaCriticEnabled, setQaCriticEnabled, isWebKnowledgeEnabled, setWebKnowledgeEnabled } from '@/lib/nvidiaFeatures';
 import { Check, Eye, EyeOff, Trash2, AlertTriangle, ShieldCheck, FolderOpen, Loader2, Zap, Scale, Leaf, Cloud, CloudOff, Mail, LogOut, RefreshCw, Upload } from 'lucide-react';
 import KnowledgeManager from '@/components/KnowledgeManager';
 import { getAllCases } from '@/lib/caseMemory';
@@ -487,6 +490,22 @@ export default function Settings() {
   const [aliSaved, setAliSaved] = useState(false);
   const [aliError, setAliError] = useState('');
 
+  // NVIDIA NIM (free-tier QA critic + web-knowledge injection — opt-in, off by default)
+  const [nvKey, setNvKeyState] = useState(getNvidiaKey);
+  const [newNvKey, setNewNvKey] = useState('');
+  const [showNvKey, setShowNvKey] = useState(false);
+  const [nvSaved, setNvSaved] = useState(false);
+  const [nvError, setNvError] = useState('');
+  const [qaCriticOn, setQaCriticOn] = useState(isQaCriticEnabled);
+  const [webKnowledgeOn, setWebKnowledgeOn] = useState(isWebKnowledgeEnabled);
+
+  // Brave Search (backs the web-knowledge injector above)
+  const [braveKey, setBraveKeyState] = useState(getBraveKey);
+  const [newBraveKey, setNewBraveKey] = useState('');
+  const [showBraveKey, setShowBraveKey] = useState(false);
+  const [braveSaved, setBraveSaved] = useState(false);
+  const [braveError, setBraveError] = useState('');
+
   function saveKey() {
     const trimmed = newKey.trim();
     if (!trimmed.startsWith('sk-ant-')) { setKeyError('Anthropic keys start with sk-ant-'); return; }
@@ -554,6 +573,54 @@ export default function Settings() {
     if (!confirm('Remove OpenAI key? GPT models will be unavailable.')) return;
     clearOpenAIKey();
     setOaiKeyState('');
+  }
+
+  function saveNvKey() {
+    const trimmed = newNvKey.trim();
+    if (!trimmed.startsWith('nvapi-')) { setNvError('NVIDIA NIM keys start with nvapi-'); return; }
+    setNvidiaKey(trimmed);
+    setNvKeyState(trimmed);
+    setNewNvKey('');
+    setNvSaved(true);
+    setNvError('');
+    setTimeout(() => setNvSaved(false), 2000);
+  }
+
+  function removeNvKey() {
+    if (!confirm('Remove NVIDIA key? QA critic and web-knowledge injection will stop working.')) return;
+    clearNvidiaKey();
+    setNvKeyState('');
+  }
+
+  function toggleQaCritic() {
+    const next = !qaCriticOn;
+    if (next && !confirm('Turn on the QA critic? Scrubbed drafts will be sent to NVIDIA\'s free-tier NIM endpoint, which logs and trains on submitted data.')) return;
+    setQaCriticEnabled(next);
+    setQaCriticOn(next);
+  }
+
+  function toggleWebKnowledge() {
+    const next = !webKnowledgeOn;
+    if (next && !confirm('Turn on live web-knowledge injection? Generic search queries and scrubbed text will be sent to Brave Search + NVIDIA\'s free-tier NIM endpoint, which logs and trains on submitted data. Results are always labeled "unverified" and never auto-sent to customers.')) return;
+    setWebKnowledgeEnabled(next);
+    setWebKnowledgeOn(next);
+  }
+
+  function saveBraveKey() {
+    const trimmed = newBraveKey.trim();
+    if (!trimmed) { setBraveError('Enter a Brave Search key'); return; }
+    setBraveKey(trimmed);
+    setBraveKeyState(trimmed);
+    setNewBraveKey('');
+    setBraveSaved(true);
+    setBraveError('');
+    setTimeout(() => setBraveSaved(false), 2000);
+  }
+
+  function removeBraveKey() {
+    if (!confirm('Remove Brave Search key? Live web-knowledge injection will stop working.')) return;
+    clearBraveKey();
+    setBraveKeyState('');
   }
 
   function clearData(key, label) {
@@ -792,6 +859,126 @@ export default function Settings() {
               </button>
             </div>
             {aliError && <p className="text-xs text-crit mt-1">{aliError}</p>}
+          </div>
+        </div>
+      </Section>
+
+      {/* NVIDIA NIM — opt-in side features */}
+      <Section title="🟩 NVIDIA NIM — QA Critic & Web Knowledge (opt-in)">
+        <div className="space-y-4">
+          <div className="flex items-start gap-2 bg-warn/10 border border-warn/30 rounded-lg p-3 text-xs text-fg-1">
+            <AlertTriangle className="w-4 h-4 text-warn shrink-0 mt-0.5" />
+            <span>Both features below route <span className="font-medium text-fg-0">scrubbed</span> text to NVIDIA's free-tier NIM endpoint, which logs and trains on all inputs/outputs and is not intended for customer-facing production use. Off by default — read before enabling.</span>
+          </div>
+
+          <div className="flex items-center justify-between bg-bg-2 rounded-lg px-4 py-3">
+            <div>
+              <p className="text-xs text-fg-2 mb-0.5">Current key</p>
+              <p className="text-sm font-mono text-fg-1">{nvKey ? (showNvKey ? nvKey : `nvapi-...${nvKey.slice(-6)}`) : 'Not set'}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              {nvKey && (
+                <>
+                  <button onClick={() => setShowNvKey(!showNvKey)} className="text-fg-2 hover:text-fg-1 transition-colors cursor-pointer" aria-label={showNvKey ? 'Hide NVIDIA key' : 'Show NVIDIA key'}>
+                    {showNvKey ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                  <button onClick={removeNvKey} className="text-fg-2 hover:text-crit transition-colors cursor-pointer" aria-label="Remove NVIDIA key">
+                    <Trash2 size={15} />
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+          <div>
+            <label htmlFor="nv-key-input" className="text-xs text-fg-2 mb-1.5 block">{nvKey ? 'Replace key' : 'Add key'}</label>
+            <div className="flex gap-2">
+              <input
+                id="nv-key-input"
+                type="password"
+                value={newNvKey}
+                onChange={e => { setNewNvKey(e.target.value); setNvError(''); }}
+                onKeyDown={e => e.key === 'Enter' && saveNvKey()}
+                placeholder="nvapi-..."
+                className="flex-1 bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-sm text-fg-0 placeholder-fg-3 outline-none font-mono"
+              />
+              <button
+                onClick={saveNvKey}
+                disabled={!newNvKey.trim()}
+                className="bg-hero disabled:bg-bg-3 disabled:text-fg-2 text-[#021418] font-medium text-sm px-4 rounded-lg hover:bg-hero transition-colors flex items-center gap-1 cursor-pointer"
+                aria-label="Save NVIDIA key"
+              >
+                {nvSaved ? <><Check size={13} /> Saved</> : 'Save'}
+              </button>
+            </div>
+            {nvError && <p className="text-xs text-crit mt-1">{nvError}</p>}
+          </div>
+
+          <div className="flex items-center justify-between py-2 border-t border-border-0">
+            <div>
+              <p className="text-sm text-fg-0">QA critic pass</p>
+              <p className="text-xs text-fg-2">Side-panel tips on a drafted reply's tone, gaps & policy risk. Never auto-inserted.</p>
+            </div>
+            <button onClick={toggleQaCritic}
+              className={`shrink-0 ml-4 w-10 h-6 rounded-full transition-colors relative ${qaCriticOn ? 'bg-hero' : 'bg-bg-3'}`}
+              aria-label={qaCriticOn ? 'Disable QA critic' : 'Enable QA critic'}>
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${qaCriticOn ? 'translate-x-4' : ''}`} />
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between py-2 border-t border-border-0">
+            <div>
+              <p className="text-sm text-fg-0">Live web-knowledge injection</p>
+              <p className="text-xs text-fg-2">When the local KB has no confident match, search the web for a grounded answer. Always tagged "external — verify before sending."</p>
+            </div>
+            <button onClick={toggleWebKnowledge}
+              className={`shrink-0 ml-4 w-10 h-6 rounded-full transition-colors relative ${webKnowledgeOn ? 'bg-hero' : 'bg-bg-3'}`}
+              aria-label={webKnowledgeOn ? 'Disable web-knowledge injection' : 'Enable web-knowledge injection'}>
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${webKnowledgeOn ? 'translate-x-4' : ''}`} />
+            </button>
+          </div>
+
+          <div className="pt-2 border-t border-border-0">
+            <div className="flex items-center justify-between bg-bg-2 rounded-lg px-4 py-3">
+              <div>
+                <p className="text-xs text-fg-2 mb-0.5">Brave Search key (required for web-knowledge injection)</p>
+                <p className="text-sm font-mono text-fg-1">{braveKey ? (showBraveKey ? braveKey : `${braveKey.slice(0, 4)}...${braveKey.slice(-4)}`) : 'Not set'}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                {braveKey && (
+                  <>
+                    <button onClick={() => setShowBraveKey(!showBraveKey)} className="text-fg-2 hover:text-fg-1 transition-colors cursor-pointer" aria-label={showBraveKey ? 'Hide Brave key' : 'Show Brave key'}>
+                      {showBraveKey ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </button>
+                    <button onClick={removeBraveKey} className="text-fg-2 hover:text-crit transition-colors cursor-pointer" aria-label="Remove Brave key">
+                      <Trash2 size={15} />
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+            <div className="mt-2">
+              <label htmlFor="brave-key-input" className="text-xs text-fg-2 mb-1.5 block">{braveKey ? 'Replace key' : 'Add key'} — get one free at brave.com/search/api</label>
+              <div className="flex gap-2">
+                <input
+                  id="brave-key-input"
+                  type="password"
+                  value={newBraveKey}
+                  onChange={e => { setNewBraveKey(e.target.value); setBraveError(''); }}
+                  onKeyDown={e => e.key === 'Enter' && saveBraveKey()}
+                  placeholder="BSA..."
+                  className="flex-1 bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-sm text-fg-0 placeholder-fg-3 outline-none font-mono"
+                />
+                <button
+                  onClick={saveBraveKey}
+                  disabled={!newBraveKey.trim()}
+                  className="bg-hero disabled:bg-bg-3 disabled:text-fg-2 text-[#021418] font-medium text-sm px-4 rounded-lg hover:bg-hero transition-colors flex items-center gap-1 cursor-pointer"
+                  aria-label="Save Brave Search key"
+                >
+                  {braveSaved ? <><Check size={13} /> Saved</> : 'Save'}
+                </button>
+              </div>
+              {braveError && <p className="text-xs text-crit mt-1">{braveError}</p>}
+            </div>
           </div>
         </div>
       </Section>
