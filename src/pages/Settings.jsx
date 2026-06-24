@@ -3,6 +3,7 @@ import { getApiKey, setApiKey, clearApiKey, getCostMode, setCostMode } from '@/a
 import { getSerpApiKey, setSerpApiKey, clearSerpApiKey } from '@/api/search';
 import { getOpenAIKey, setOpenAIKey, clearOpenAIKey } from '@/api/openai';
 import { getAlibabaKey, setAlibabaKey, clearAlibabaKey } from '@/api/alibaba';
+import { getGeminiKey, setGeminiKey, clearGeminiKey } from '@/api/gemini';
 import { getNvidiaKey, setNvidiaKey, clearNvidiaKey } from '@/api/nvidia';
 import { getBraveKey, setBraveKey, clearBraveKey } from '@/api/braveSearch';
 import { isQaCriticEnabled, setQaCriticEnabled, isWebKnowledgeEnabled, setWebKnowledgeEnabled } from '@/lib/nvidiaFeatures';
@@ -490,6 +491,13 @@ export default function Settings() {
   const [aliSaved, setAliSaved] = useState(false);
   const [aliError, setAliError] = useState('');
 
+  // Google Gemini
+  const [gemKey, setGemKeyState] = useState(getGeminiKey);
+  const [newGemKey, setNewGemKey] = useState('');
+  const [showGemKey, setShowGemKey] = useState(false);
+  const [gemSaved, setGemSaved] = useState(false);
+  const [gemError, setGemError] = useState('');
+
   // NVIDIA NIM (free-tier QA critic + web-knowledge injection — opt-in, off by default)
   const [nvKey, setNvKeyState] = useState(getNvidiaKey);
   const [newNvKey, setNewNvKey] = useState('');
@@ -567,6 +575,23 @@ export default function Settings() {
     if (!confirm('Remove Alibaba Cloud key? Qwen and DeepSeek models will be unavailable.')) return;
     clearAlibabaKey();
     setAliKeyState('');
+  }
+
+  function saveGemKey() {
+    const trimmed = newGemKey.trim();
+    if (!trimmed.startsWith('AIza')) { setGemError('Gemini keys start with AIza'); return; }
+    setGeminiKey(trimmed);
+    setGemKeyState(trimmed);
+    setNewGemKey('');
+    setGemSaved(true);
+    setGemError('');
+    setTimeout(() => setGemSaved(false), 2000);
+  }
+
+  function removeGemKey() {
+    if (!confirm('Remove Gemini key? Gemini models will be unavailable.')) return;
+    clearGeminiKey();
+    setGemKeyState('');
   }
 
   function removeOaiKey() {
@@ -859,6 +884,54 @@ export default function Settings() {
               </button>
             </div>
             {aliError && <p className="text-xs text-crit mt-1">{aliError}</p>}
+          </div>
+        </div>
+      </Section>
+
+      {/* Google Gemini API Key */}
+      <Section title="🔵 Google Gemini API Key">
+        <div className="space-y-4">
+          <p className="text-xs text-fg-2">Enables Gemini 2.5 Pro/Flash via Google's API. Switch provider in Models & Usage page.</p>
+          <div className="flex items-center justify-between bg-bg-2 rounded-lg px-4 py-3">
+            <div>
+              <p className="text-xs text-fg-2 mb-0.5">Current key</p>
+              <p className="text-sm font-mono text-fg-1">{gemKey ? (showGemKey ? gemKey : `AIza...${gemKey.slice(-6)}`) : 'Not set'}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              {gemKey && (
+                <>
+                  <button onClick={() => setShowGemKey(!showGemKey)} className="text-fg-2 hover:text-fg-1 transition-colors cursor-pointer" aria-label={showGemKey ? 'Hide Gemini key' : 'Show Gemini key'}>
+                    {showGemKey ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                  <button onClick={removeGemKey} className="text-fg-2 hover:text-crit transition-colors cursor-pointer" aria-label="Remove Gemini key">
+                    <Trash2 size={15} />
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+          <div>
+            <label htmlFor="gem-key-input" className="text-xs text-fg-2 mb-1.5 block">{gemKey ? 'Replace key' : 'Add key'}</label>
+            <div className="flex gap-2">
+              <input
+                id="gem-key-input"
+                type="password"
+                value={newGemKey}
+                onChange={e => { setNewGemKey(e.target.value); setGemError(''); }}
+                onKeyDown={e => e.key === 'Enter' && saveGemKey()}
+                placeholder="AIza..."
+                className="flex-1 bg-bg-2 border border-border-0 focus:border-hero/50 rounded-lg px-3 py-2 text-sm text-fg-0 placeholder-fg-3 outline-none font-mono"
+              />
+              <button
+                onClick={saveGemKey}
+                disabled={!newGemKey.trim()}
+                className="bg-hero disabled:bg-bg-3 disabled:text-fg-2 text-[#021418] font-medium text-sm px-4 rounded-lg hover:bg-hero transition-colors flex items-center gap-1 cursor-pointer"
+                aria-label="Save Gemini key"
+              >
+                {gemSaved ? <><Check size={13} /> Saved</> : 'Save'}
+              </button>
+            </div>
+            {gemError && <p className="text-xs text-crit mt-1">{gemError}</p>}
           </div>
         </div>
       </Section>

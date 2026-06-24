@@ -43,9 +43,9 @@ Small PRs preferred. If a change is getting past ~400 lines, stop and suggest sp
 
 These are non-negotiable for the `ace-app` project:
 
-- **No backend services.** All AI calls go directly from the local app to `api.anthropic.com`. Do not re-introduce Base44 or any external orchestration layer.
+- **No backend services beyond a thin serverless proxy.** All AI calls go from the app to `/api/llm`, a stateless proxy that forwards to the provider's native endpoint (Anthropic, OpenAI, Alibaba DashScope, NVIDIA NIM, or Google Gemini) so keys stay server-side. Do not re-introduce Base44 or any external orchestration layer.
 - **PII scrubbing is the security boundary.** Every outbound API call carrying user/customer content must pass through the scrubber (UID, email, phone, user-specific TX hashes, customer-owned wallet addresses). Treat it like auth.
-- **Modules stay independently testable**: quick-lookup, escalation-builder, chain-lookup (80+ chains), response-drafter, tone-QA, PII-scrubber, probation-prep.
+- **Modules stay independently testable**: quick-lookup, escalation-builder, chain-lookup (45+ chains), response-drafter, tone-QA, PII-scrubber, probation-prep.
 - **Audit after every security-relevant change.** If a change touches the API client, auth, or the scrubber, run a full audit with `sequential_thinking` enabled. Report as critical / high / medium / low.
 
 ---

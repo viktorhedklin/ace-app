@@ -2,6 +2,7 @@ import { scrubPII } from '@/lib/SecurityModule';
 import { getOpenAIKey, openaiChat, openaiChatStream } from '@/api/openai';
 import { llmFetch } from '@/api/proxy';
 import { getAlibabaKey, alibabaChat, alibabaChatStream } from '@/api/alibaba';
+import { getGeminiKey, geminiChat, geminiChatStream } from '@/api/gemini';
 import { retrieveArticles } from '@/lib/semanticSearch';
 import {
   get as storageGet, set as storageSet, remove as storageRemove,
@@ -14,9 +15,9 @@ export function getApiKey() {
   return localStorage.getItem('claude_api_key') || localStorage.getItem('openai_api_key') || '';
 }
 
-// Check if any LLM provider is configured (Claude, OpenAI, or Alibaba)
+// Check if any LLM provider is configured (Claude, OpenAI, Alibaba, or Gemini)
 export function hasAnyApiKey() {
-  return !!(getApiKey() || getOpenAIKey() || getAlibabaKey());
+  return !!(getApiKey() || getOpenAIKey() || getAlibabaKey() || getGeminiKey());
 }
 
 export function setApiKey(key) {
@@ -306,7 +307,24 @@ EU CUSTOMER TONE REGISTER:
 - Scandinavian, German, Dutch, French customers expect: direct, factual, no filler
 - Drop over-warm US CS phrases ("Absolutely!", "Amazing!", "Totally understand!") — they read as insincere to most EU customers
 - Professional and measured is appropriate. Warm but not gushing. Concise over effusive.
-- Swedish-speaking customers specifically: formal register by default unless they write casually first
+- Swedish-speaking customers specifically: default to "du" (informal) unless the customer's own message signals formal "Ni" first — that's modern Swedish digital-CS convention.
+
+SWEDISH LANGUAGE CAPABILITY:
+- Draft customer-facing replies natively in Swedish when the conversation is in Swedish — don't route through the Translate tool for this.
+- Default register: "du", per the tone register above. Switch to "Ni" only if the customer used it first.
+- Keep Bybit/crypto terms untranslated: UID, KYC, P2P, TxID, etc. — same rule as the Translate tool.
+- If the agent's own question to you is in English, answer in English even inside a Swedish-channel conversation — don't force-translate your half of the conversation.
+
+CUSTOMER-SUPPORT TECHNIQUE:
+- For emotionally-loaded cases (anger, financial loss, repeated failure) — reflect briefly before resolving: one short line that validates without admitting fault, then move straight to the one concrete next action. Skip this for routine cases — it reads as padding per LENGTH CALIBRATION above.
+- De-escalation ladder: validate without admitting fault → narrow to one concrete next action → never match an angry tone, even if the customer escalates theirs.
+- An empathy line helps when it's specific to what happened ("that's a real delay, I get why you're pushing on this"). It reads as scripted the moment it's generic ("I understand your frustration") — when in doubt, cut it and go straight to the action.
+- Handoff triggers: threats, repeated contact on the same unresolved issue, or the customer using legal language — flag to the agent for escalation rather than continuing to iterate on the draft.
+
+KYC/AML/COMPLIANCE GUARDRAIL:
+- You give operational guidance only: how to explain the process to the customer, what the SOP says, when to escalate. You never give a legal interpretation of whether a case constitutes money laundering, sanctions evasion, or a MiCA violation — that's a Compliance/Legal call, not yours.
+- Any question that asks you to judge or imply a legal/compliance determination ("is this customer laundering money", "does this break MiCA") → say plainly you can't make that call and point to Compliance/Legal.
+- This extends the existing rule on EDD/KYC reviews (never speculate on rejection reasons) to AML holds, sanctions screening, and Travel Rule holds specifically — same neutral, process-based posture, no exceptions for "just between us" framing.
 
 You know Bybit inside out: P2P, KYC, deposits, withdrawals, security, MiCA, SEPA, Travel Rule, Bybit Card, campaigns, the lot.`;
 
@@ -324,6 +342,8 @@ const MODELS = {
   'deepseek-v4-flash': 'deepseek-v4-flash',
   'qwen-max': 'qwen-max',
   'qwen-plus': 'qwen-plus',
+  'gemini-2.5-pro': 'gemini-2.5-pro',
+  'gemini-2.5-flash': 'gemini-2.5-flash',
 };
 
 // ── Model catalog — pricing, capabilities, feature suitability ──────────────
@@ -439,6 +459,28 @@ export const MODEL_CATALOG = [
     weaknesses: ['Less capable than Max tier on complex cases'],
     features: { chat: 4, campaign: 4, followUp: 4, qualityCheck: 4, translate: 4, csat: 3, escalation: 4, hackCase: 3, quickLookup: 4, nba: 4 },
   },
+  {
+    id: 'gemini-2.5-pro',
+    name: 'Gemini 2.5 Pro',
+    provider: 'gemini',
+    inputPrice: 1.25,
+    outputPrice: 10,
+    speed: 'Fast',
+    strengths: ['Strong reasoning', 'Very large context window', 'Good multilingual support', 'Competitive pricing'],
+    weaknesses: ['Less battle-tested on support tone than Anthropic/OpenAI', 'Newer to this stack'],
+    features: { chat: 4, campaign: 4, followUp: 4, qualityCheck: 4, translate: 4, csat: 3, escalation: 4, hackCase: 4, quickLookup: 4, nba: 3 },
+  },
+  {
+    id: 'gemini-2.5-flash',
+    name: 'Gemini 2.5 Flash',
+    provider: 'gemini',
+    inputPrice: 0.15,
+    outputPrice: 0.60,
+    speed: 'Very fast',
+    strengths: ['Very cheap', 'Fast responses', 'Good for utility and routing tasks'],
+    weaknesses: ['Less nuanced than Pro on complex policy cases'],
+    features: { chat: 3, campaign: 4, followUp: 4, qualityCheck: 3, translate: 4, csat: 3, escalation: 3, hackCase: 3, quickLookup: 5, nba: 4 },
+  },
 ];
 
 // Feature labels for the catalog
@@ -527,6 +569,13 @@ export function resolveModel(tier = 'utility') {
     return tier === 'chat' ? MODELS['qwen3.7-max'] : MODELS['qwen3.7-plus'];
   }
 
+  if (provider === 'gemini') {
+    if (mode === 'performance') return MODELS['gemini-2.5-pro'];
+    if (mode === 'economy') return MODELS['gemini-2.5-flash'];
+    // balanced: pro for chat, flash for utility/routing
+    return tier === 'chat' ? MODELS['gemini-2.5-pro'] : MODELS['gemini-2.5-flash'];
+  }
+
   // Anthropic (default) — Sonnet default, Opus only for heavy tasks
   if (mode === 'performance') return MODELS.opus;
   if (mode === 'economy') return MODELS.sonnet;
@@ -550,6 +599,7 @@ function alibabaFallbackModel(model) {
 function getModelProvider(modelId) {
   if (modelId.startsWith('qwen') || modelId.startsWith('deepseek')) return 'alibaba';
   if (modelId.startsWith('gpt-') || modelId.startsWith('o1') || modelId.startsWith('o3')) return 'openai';
+  if (modelId.startsWith('gemini')) return 'gemini';
   return 'anthropic';
 }
 
@@ -776,6 +826,14 @@ export async function InvokeLLM({
     }
   }
 
+  if (provider === 'gemini') {
+    const gemKey = getGeminiKey();
+    if (!gemKey) throw new Error('NO_GEMINI_KEY');
+    const { text, usage } = await geminiChat(gemKey, [{ role: 'user', content: prompt }], systemBlocks, maxTokens, model, oaiOpts);
+    trackUsage(model, usage.input_tokens, usage.output_tokens);
+    return text;
+  }
+
   const apiKey = getApiKey();
   if (!apiKey) throw new Error('NO_API_KEY');
   return claudeChat(apiKey, [{ role: 'user', content: prompt }], systemBlocks, maxTokens, model, { signal });
@@ -799,7 +857,7 @@ After the [/PLAN] tag, write your actual response. Do not reference the plan in 
 
 export async function InvokeNBA({ messages, vipLevel = 0, parsedData = {} }) {
   const apiKey = getApiKey();
-  if (!apiKey && !getOpenAIKey() && !getAlibabaKey()) return [];
+  if (!apiKey && !getOpenAIKey() && !getAlibabaKey() && !getGeminiKey()) return [];
 
   const recent = messages.slice(-6)
     .map(m => `${m.role === 'user' ? 'AGENT' : 'ACE'}: ${scrubPII(m.content.slice(0, 300))}`)
@@ -850,6 +908,12 @@ Rules: "critical" only for VIP 3+ or active financial emergencies. Labels under 
         trackUsage(fallback, result.usage.input_tokens, result.usage.output_tokens);
         setModelOverride('routing', fallback);
       }
+      text = result.text;
+    } else if (provider === 'gemini') {
+      const gemKey = getGeminiKey();
+      if (!gemKey) return [];
+      const result = await geminiChat(gemKey, [{ role: 'user', content: prompt }], null, 400, model);
+      trackUsage(model, result.usage.input_tokens, result.usage.output_tokens);
       text = result.text;
     } else {
       if (!apiKey) return [];
@@ -1027,6 +1091,19 @@ export async function InvokeChatWithHistory({ messages, system_prompt = '', auto
       setModelOverride('chat', fallback);
       return text;
     }
+  }
+
+  if (provider === 'gemini') {
+    const gemKey = getGeminiKey();
+    if (!gemKey) throw new Error('NO_GEMINI_KEY');
+    if (onToken) {
+      const { text, usage } = await geminiChatStream(gemKey, filteredMessages, systemBlocks, 4096, onToken, model);
+      trackUsage(model, usage.input_tokens, usage.output_tokens);
+      return text;
+    }
+    const { text, usage } = await geminiChat(gemKey, filteredMessages, systemBlocks, 4096, model);
+    trackUsage(model, usage.input_tokens, usage.output_tokens);
+    return text;
   }
 
   const apiKey = getApiKey();

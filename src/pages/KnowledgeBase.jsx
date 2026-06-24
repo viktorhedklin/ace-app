@@ -262,7 +262,7 @@ function BybitOfficialTab() {
                 : 'text-fg-2 border-border-0 hover:text-fg-1'
             )}
           >
-            15 Articles
+            {BYBIT_KB.length} Articles
           </button>
           <button
             onClick={() => setView('matrix')}
@@ -314,7 +314,7 @@ function BybitOfficialTab() {
             <div>
               <p className="text-xs font-medium text-fg-1">Bybit Official Help Center</p>
               <p className="text-xs text-fg-2 mt-0.5">
-                15 critical articles for live-chat. Key points and agent tips extracted. Click any article to expand.
+                {BYBIT_KB.length} critical articles for live-chat. Key points and agent tips extracted. Click any article to expand.
               </p>
             </div>
           </div>

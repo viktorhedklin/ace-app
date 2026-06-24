@@ -1,6 +1,7 @@
 // ─── LLM proxy client ───────────────────────────────────────────────────────
-// All provider clients (claude.js, openai.js, alibaba.js) route their requests
-// through the serverless proxy at /api/llm so provider keys can stay server-side.
+// All provider clients (claude.js, openai.js, alibaba.js, nvidia.js, gemini.js)
+// route their requests through the serverless proxy at /api/llm so provider
+// keys can stay server-side.
 //
 // Key handling:
 //   - If the server has the provider key in env (ANTHROPIC_API_KEY / OPENAI_API_KEY
@@ -15,7 +16,7 @@ const PROXY_URL = '/api/llm';
 
 /**
  * POST a provider-native payload to the proxy.
- * @param {'anthropic'|'openai'|'alibaba'} provider
+ * @param {'anthropic'|'openai'|'alibaba'|'nvidia'|'gemini'} provider
  * @param {string} clientKey  locally-stored key (sent only if present; ignored when server has env key)
  * @param {object} payload    provider-native request body
  * @param {AbortSignal} [signal]  optional — aborts the request (e.g. on caller timeout)
