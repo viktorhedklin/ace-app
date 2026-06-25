@@ -31,6 +31,10 @@ function scrubContent(content) {
   if (Array.isArray(content)) {
     return content.map(block => {
       if (block.type === 'text') return { ...block, text: scrubPII(block.text) };
+      // Anthropic-style vision block -> OpenAI-compatible image_url block
+      if (block.type === 'image') {
+        return { type: 'image_url', image_url: { url: `data:${block.source.media_type};base64,${block.source.data}` } };
+      }
       return block;
     });
   }
