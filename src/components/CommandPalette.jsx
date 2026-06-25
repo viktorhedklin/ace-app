@@ -9,6 +9,7 @@ import { useAce } from '@/context/AceContext';
 import { BUILT_IN_TEMPLATES } from '@/pages/QuickTemplates';
 import { WORKFLOW_CATEGORIES } from '@/pages/Workflows';
 import { get as storageGet, NAMESPACES } from '@/lib/storage';
+import { ALL_TOOLS } from '@/lib/toolsRegistry';
 
 // Heavy spring — "particle assembly" snap-in feel
 const ASSEMBLE_SPRING = { type: 'spring', stiffness: 500, damping: 22, mass: 0.7 };
@@ -28,26 +29,9 @@ const NAV_ITEMS = [
   { id: 'bybit-global', label: 'Bybit Global — Email', icon: '🌍', path: '/bybit-global', group: 'Chat Channels', badge: 'EMAIL' },
   { id: 'global-live-chat', label: 'Global Live Chat', icon: '🌍', path: '/global-live-chat', group: 'Chat Channels', badge: 'CHAT' },
   { id: 'personal', label: 'Personal', icon: '✦', path: '/personal', group: 'Chat Channels', badge: 'CHAT' },
-  // Tools
-  { id: 'workspace', label: 'Workspace', icon: '🗂️', path: '/workspace', group: 'Tools' },
-  { id: 'sepa-delay', label: 'SEPA Delay', icon: '💶', path: '/sepa-delay', group: 'Tools' },
-  { id: 'quick-lookup', label: 'Quick Lookup', icon: '⚡', path: '/quick-lookup', group: 'Tools' },
-  { id: 'campaign', label: 'Campaign', icon: '🎁', path: '/campaign', group: 'Tools' },
-  { id: 'shift-tracker', label: 'Shift Tracker', icon: '📊', path: '/shift-tracker', group: 'Tools' },
-  { id: 'hack-case', label: 'Hack Case', icon: '🔴', path: '/hack-case', group: 'Tools' },
-  { id: 'missing-deposit', label: 'Missing Deposit', icon: '💸', path: '/missing-deposit', group: 'Tools' },
-  { id: 'account-matters', label: 'Account Matters', icon: '👤', path: '/account-matters', group: 'Tools' },
-  { id: 'p2p-advertiser', label: 'P2P Advertiser', icon: '🤝', path: '/p2p-advertiser', group: 'Tools' },
-  { id: 'p2p-dispute', label: 'P2P Dispute', icon: '⚖️', path: '/p2p-dispute', group: 'Tools' },
-  { id: 'card-decline', label: 'Card Decline', icon: '💳', path: '/card-decline', group: 'Tools' },
-  { id: 'chain-lookup', label: 'Chain Lookup', icon: '🔗', path: '/chain-lookup', group: 'Tools' },
-  { id: 'quality-check', label: 'Quality Check', icon: '🎯', path: '/quality-check', group: 'Tools' },
-  { id: 'closed-cases', label: 'Closed Cases', icon: '📋', path: '/closed-cases', group: 'Tools' },
-  { id: 'probation-prep', label: 'Probation Prep', icon: '🎓', path: '/probation-prep', group: 'Tools' },
-  { id: 'quick-templates', label: 'Quick Templates', icon: '💬', path: '/quick-templates', group: 'Tools' },
-  { id: 'follow-up', label: 'Follow-up', icon: '📬', path: '/follow-up', group: 'Tools' },
-  { id: 'translate', label: 'Translate', icon: '🌐', path: '/translate', group: 'Tools' },
-  { id: 'csat-predictor', label: 'CSAT Predictor', icon: '⭐', path: '/csat-predictor', group: 'Tools' },
+  { id: 'workspace', label: 'Workspace', icon: '🗂️', path: '/workspace', group: 'Chat Channels' },
+  // Tools — sourced from the shared registry so the palette and sidebar never drift apart
+  ...ALL_TOOLS.map(t => ({ id: t.path.slice(1), label: t.name, icon: t.icon, path: t.path, group: 'Tools' })),
 ];
 
 // Build KB items for searching

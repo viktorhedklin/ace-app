@@ -2,11 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Menu, X, StickyNote, WifiOff } from 'lucide-react';
+import { Menu, X, StickyNote, WifiOff, Search } from 'lucide-react';
 import CommandPalette, { useCommandPalette } from '@/components/CommandPalette';
 import CaseTimeline from '@/components/CaseTimeline';
 import SnippetSearch from '@/components/SnippetSearch';
 import NebulaBackground from '@/components/NebulaBackground';
+import NavGroup from '@/components/NavGroup';
+import { TOOL_GROUPS } from '@/lib/toolsRegistry';
 import { getMacros, executeMacro } from '@/lib/macros';
 import { useAce } from '@/context/AceContext';
 import { get as storageGet, set as storageSet, remove as storageRemove, NAMESPACES } from '@/lib/storage';
@@ -34,31 +36,6 @@ const CHAT_CHANNELS = [
   { name: 'Personal', type: 'CHAT', flag: '✦', path: '/personal' },
 ];
 
-const TOOLS = [
-  { name: 'Workflow Hub', icon: '🔄', path: '/workflows' },
-  { name: 'Scenario Studio', icon: '🎭', path: '/scenario-studio' },
-  { name: 'SEPA Delay', icon: '💶', path: '/sepa-delay' },
-  { name: 'Quick Lookup', icon: '⚡', path: '/quick-lookup' },
-  { name: 'Campaign', icon: '🎁', path: '/campaign' },
-  { name: 'Shift Tracker', icon: '📊', path: '/shift-tracker' },
-  { name: 'Hack Case', icon: '🔴', path: '/hack-case' },
-  { name: 'Missing Deposit', icon: '💸', path: '/missing-deposit' },
-  { name: 'Account Matters', icon: '👤', path: '/account-matters' },
-  { name: 'P2P Advertiser', icon: '🤝', path: '/p2p-advertiser' },
-  { name: 'P2P Dispute', icon: '⚖️', path: '/p2p-dispute' },
-  { name: 'Fiat Deposit', icon: '🏦', path: '/fiat-deposit' },
-  { name: 'Fiat Withdrawal', icon: '💶', path: '/fiat-withdrawal' },
-  { name: 'Referral Program', icon: '🎁', path: '/referral-program' },
-  { name: 'Card Decline', icon: '💳', path: '/card-decline' },
-  { name: 'Chain Lookup', icon: '🔗', path: '/chain-lookup' },
-  { name: 'Quality Check', icon: '🎯', path: '/quality-check' },
-  { name: 'Closed Cases', icon: '📋', path: '/closed-cases' },
-  { name: 'Trajectory', icon: '🎯', path: '/trajectory' },
-  { name: 'Quick Templates', icon: '💬', path: '/quick-templates' },
-  { name: 'Follow-up', icon: '📬', path: '/follow-up' },
-  { name: 'Translate 🇸🇪', icon: '🌐', path: '/translate' },
-];
-
 function NavLink({ to, icon, label, badge, badgeType, onClick }) {
   const location = useLocation();
   const active = location.pathname === to;
@@ -81,6 +58,7 @@ function NavLink({ to, icon, label, badge, badgeType, onClick }) {
 }
 
 function SidebarContent({ onNav, onOpenPalette, ghostMode, setGhostMode }) {
+  const [filter, setFilter] = useState('');
   return (
     <div className="flex flex-col h-full w-64 bg-bg-1 border-r border-border-0 relative">
       {/* Vertical accent rail */}
@@ -122,13 +100,29 @@ function SidebarContent({ onNav, onOpenPalette, ghostMode, setGhostMode }) {
           </div>
         </div>
 
-        <div>
-          <p className="type-nav-section px-3 pt-1 pb-2">Tools & Workflows</p>
-          <div className="space-y-0.5">
-            {TOOLS.map(t => (
-              <NavLink key={t.path} to={t.path} icon={t.icon} label={t.name} onClick={onNav} />
-            ))}
-          </div>
+        <div className="relative px-3">
+          <Search size={12} className="absolute left-[22px] top-1/2 -translate-y-1/2 text-fg-3 pointer-events-none" />
+          <input
+            type="text"
+            value={filter}
+            onChange={e => setFilter(e.target.value)}
+            placeholder="Filter tools…"
+            className="w-full bg-bg-2 border border-border-0 rounded-lg pl-7 pr-2.5 py-1.5 text-xs text-fg-0 placeholder-fg-3 outline-none focus:border-border-hero transition-colors duration-220"
+          />
+        </div>
+
+        <div className="space-y-1">
+          {TOOL_GROUPS.map(group => (
+            <NavGroup
+              key={group.id}
+              id={group.id}
+              label={group.label}
+              tools={group.tools}
+              filterQuery={filter}
+              forceOpen={filter.length > 0}
+              onNav={onNav}
+            />
+          ))}
         </div>
       </nav>
 
