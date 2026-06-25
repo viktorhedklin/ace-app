@@ -9,7 +9,10 @@ import { useAce, scrubPII, recordCaseEvent } from '@/context/AceContext';
 import { scrubMessagesForStorage, scrubForStorage } from '@/lib/SecurityModule';
 import { saveCase } from '@/lib/caseMemory';
 import { get as storageGet, set as storageSet, remove as storageRemove, NAMESPACES } from '@/lib/storage';
-import { Send, Trash2, Copy, Check, Brain, X, Zap, ChevronDown, ChevronUp, XCircle, ArrowDownToLine, ImagePlus, Languages, Gauge } from 'lucide-react';
+import {
+  Send, Trash2, Copy, Check, Brain, X, Zap, ChevronDown, ChevronUp, XCircle, ArrowDownToLine,
+  ImagePlus, Languages, Gauge, MoreHorizontal, SlidersHorizontal, Megaphone, Star, Target, Euro, Siren,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import EscalationBuilder from './EscalationBuilder.jsx';
 import QuickReplies from '@/components/QuickReplies';
@@ -17,6 +20,7 @@ import LinkHealthBadge from '@/components/LinkHealthBadge';
 import DraftRating from '@/components/DraftRating';
 import AceAvatar from '@/components/AceAvatar';
 import CouncilBadge from '@/components/CouncilBadge';
+import HeaderOverflowMenu from '@/components/HeaderOverflowMenu';
 import { critiqueDraft, crossCheckDraft } from '@/lib/qaCritic';
 import { fetchWebKnowledge, isKbConfident } from '@/lib/webKnowledge';
 import { isQaCriticEnabled, isWebKnowledgeEnabled } from '@/lib/nvidiaFeatures';
@@ -974,12 +978,15 @@ export default function Chat({ channel }) {
 
   const TOOLBAR = [
     { label: '⚡ Lookup', action: () => navigate('/quick-lookup') },
-    { label: '📣 Campaign', action: () => navigate('/campaign') },
     { label: '🔴 Escalate', action: () => setShowEscalation(true), highlight: true },
     { label: '📋 Summary', action: () => injectPrompt('Give me a concise internal case summary for escalation — what the issue is, what was checked, and what needs review.') },
-    { label: '⭐ CSAT', action: () => injectPrompt('Suggest 2–3 CSAT-optimised phrases to close this case positively.') },
-    { label: '🎯 Quality', action: () => navigate('/quality-check') },
-    { label: '💶 SEPA', action: () => navigate('/sepa-delay') },
+  ];
+
+  const MORE_TOOLS = [
+    { label: 'Campaign', icon: Megaphone, onClick: () => navigate('/campaign') },
+    { label: 'CSAT phrasing', icon: Star, onClick: () => injectPrompt('Suggest 2–3 CSAT-optimised phrases to close this case positively.') },
+    { label: 'Quality Check', icon: Target, onClick: () => navigate('/quality-check') },
+    { label: 'SEPA Delay', icon: Euro, onClick: () => navigate('/sepa-delay') },
   ];
 
   // VIP accent line when critical
@@ -1068,23 +1075,6 @@ export default function Chat({ channel }) {
               )}
             </button>
 
-            <button
-              onClick={() => {
-                const next = !autoMemory;
-                setAutoMemory(next);
-                storageSet(NAMESPACES.CHAT, `auto_${channel.id}`, next);
-                localStorage.removeItem(`auto_memory_${channel.id}`);
-              }}
-              className={cn(
-                'flex items-center gap-1.5 text-xs px-2 py-1 rounded-lg border transition-colors duration-150',
-                autoMemory
-                  ? 'bg-hero/15 border-hero/30 text-hero'
-                  : 'bg-bg-2 border-border-0 text-fg-2 hover:text-fg-1'
-              )}
-            >
-              <Zap size={10} className={autoMemory ? 'fill-hero' : ''} />
-              {autoMemory ? 'Auto' : 'Off'}
-            </button>
             {messages.length > 0 && (
               <>
                 <span className="text-xs text-fg-3">{messages.length}</span>
@@ -1099,13 +1089,41 @@ export default function Chat({ channel }) {
                 </button>
               </>
             )}
-            <button
-              onClick={clearHistory}
-              className="text-fg-2 hover:text-crit transition-colors duration-150 flex items-center justify-center w-7 h-7 rounded-lg hover:bg-bg-2"
-              aria-label="Clear conversation"
-            >
-              <Trash2 size={14} />
-            </button>
+
+            <HeaderOverflowMenu
+              triggerIcon={SlidersHorizontal}
+              ariaLabel="Session settings"
+              items={[
+                {
+                  label: autoMemory ? 'Auto-Memory: On' : 'Auto-Memory: Off',
+                  icon: Zap,
+                  active: autoMemory,
+                  onClick: () => {
+                    const next = !autoMemory;
+                    setAutoMemory(next);
+                    storageSet(NAMESPACES.CHAT, `auto_${channel.id}`, next);
+                    localStorage.removeItem(`auto_memory_${channel.id}`);
+                  },
+                },
+                {
+                  label: autoCsat ? 'Auto-CSAT: On' : 'Auto-CSAT: Off',
+                  icon: Gauge,
+                  active: autoCsat,
+                  onClick: () => {
+                    const next = !autoCsat;
+                    setAutoCsat(next);
+                    storageSet(NAMESPACES.SETTINGS, 'auto_csat', next);
+                    localStorage.removeItem('ace_auto_csat');
+                  },
+                },
+                {
+                  label: 'Clear conversation',
+                  icon: Trash2,
+                  danger: true,
+                  onClick: clearHistory,
+                },
+              ]}
+            />
           </div>
         </div>
 
@@ -1145,6 +1163,12 @@ export default function Chat({ channel }) {
               )}
             </>
           )}
+
+          <HeaderOverflowMenu
+            triggerIcon={MoreHorizontal}
+            ariaLabel="More tools"
+            items={MORE_TOOLS}
+          />
         </div>
       </div>
 
@@ -1354,30 +1378,26 @@ export default function Chat({ channel }) {
                   <LinkHealthBadge content={m.content} streaming={m.streaming} />
                 )}
 
-                {/* Thumbs up/down — feeds back into QA memory + trajectory */}
+                {/* Per-message chrome — rating, Council verdict, and Auto-CSAT grade share one row */}
                 {m.role === 'assistant' && !m.streaming && m.content && (
-                  <DraftRating
-                    messageContent={m.content}
-                    messageIndex={i}
-                    onRate={kind => triggerAvatarFx(i, kind === 'up' ? 'celebrated' : 'flagged')}
-                  />
-                )}
-
-                {/* The Council — unified QA critic + cross-check + web-sourcing badge */}
-                {m.role === 'assistant' && !m.streaming && m.content && (
-                  <CouncilBadge qa={qaCritiques[i]} web={webKnowledgeResults[i]} crossCheck={councilCrossChecks[i]} />
-                )}
-
-                {/* Auto-CSAT badge */}
-                {m.role === 'assistant' && csatScores[i] && (
-                  <div className="flex items-center gap-1.5 px-1">
-                    <span className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded',
-                      csatScores[i].grade === 'A' ? 'bg-ok/20 text-ok' :
-                      csatScores[i].grade === 'B' ? 'bg-info/20 text-info' :
-                      csatScores[i].grade === 'C' ? 'bg-hero-soft/20 text-hero' :
-                      'bg-crit/20 text-crit'
-                    )}>{csatScores[i].grade}</span>
-                    <span className="text-[10px] text-fg-2">{csatScores[i].score}/100</span>
+                  <div className="mt-1 flex items-center gap-2 px-1">
+                    <DraftRating
+                      messageContent={m.content}
+                      messageIndex={i}
+                      onRate={kind => triggerAvatarFx(i, kind === 'up' ? 'celebrated' : 'flagged')}
+                    />
+                    <CouncilBadge qa={qaCritiques[i]} web={webKnowledgeResults[i]} crossCheck={councilCrossChecks[i]} />
+                    {csatScores[i] && (
+                      <div className="flex items-center gap-1.5">
+                        <span className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded',
+                          csatScores[i].grade === 'A' ? 'bg-ok/20 text-ok' :
+                          csatScores[i].grade === 'B' ? 'bg-info/20 text-info' :
+                          csatScores[i].grade === 'C' ? 'bg-hero-soft/20 text-hero' :
+                          'bg-crit/20 text-crit'
+                        )}>{csatScores[i].grade}</span>
+                        <span className="text-[10px] text-fg-2">{csatScores[i].score}/100</span>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1521,74 +1541,60 @@ export default function Chat({ channel }) {
           onInsert={text => { setInput(text); setShowQuickReplies(false); textareaRef.current?.focus(); }}
         />
 
-        {/* Quick Actions Bar — visible when conversation is active */}
-        {messages.length > 0 && (
-          <div className="px-4 pt-2 flex gap-1.5 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-            <button
-              onClick={() => {
-                const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant');
-                if (lastAssistant) { navigator.clipboard.writeText(lastAssistant.content); }
-              }}
-              className="text-xs whitespace-nowrap px-2.5 py-1.5 rounded-lg bg-bg-2 border border-border-0 text-fg-1 hover:text-fg-0 hover:border-border-1 transition-colors duration-150 shrink-0 flex items-center gap-1 cursor-pointer"
-              aria-label="Copy last AI response"
-            >
-              <Copy size={10} /> Copy Last
-            </button>
-            <button
-              onClick={() => setShowEscalation(true)}
-              className="text-xs whitespace-nowrap px-2.5 py-1.5 rounded-lg bg-crit/10 border border-crit/25 text-crit hover:bg-crit/20 transition-colors duration-150 shrink-0 flex items-center gap-1 cursor-pointer"
-              aria-label="Open escalation builder"
-            >
-              📤 Escalate
-            </button>
-            <button
-              onClick={() => {
-                const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant');
-                if (lastAssistant) {
-                  const idx = messages.lastIndexOf(lastAssistant);
-                  setSavingMem(idx);
-                  setMemTitle('');
-                }
-              }}
-              className="text-xs whitespace-nowrap px-2.5 py-1.5 rounded-lg bg-bg-2 border border-border-0 text-fg-1 hover:text-hero hover:border-hero/30 transition-colors duration-150 shrink-0 flex items-center gap-1 cursor-pointer"
-              aria-label="Save to memory"
-            >
-              <Brain size={10} /> Save Memory
-            </button>
-            <button
-              onClick={() => setShowQuickReplies(!showQuickReplies)}
-              className={cn(
-                'text-xs whitespace-nowrap px-2.5 py-1.5 rounded-lg border transition-colors duration-150 shrink-0 flex items-center gap-1 cursor-pointer',
-                showQuickReplies
-                  ? 'bg-hero/15 border-hero/30 text-hero'
-                  : 'bg-bg-2 border-border-0 text-fg-1 hover:text-fg-0 hover:border-border-1'
-              )}
-              aria-label="Toggle quick replies"
-            >
-              <Languages size={10} /> SE/EN
-            </button>
-            <button
-              onClick={() => {
-                const next = !autoCsat;
-                setAutoCsat(next);
-                storageSet(NAMESPACES.SETTINGS, 'auto_csat', next);
-                localStorage.removeItem('ace_auto_csat');
-              }}
-              className={cn(
-                'text-xs whitespace-nowrap px-2.5 py-1.5 rounded-lg border transition-colors duration-150 shrink-0 flex items-center gap-1 cursor-pointer',
-                autoCsat
-                  ? 'bg-ok/15 border-ok/30 text-ok'
-                  : 'bg-bg-2 border-border-0 text-fg-1 hover:text-fg-0 hover:border-border-1'
-              )}
-              aria-label="Toggle auto quality scoring"
-            >
-              <Gauge size={10} /> {autoCsat ? 'CSAT On' : 'CSAT Off'}
-            </button>
-          </div>
-        )}
-
-        {/* Quick chips */}
-        <div className="px-4 pt-2 flex gap-1.5 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+        {/* Quick Actions (icon-only, pinned) + Quick Chips — share one scrolling row */}
+        <div className="px-4 pt-2 flex items-center gap-1.5 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+          {messages.length > 0 && (
+            <>
+              <button
+                onClick={() => {
+                  const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant');
+                  if (lastAssistant) { navigator.clipboard.writeText(lastAssistant.content); }
+                }}
+                className="w-7 h-7 shrink-0 flex items-center justify-center rounded-lg bg-bg-2 border border-border-0 text-fg-1 hover:text-fg-0 hover:border-border-1 transition-colors duration-150 cursor-pointer"
+                title="Copy last AI response"
+                aria-label="Copy last AI response"
+              >
+                <Copy size={12} />
+              </button>
+              <button
+                onClick={() => setShowEscalation(true)}
+                className="w-7 h-7 shrink-0 flex items-center justify-center rounded-lg bg-crit/10 border border-crit/25 text-crit hover:bg-crit/20 transition-colors duration-150 cursor-pointer"
+                title="Open escalation builder"
+                aria-label="Open escalation builder"
+              >
+                <Siren size={12} />
+              </button>
+              <button
+                onClick={() => {
+                  const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant');
+                  if (lastAssistant) {
+                    const idx = messages.lastIndexOf(lastAssistant);
+                    setSavingMem(idx);
+                    setMemTitle('');
+                  }
+                }}
+                className="w-7 h-7 shrink-0 flex items-center justify-center rounded-lg bg-bg-2 border border-border-0 text-fg-1 hover:text-hero hover:border-hero/30 transition-colors duration-150 cursor-pointer"
+                title="Save to memory"
+                aria-label="Save to memory"
+              >
+                <Brain size={12} />
+              </button>
+              <button
+                onClick={() => setShowQuickReplies(!showQuickReplies)}
+                className={cn(
+                  'w-7 h-7 shrink-0 flex items-center justify-center rounded-lg border transition-colors duration-150 cursor-pointer',
+                  showQuickReplies
+                    ? 'bg-hero/15 border-hero/30 text-hero'
+                    : 'bg-bg-2 border-border-0 text-fg-1 hover:text-fg-0 hover:border-border-1'
+                )}
+                title="Toggle quick replies (SE/EN)"
+                aria-label="Toggle quick replies"
+              >
+                <Languages size={12} />
+              </button>
+              <div className="w-px h-5 bg-border-0 mx-0.5 shrink-0" />
+            </>
+          )}
           {QUICK_CHIPS.map(chip => (
             <motion.button
               key={chip.label}

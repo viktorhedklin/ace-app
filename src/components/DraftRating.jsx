@@ -57,7 +57,7 @@ export default function DraftRating({ messageContent, onRate }) {
 
   if (askingReason) {
     return (
-      <div className="mt-1 flex items-center gap-1.5 px-1">
+      <div className="flex items-center gap-1.5 flex-1 min-w-0">
         <input
           autoFocus
           value={reason}
@@ -81,7 +81,7 @@ export default function DraftRating({ messageContent, onRate }) {
   }
 
   return (
-    <div className="mt-1 flex items-center gap-2 px-1">
+    <div className="flex items-center gap-2 shrink-0">
       <button
         onClick={handleUp}
         disabled={!!rating}
