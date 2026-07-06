@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { InvokeLLM } from '@/api/integrations';
 import { scrubPII } from '@/lib/SecurityModule';
-import { Copy, Check, Loader2, Languages, Sparkles, RotateCcw, ChevronRight, Wand2 } from 'lucide-react';
+import { Copy, Check, Loader2, Languages, Sparkles, RotateCcw, ChevronRight, Wand2, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getGlossaryContext } from '@/data/svGlossary';
 
 const CONTENT_TYPES = [
   { key: 'email', label: 'Email Template', icon: '📧', desc: 'Follow-up or case email' },
   { key: 'chat', label: 'Chat Quicktext', icon: '💬', desc: 'Live chat — paste & send' },
   { key: 'lark', label: 'Internal / Lark', icon: '🔧', desc: 'Escalation notes & internal' },
+  { key: 'help_center_article', label: 'Help Center Article', icon: '📄', desc: 'Proofread existing SV draft' },
 ];
 
 const TONE_OPTIONS = [
@@ -66,11 +68,46 @@ TEXT TO TRANSLATE:
 ${text}`;
 }
 
+// Help Center articles arrive already translated (often stiffly, by AI or literally) —
+// this is a proofread-and-naturalize pass, not an EN→SV translation.
+function buildProofreadPrompt(text) {
+  const glossaryBlock = getGlossaryContext(text);
+
+  return `You are proofreading an EXISTING Swedish Bybit Help Center / FAQ article. It has already been translated from English — likely by AI or too literally — and now needs to read like it was written natively by a Swedish crypto-industry copywriter, not translated.
+
+TASK: Rewrite the Swedish text so every sentence sounds natural and idiomatic, while preserving the exact meaning, facts, numbers, and structure. Do not summarize, shorten, or add content.
+
+PRESERVE EXACTLY:
+- Headings, Q&A structure, paragraph breaks, and blank-line separators between sections/questions
+- Numbered/dated examples (e.g. "1 januari: Bob registrerar sitt konto") — same structure, same names, same dates
+- Currency tickers, percentages, UTC times, URLs, and numbers exactly as written
+- Product/brand terms the crypto industry keeps in English (Launch Pool, Launchpool, staking, airdrop, KYC, VIP, lock-up, Rewards Hub, etc.) — do not force-translate these
+
+FIX:
+- Incorrect compound-word spacing — Swedish uses closed compounds: "krypto tillgångar" → "kryptotillgångar", "identitet verifiering" → "identitetsverifiering", "låsnings period" → "låsningsperiod", "ögonblicks bild" → "ögonblicksbild", etc. Scan the whole text for this pattern.
+- Overly literal/robotic grammar and word order carried over from English
+- Awkward or redundant phrasing (e.g. "Vi ber om ursäkt för eventuella olägenheter som detta kan ha orsakat" → "Vi beklagar besväret")
+- Passive constructions that a native speaker would phrase actively
+- "Ni" used instead of "du" (always use "du" — informal address is standard in Swedish CS/product copy)
+${glossaryBlock}
+STRICT RULES:
+1. Never change a fact, number, date, condition, or example — only the wording.
+2. Never add headings, commentary, or markdown that wasn't in the original.
+3. Keep the same overall length and paragraph structure — this is a polish pass, not a rewrite from scratch.
+
+OUTPUT: Only the corrected Swedish article text, in the same structure as the input. Nothing else — no preamble, no notes.
+
+EXISTING SWEDISH TEXT TO PROOFREAD:
+${text}`;
+}
+
 function buildToneCheckPrompt(text, contentType) {
   const contextLabel = contentType === 'email'
     ? 'a customer-facing email template'
     : contentType === 'chat'
     ? 'a live chat quicktext for paste-and-send use'
+    : contentType === 'help_center_article'
+    ? 'a public-facing Help Center / FAQ article'
     : 'an internal Lark / escalation message';
 
   return `You are a Swedish tone quality checker for customer support at a crypto exchange. You know Swedish CS communication standards inside out.
@@ -115,7 +152,10 @@ function buildApplyImprovementsPrompt(text, toneResult, contentType) {
     email: 'customer-facing email',
     chat: 'live chat quicktext (short, direct, paste-and-send)',
     lark: 'internal Lark message or escalation note',
+    help_center_article: 'public-facing Help Center / FAQ article — preserve headings, Q&A structure, and all examples/numbers exactly',
   };
+
+  const glossaryBlock = contentType === 'help_center_article' ? getGlossaryContext(text) : '';
 
   return `You are a native Swedish copyeditor for Bybit customer support.
 
@@ -125,7 +165,7 @@ IMPROVEMENTS TO APPLY:
 ${improvementLines || '- General polish: make it sound more natural and human'}
 ${rewriteHint}
 CONTEXT: This is a ${contextMap[contentType]}.
-
+${glossaryBlock}
 RULES — never break these:
 - Preserve ALL placeholders exactly as written: [NAME], [CASE_ID], {{{...}}}, @mentions, etc.
 - Crypto/Bybit terms stay in English: USDT, BTC, ETH, KYC, SEPA, 2FA, TXID, etc.
@@ -144,14 +184,17 @@ function buildHumanisePrompt(text, contentType) {
     email: 'a customer email. The tone should feel like a thoughtful, helpful human — not a support script.',
     chat: 'a live chat message. It needs to be short, warm, and immediately readable — like a colleague typing in real time.',
     lark: 'an internal team message. Direct, practical, colleague-to-colleague.',
+    help_center_article: 'a public Help Center / FAQ article. Preserve headings, Q&A structure, and every example/number exactly — this is a polish pass, not a rewrite.',
   };
+
+  const glossaryBlock = contentType === 'help_center_article' ? getGlossaryContext(text) : '';
 
   return `You are a native Swedish speaker giving a final human polish to support communications for a crypto exchange.
 
 The text below is translated Swedish. Your job is to make it sound like a real Swedish person wrote it from scratch — not like it was translated from English.
 
 CONTEXT: This is ${contextMap[contentType]}
-
+${glossaryBlock}
 HOW TO HUMANISE:
 - Read each sentence. If it sounds stiff, foreign, or over-formal to a native Swedish ear — rewrite it
 - Replace typical over-translated phrases:
@@ -200,6 +243,8 @@ export default function Translate() {
   const [copied, setCopied] = useState(false);
   const [toneError, setToneError] = useState('');
 
+  const isHelpCenter = contentType === 'help_center_article';
+
   async function translate() {
     if (!input.trim()) return;
     setTranslating(true);
@@ -207,10 +252,15 @@ export default function Translate() {
     setToneResult(null);
     setToneError('');
     try {
-      const result = await InvokeLLM({
-        prompt: buildTranslatePrompt(scrubPII(input.trim()), contentType, tone),
-        system_prompt: 'You are an expert Swedish translator for Bybit customer support. Your translations are natural, human, and professional. You never add explanations — only the translated text.',
-      });
+      const result = isHelpCenter
+        ? await InvokeLLM({
+            prompt: buildProofreadPrompt(scrubPII(input.trim())),
+            system_prompt: 'You are a native Swedish copyeditor specializing in crypto-exchange Help Center content. You proofread and naturalize existing Swedish text, grounding word choice in real market terminology. You never add explanations — only the corrected text.',
+          })
+        : await InvokeLLM({
+            prompt: buildTranslatePrompt(scrubPII(input.trim()), contentType, tone),
+            system_prompt: 'You are an expert Swedish translator for Bybit customer support. Your translations are natural, human, and professional. You never add explanations — only the translated text.',
+          });
       setOutput(result.trim());
     } catch (e) {
       setOutput(`Error: ${e.message}`);
@@ -298,7 +348,11 @@ export default function Translate() {
       >
         <div>
           <h1 className="text-xl font-bold text-fg-0">🇸🇪 Swedish Translator</h1>
-          <p className="text-sm text-fg-2">Translate support texts to natural, human Swedish</p>
+          <p className="text-sm text-fg-2">
+            {isHelpCenter
+              ? 'Proofread existing Swedish Help Center articles into natural, market-grounded Swedish'
+              : 'Translate support texts to natural, human Swedish'}
+          </p>
         </div>
         <button
           onClick={reset}
@@ -376,8 +430,8 @@ export default function Translate() {
         <div className="bg-bg-1 border border-border-0 rounded-xl overflow-hidden flex flex-col">
           <div className="flex items-center justify-between px-4 py-2.5 border-b border-border-0 shrink-0">
             <div className="flex items-center gap-2">
-              <span className="text-base">🇬🇧</span>
-              <span className="text-sm font-semibold text-fg-1">English</span>
+              <span className="text-base">{isHelpCenter ? '🇸🇪' : '🇬🇧'}</span>
+              <span className="text-sm font-semibold text-fg-1">{isHelpCenter ? 'Swedish (draft)' : 'English'}</span>
             </div>
             {input && (
               <button onClick={() => setInput('')} className="text-xs text-fg-2 hover:text-fg-1 transition-colors">
@@ -388,7 +442,9 @@ export default function Translate() {
           <textarea
             value={input}
             onChange={e => setInput(e.target.value)}
-            placeholder={contentType === 'chat'
+            placeholder={isHelpCenter
+              ? 'Paste the existing Swedish Help Center article here (the one that sounds AI-translated or stiff)...'
+              : contentType === 'chat'
               ? 'Paste your chat quicktext here...'
               : contentType === 'lark'
               ? 'Paste your Lark template or internal note here...'
@@ -405,7 +461,9 @@ export default function Translate() {
               className="w-full bg-hero hover:bg-hero disabled:bg-bg-2 disabled:text-fg-2 text-[#021418] font-semibold text-sm py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2"
             >
               {translating ? (
-                <><Loader2 size={14} className="animate-spin" /> Translating...</>
+                <><Loader2 size={14} className="animate-spin" /> {isHelpCenter ? 'Proofreading...' : 'Translating...'}</>
+              ) : isHelpCenter ? (
+                <><FileText size={14} /> Proofread &amp; Correct</>
               ) : (
                 <><Languages size={14} /> Translate to Swedish</>
               )}
@@ -471,12 +529,12 @@ export default function Translate() {
                 {translating ? (
                   <div className="flex items-center gap-2">
                     <Loader2 size={14} className="animate-spin text-hero/50" />
-                    <span className="text-fg-2">Translating...</span>
+                    <span className="text-fg-2">{isHelpCenter ? 'Proofreading...' : 'Translating...'}</span>
                   </div>
                 ) : (
                   <div className="text-center space-y-1">
                     <p className="text-2xl">🇸🇪</p>
-                    <p>Translation will appear here</p>
+                    <p>{isHelpCenter ? 'Corrected article will appear here' : 'Translation will appear here'}</p>
                   </div>
                 )}
               </div>
@@ -650,10 +708,17 @@ export default function Translate() {
           >
             <p className="text-xs font-semibold text-fg-2 uppercase tracking-wider mb-3">How it works</p>
             <ul className="space-y-2 text-sm text-fg-2">
-              <li className="flex items-start gap-2">
-                <ChevronRight size={13} className="text-hero/50 mt-0.5 shrink-0" />
-                Paste English → hit <span className="text-fg-1">Translate</span> → get natural Swedish
-              </li>
+              {isHelpCenter ? (
+                <li className="flex items-start gap-2">
+                  <ChevronRight size={13} className="text-hero/50 mt-0.5 shrink-0" />
+                  Paste the existing Swedish draft → hit <span className="text-fg-1">Proofread & Correct</span> → get a naturalized version grounded in real market terminology
+                </li>
+              ) : (
+                <li className="flex items-start gap-2">
+                  <ChevronRight size={13} className="text-hero/50 mt-0.5 shrink-0" />
+                  Paste English → hit <span className="text-fg-1">Translate</span> → get natural Swedish
+                </li>
+              )}
               <li className="flex items-start gap-2">
                 <ChevronRight size={13} className="text-hero/50 mt-0.5 shrink-0" />
                 Hit <span className="text-fg-1">Check tone</span> → get a score, specific issues, and a suggested rewrite
@@ -666,14 +731,27 @@ export default function Translate() {
                 <ChevronRight size={13} className="text-hero/50 mt-0.5 shrink-0" />
                 Hit <span className="text-purple-400/80">Humanise</span> → dedicated native-speaker pass. Use this for final polish before sending.
               </li>
-              <li className="flex items-start gap-2">
-                <ChevronRight size={13} className="text-hero/50 mt-0.5 shrink-0" />
-                Placeholders like <code className="text-fg-1 bg-bg-2 px-1 rounded text-xs">[NAME]</code>, <code className="text-fg-1 bg-bg-2 px-1 rounded text-xs">{'{{{Case.Anti_Phishing_Text__c}}}'}</code> are always kept intact
-              </li>
+              {isHelpCenter ? (
+                <li className="flex items-start gap-2">
+                  <ChevronRight size={13} className="text-hero/50 mt-0.5 shrink-0" />
+                  Headings, Q&A structure, dates, and named examples (e.g. "Bob", "1 januari") are always kept intact
+                </li>
+              ) : (
+                <li className="flex items-start gap-2">
+                  <ChevronRight size={13} className="text-hero/50 mt-0.5 shrink-0" />
+                  Placeholders like <code className="text-fg-1 bg-bg-2 px-1 rounded text-xs">[NAME]</code>, <code className="text-fg-1 bg-bg-2 px-1 rounded text-xs">{'{{{Case.Anti_Phishing_Text__c}}}'}</code> are always kept intact
+                </li>
+              )}
               <li className="flex items-start gap-2">
                 <ChevronRight size={13} className="text-hero/50 mt-0.5 shrink-0" />
                 USDT, KYC, SEPA, TXID, 2FA — always in English. Swedish customers expect this.
               </li>
+              {isHelpCenter && (
+                <li className="flex items-start gap-2">
+                  <ChevronRight size={13} className="text-hero/50 mt-0.5 shrink-0" />
+                  Help Center mode grounds word choice in a glossary sourced from other Swedish crypto-exchange and financial help centers — not just tone rewriting.
+                </li>
+              )}
             </ul>
           </motion.div>
         )}
