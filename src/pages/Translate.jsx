@@ -327,6 +327,17 @@ export default function Translate() {
     setTimeout(() => setCopied(false), 2000);
   }
 
+  // Force plain text even when the user manually selects + Ctrl/Cmd-C instead of
+  // clicking Copy — otherwise the browser copies the dark background + monospace
+  // font as rich HTML, which pastes into Google Docs/Word as a highlighted code block.
+  function forcePlainTextCopy(e) {
+    const selection = window.getSelection()?.toString();
+    if (selection) {
+      e.preventDefault();
+      e.clipboardData.setData('text/plain', selection);
+    }
+  }
+
   function reset() {
     setInput('');
     setOutput('');
@@ -520,10 +531,12 @@ export default function Translate() {
 
           <div className="flex-1 relative min-h-52">
             {output ? (
-              <pre className={cn(
-                'w-full h-full px-4 py-3 text-sm text-fg-0 whitespace-pre-wrap font-mono leading-relaxed overflow-y-auto transition-opacity duration-200',
-                outputBusy && 'opacity-40'
-              )}>{output}</pre>
+              <pre
+                onCopy={forcePlainTextCopy}
+                className={cn(
+                  'w-full h-full px-4 py-3 text-sm text-fg-0 whitespace-pre-wrap font-mono leading-relaxed overflow-y-auto transition-opacity duration-200',
+                  outputBusy && 'opacity-40'
+                )}>{output}</pre>
             ) : (
               <div className="flex items-center justify-center h-full min-h-52 text-fg-3 text-sm">
                 {translating ? (
@@ -655,7 +668,7 @@ export default function Translate() {
                     <Sparkles size={11} className="text-hero" />
                     Suggested rewrite
                   </p>
-                  <p className="text-sm text-fg-0 leading-relaxed font-mono whitespace-pre-wrap">{toneResult.rewrite}</p>
+                  <p onCopy={forcePlainTextCopy} className="text-sm text-fg-0 leading-relaxed font-mono whitespace-pre-wrap">{toneResult.rewrite}</p>
                   <div className="flex items-center gap-3 mt-3">
                     <button
                       onClick={() => navigator.clipboard.writeText(toneResult.rewrite)}
